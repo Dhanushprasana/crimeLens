@@ -1,38 +1,79 @@
 /**
  * @openapi
  * /users:
- *   post:
- *     summary: Create a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 example: john.doe@example.com
- *               phone:
- *                 type: string
- *                 example: "+1234567890"
- *               roleIds:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["46044000000024730"]
- *               catalystUserId:
- *                 type: string
- *                 example: "1234567"
- *     responses:
- *       200:
+		requestBody:
+			required: true
+			content:
+				application/json:
+					schema:
+						type: object
+						required:
+							- name
+							- email
+							- password
+						properties:
+							name:
+								type: string
+								example: John Doe
+							email:
+								type: string
+								example: john.doe@example.com
+							password:
+								type: string
+								example: "P@ssw0rd!"
+							phone:
+								type: string
+								example: "+1234567890"
+							roleIds:
+								type: array
+								items:
+									type: string
+								example: ["46044000000024730"]
+							catalystUserId:
+								type: string
+								example: "1234567"
+		responses:
+			200:
+				description: User created successfully
+				content:
+					application/json:
+						schema:
+							type: object
+							properties:
+								id:
+									type: string
+									example: "46044000000012345"
+								isArchived:
+									type: boolean
+									example: false
+								userInfo:
+									type: object
+									properties:
+										id:
+											type: string
+											example: "46044000000054321"
+										name:
+											type: string
+											example: "John Doe"
+										email:
+											type: string
+											example: "john.doe@example.com"
+										phone:
+											type: string
+											example: "+1234567890"
+										roleDetails:
+											type: array
+											items:
+												type: object
+												properties:
+													id:
+														type: string
+														example: "46044000000024730"
+													name:
+														type: string
+														example: "SUPER_ADMIN"
+			500:
+				description: Server error
  *         description: User created successfully
  *       500:
  *         description: Server error
