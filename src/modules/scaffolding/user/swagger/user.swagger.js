@@ -1,82 +1,84 @@
 /**
  * @openapi
  * /users:
-		requestBody:
-			required: true
-			content:
-				application/json:
-					schema:
-						type: object
-						required:
-							- name
-							- email
-							- password
-						properties:
-							name:
-								type: string
-								example: John Doe
-							email:
-								type: string
-								example: john.doe@example.com
-							password:
-								type: string
-								example: "P@ssw0rd!"
-							phone:
-								type: string
-								example: "+1234567890"
-							roleIds:
-								type: array
-								items:
-									type: string
-								example: ["46044000000024730"]
-							catalystUserId:
-								type: string
-								example: "1234567"
-		responses:
-			200:
-				description: User created successfully
-				content:
-					application/json:
-						schema:
-							type: object
-							properties:
-								id:
-									type: string
-									example: "46044000000012345"
-								isArchived:
-									type: boolean
-									example: false
-								userInfo:
-									type: object
-									properties:
-										id:
-											type: string
-											example: "46044000000054321"
-										name:
-											type: string
-											example: "John Doe"
-										email:
-											type: string
-											example: "john.doe@example.com"
-										phone:
-											type: string
-											example: "+1234567890"
-										roleDetails:
-											type: array
-											items:
-												type: object
-												properties:
-													id:
-														type: string
-														example: "46044000000024730"
-													name:
-														type: string
-														example: "SUPER_ADMIN"
-			500:
-				description: Server error
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - roleNames
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 example: john.doe@example.com
+ *               password:
+ *                 type: string
+ *                 example: "P@ssw0rd!"
+ *               phone:
+ *                 type: string
+ *                 example: "+1234567890"
+ *               roleNames:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["SUPER_ADMIN"]
+ *               catalystUserId:
+ *                 type: string
+ *                 example: "1234567"
+ *     responses:
+ *       200:
  *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "46044000000012345"
+ *                 isArchived:
+ *                   type: boolean
+ *                   example: false
+ *                 userInfo:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "46044000000054321"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     email:
+ *                       type: string
+ *                       example: "john.doe@example.com"
+ *                     phone:
+ *                       type: string
+ *                       example: "+1234567890"
+ *                     roleDetails:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: "46044000000024730"
+ *                           name:
+ *                             type: string
+ *                             example: "SUPER_ADMIN"
  *       500:
  *         description: Server error
+ *
  *   delete:
  *     summary: Hard delete users by email list
  *     tags: [Users]
@@ -191,6 +193,12 @@
  *               roleName:
  *                 type: string
  *                 example: SUPER_ADMIN
+ *               roleNames:
+ *                 type: array
+ *                 description: Array of role names or ROWIDs (e.g. SUPER_ADMIN)
+ *                 items:
+ *                   type: string
+ *                 example: ["SUPER_ADMIN"]
  *     responses:
  *       200:
  *         description: Role updated successfully

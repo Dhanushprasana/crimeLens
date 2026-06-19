@@ -29,7 +29,7 @@ module.exports = {
     const email = dto.email.trim().toLowerCase();
 
     // Split full name into first and last name components
-    const nameParts = dto.name.trim().split(" ");
+    const nameParts = (dto.name || "").trim().split(" ");
     const userFirstName = nameParts[0] || "";
     const userLastName = nameParts.slice(1).join(" ") || "";
 
@@ -40,15 +40,32 @@ module.exports = {
       throw new Error("User already exists");
     }
 
-    // 2. Validate role IDs exist in sys_role
-    const roleIds = dto.roleIds || [];
-    if (roleIds.length > 0) {
-      const formattedIds = roleIds.map((id) => `'${id}'`).join(",");
-      const roleCheckQuery = `SELECT ROWID FROM ${env.TABLE_ROLE} WHERE ROWID IN (${formattedIds})`;
-      const roleCheckResult = await executeQuery(req, roleCheckQuery);
-      if (roleCheckResult.length !== roleIds.length) {
-        throw new Error("One or more invalid role IDs provided");
+    // 2. Resolve provided roles (from `roleNames` array) — can be ROWIDs or role names — to canonical ROWIDs
+    const providedRoles = dto.roleNames || [];
+    const roleIds = [];
+    const roleDetails = [];
+
+    for (const r of providedRoles) {
+      let roleResult = null;
+      // If r looks like a numeric ROWID, query by ROWID without quotes to avoid cast errors
+      if (/^-?\d+$/.test(String(r))) {
+        const roleQuery = `SELECT * FROM ${env.TABLE_ROLE} WHERE ROWID = ${r}`;
+        roleResult = await executeQuery(req, roleQuery);
       }
+
+      if (!roleResult || roleResult.length === 0) {
+        // Try by role name
+        const roleQueryByName = `SELECT * FROM ${env.TABLE_ROLE} WHERE role_name = '${r}'`;
+        roleResult = await executeQuery(req, roleQueryByName);
+      }
+
+      if (!roleResult || roleResult.length === 0) {
+        throw new Error(`Role '${r}' not found`);
+      }
+
+      const role = roleResult[0][env.TABLE_ROLE];
+      roleIds.push(role.ROWID);
+      roleDetails.push({ id: role.ROWID, name: role.role_name });
     }
 
     // 3. Ensure user exists in Catalyst Auth — create if catalystUserId not provided
@@ -61,8 +78,11 @@ module.exports = {
           dto.password,
           userFirstName,
         );
-        // Try common response shapes to extract an id
+
+        // Try common response shapes to extract an id. SDK returns { user_details: ICatalystUser }
         catalystUserId =
+          created?.user_details?.user_id ||
+          created?.user_details?.zuid ||
           created?.user_id ||
           created?.id ||
           created?.USER_ID ||
@@ -71,7 +91,6 @@ module.exports = {
           null;
         logger.info(`Catalyst user created or returned id: ${catalystUserId}`);
       } catch (err) {
-        // If creating the catalyst user fails, log and rethrow so callers can handle it.
         logger.error("Failed to create or fetch Catalyst auth user", err);
         throw err;
       }
@@ -86,9 +105,7 @@ module.exports = {
       phone: dto.phone || null,
     });
 
-    // 4. Save account credential configurations in sys_user table (associated to user_info_id)
-    // Note: No local password column is shown in the sys_user schema screenshot. We assume authentication credentials
-    // are stored elsewhere or we store them in a column user_configuration_id/catalyst_user_id or mock it.
+    // 5. Save account credential configurations in sys_user table (associated to user_info_id)
     const userTable = getTable(req, env.TABLE_USER);
     const savedUser = await userTable.insertRow({
       user_info_id: savedInfo.ROWID,
@@ -96,25 +113,13 @@ module.exports = {
       catalyst_user_id: catalystUserId || null,
     });
 
-    // 5. Map Roles in sys_user_role table
+    // 6. Map Roles in sys_user_role table
     const userRoleTable = getTable(req, env.TABLE_USER_ROLE);
-    const roleDetails = [];
     for (const roleId of roleIds) {
       await userRoleTable.insertRow({
         user_id: savedUser.ROWID,
         role_id: roleId,
       });
-
-      // Get role details for response payload
-      const getRoleQuery = `SELECT * FROM ${env.TABLE_ROLE} WHERE ROWID = '${roleId}'`;
-      const roleResult = await executeQuery(req, getRoleQuery);
-      if (roleResult && roleResult.length > 0) {
-        const role = roleResult[0][env.TABLE_ROLE];
-        roleDetails.push({
-          id: role.ROWID,
-          name: role.role_name,
-        });
-      }
     }
 
     return {

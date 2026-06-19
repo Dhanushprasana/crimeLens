@@ -6,14 +6,53 @@ module.exports = {
   async createUser(req, email, password, displayName) {
     const catalystApp = catalyst.initialize(req);
     const userManagement = catalystApp.userManagement();
-
-    const payload = {
-      first_name: displayName || undefined,
-      email_id: email,
-      password: password,
+    const signupConfig = {
+      // platform_type is required by the SDK — use 'web' for server-side signup
+      platform_type: "web",
     };
 
-    const response = await userManagement.registerUser(payload);
+    // helpful debug: log signupConfig without sensitive data
+    // eslint-disable-next-line no-console
+    console.debug &&
+      console.debug("signupConfig for registerUser:", {
+        platform_type: signupConfig.platform_type,
+      });
+
+    const userDetails = {
+      first_name: displayName || undefined,
+      last_name: undefined,
+      email_id: email,
+    };
+
+    // registerUser requires an org_id in userDetails — try to fetch available orgs from Catalyst
+    try {
+      const orgs = await userManagement.getAllOrgs();
+      if (Array.isArray(orgs) && orgs.length > 0) {
+        const first = orgs[0];
+        let orgId = null;
+        if (typeof first === "string") {
+          orgId = first;
+        } else if (first && typeof first === "object") {
+          orgId = first.id || first.org_id || first.value || null;
+        }
+        if (orgId) {
+          userDetails.org_id = orgId;
+        }
+      }
+    } catch (e) {
+      // non-fatal — if we cannot fetch orgs, let registerUser handle the error
+      // but log for debugging
+      // eslint-disable-next-line no-console
+      console.warn(
+        "Could not fetch orgs for Catalyst user creation",
+        e && e.message ? e.message : e,
+      );
+    }
+
+    const response = await userManagement.registerUser(
+      signupConfig,
+      userDetails,
+    );
     // response may contain created user details — return it as-is
     return response;
   },
