@@ -2,7 +2,8 @@
   "appsail": [
     {
       "source": ".",
-      "name": "crimelens-be"
+      "name": "crimelens-be",
+      "app_config": "app-config.json"
     }
   ]
 }
