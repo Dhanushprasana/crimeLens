@@ -14,7 +14,5 @@ router.post("/geojson", controller.addDistrictGeoJson);
 router.get("/geojson/getAll", controller.getAllDistrictGeoJson);
 router.get("/geojson/:id", controller.getOneDistrictGeoJson);
 router.delete("/geojson/:id", controller.deleteDistrictGeoJson);
-// Bootstrap seed-data -> DB
-router.post("/geojson/bootstrap", controller.bootstrapDistrictGeoJson);
 
 module.exports = router;

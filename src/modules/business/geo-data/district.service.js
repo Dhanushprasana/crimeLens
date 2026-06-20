@@ -43,8 +43,4 @@ module.exports = {
     return repository.deleteDistrictGeoJson(id, req);
   },
 
-  async bootstrapDistrictGeoJson(req) {
-    logger.info("bootstrapDistrictGeoJson");
-    return repository.bootstrapDistrictGeoJson(req);
-  },
 };

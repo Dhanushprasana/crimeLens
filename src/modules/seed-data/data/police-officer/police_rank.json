@@ -1,0 +1,50 @@
+[
+ {
+  "rank_name": "DGP",
+  "hierarchy_level": 1
+ },
+ {
+  "rank_name": "ADGP",
+  "hierarchy_level": 2
+ },
+ {
+  "rank_name": "IGP",
+  "hierarchy_level": 3
+ },
+ {
+  "rank_name": "DIG",
+  "hierarchy_level": 4
+ },
+ {
+  "rank_name": "SP",
+  "hierarchy_level": 5
+ },
+ {
+  "rank_name": "ASP",
+  "hierarchy_level": 6
+ },
+ {
+  "rank_name": "DSP",
+  "hierarchy_level": 7
+ },
+ {
+  "rank_name": "Inspector",
+  "hierarchy_level": 8
+ },
+ {
+  "rank_name": "SI",
+  "hierarchy_level": 9
+ },
+ {
+  "rank_name": "ASI",
+  "hierarchy_level": 10
+ },
+ {
+  "rank_name": "Head Constable",
+  "hierarchy_level": 11
+ },
+ {
+  "rank_name": "Constable",
+  "hierarchy_level": 12
+ }
+]

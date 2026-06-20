@@ -14,6 +14,7 @@ const geoDistrictRoute = require("../modules/business/geo-data/district.route");
 const criminalRoute = require("../modules/business/criminal/criminal.route");
 const crimeRoute = require("../modules/business/crime/crime.route");
 const firRoute = require("../modules/business/fir/fir.route");
+const authRoute = require("../modules/auth/auth.route");
 
 router.use("/configurations", configurationRoute);
 router.use("/permissions", permissionRoute);
@@ -26,5 +27,6 @@ router.use("/geo/districts", geoDistrictRoute);
 router.use("/criminals", criminalRoute);
 router.use("/crimes", crimeRoute);
 router.use("/firs", firRoute);
+router.use("/auth", authRoute);
 
 module.exports = router;
