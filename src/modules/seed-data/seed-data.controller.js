@@ -20,4 +20,12 @@ module.exports = {
       next(err);
     }
   },
+  async bootstrapPoliceStations(req, res, next) {
+    try {
+      const result = await service.bootstrapPoliceStations(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

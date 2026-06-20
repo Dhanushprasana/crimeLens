@@ -1,1802 +1,1802 @@
 [
-{
-  "user_id": "USER_0001",
-  "badge_number": "BDG00001",
-  "rank_id": 11,
-  "station_id": 12,
-  "date_of_joining": "2017-06-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9416169920"
- },
- {
-  "user_id": "USER_0002",
-  "badge_number": "BDG00002",
-  "rank_id": 2,
-  "station_id": 11,
-  "date_of_joining": "2020-04-13",
-  "operational_status": "ACTIVE",
-  "contact_number": "9182837391"
- },
- {
-  "user_id": "USER_0003",
-  "badge_number": "BDG00003",
-  "rank_id": 3,
-  "station_id": 24,
-  "date_of_joining": "2012-04-28",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9363252742"
- },
- {
-  "user_id": "USER_0004",
-  "badge_number": "BDG00004",
-  "rank_id": 2,
-  "station_id": 49,
-  "date_of_joining": "2013-06-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9165538405"
- },
- {
-  "user_id": "USER_0005",
-  "badge_number": "BDG00005",
-  "rank_id": 10,
-  "station_id": 50,
-  "date_of_joining": "2012-01-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9288248390"
- },
- {
-  "user_id": "USER_0006",
-  "badge_number": "BDG00006",
-  "rank_id": 4,
-  "station_id": 29,
-  "date_of_joining": "2010-01-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9814268685"
- },
- {
-  "user_id": "USER_0007",
-  "badge_number": "BDG00007",
-  "rank_id": 5,
-  "station_id": 40,
-  "date_of_joining": "2024-03-25",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9329649537"
- },
- {
-  "user_id": "USER_0008",
-  "badge_number": "BDG00008",
-  "rank_id": 5,
-  "station_id": 47,
-  "date_of_joining": "2013-09-22",
-  "operational_status": "ACTIVE",
-  "contact_number": "9659095867"
- },
- {
-  "user_id": "USER_0009",
-  "badge_number": "BDG00009",
-  "rank_id": 10,
-  "station_id": 39,
-  "date_of_joining": "2018-04-18",
-  "operational_status": "ACTIVE",
-  "contact_number": "9243424893"
- },
- {
-  "user_id": "USER_0010",
-  "badge_number": "BDG00010",
-  "rank_id": 10,
-  "station_id": 39,
-  "date_of_joining": "2010-07-01",
-  "operational_status": "ACTIVE",
-  "contact_number": "9787032687"
- },
- {
-  "user_id": "USER_0011",
-  "badge_number": "BDG00011",
-  "rank_id": 2,
-  "station_id": 27,
-  "date_of_joining": "2020-04-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9711642506"
- },
- {
-  "user_id": "USER_0012",
-  "badge_number": "BDG00012",
-  "rank_id": 2,
-  "station_id": 8,
-  "date_of_joining": "2025-07-13",
-  "operational_status": "ACTIVE",
-  "contact_number": "9660700251"
- },
- {
-  "user_id": "USER_0013",
-  "badge_number": "BDG00013",
-  "rank_id": 7,
-  "station_id": 8,
-  "date_of_joining": "2021-03-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9229178589"
- },
- {
-  "user_id": "USER_0014",
-  "badge_number": "BDG00014",
-  "rank_id": 10,
-  "station_id": 23,
-  "date_of_joining": "2020-06-11",
-  "operational_status": "ACTIVE",
-  "contact_number": "9877369323"
- },
- {
-  "user_id": "USER_0015",
-  "badge_number": "BDG00015",
-  "rank_id": 6,
-  "station_id": 50,
-  "date_of_joining": "2012-06-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9347769683"
- },
- {
-  "user_id": "USER_0016",
-  "badge_number": "BDG00016",
-  "rank_id": 10,
-  "station_id": 19,
-  "date_of_joining": "2016-04-22",
-  "operational_status": "ACTIVE",
-  "contact_number": "9496895411"
- },
- {
-  "user_id": "USER_0017",
-  "badge_number": "BDG00017",
-  "rank_id": 9,
-  "station_id": 25,
-  "date_of_joining": "2010-02-24",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9583682098"
- },
- {
-  "user_id": "USER_0018",
-  "badge_number": "BDG00018",
-  "rank_id": 6,
-  "station_id": 1,
-  "date_of_joining": "2022-07-01",
-  "operational_status": "ACTIVE",
-  "contact_number": "9505506218"
- },
- {
-  "user_id": "USER_0019",
-  "badge_number": "BDG00019",
-  "rank_id": 4,
-  "station_id": 30,
-  "date_of_joining": "2019-02-10",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9490215303"
- },
- {
-  "user_id": "USER_0020",
-  "badge_number": "BDG00020",
-  "rank_id": 8,
-  "station_id": 29,
-  "date_of_joining": "2011-02-21",
-  "operational_status": "ACTIVE",
-  "contact_number": "9236971086"
- },
- {
-  "user_id": "USER_0021",
-  "badge_number": "BDG00021",
-  "rank_id": 2,
-  "station_id": 48,
-  "date_of_joining": "2016-04-17",
-  "operational_status": "ACTIVE",
-  "contact_number": "9843634201"
- },
- {
-  "user_id": "USER_0022",
-  "badge_number": "BDG00022",
-  "rank_id": 1,
-  "station_id": 24,
-  "date_of_joining": "2019-11-18",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9197335805"
- },
- {
-  "user_id": "USER_0023",
-  "badge_number": "BDG00023",
-  "rank_id": 3,
-  "station_id": 22,
-  "date_of_joining": "2016-12-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9280221657"
- },
- {
-  "user_id": "USER_0024",
-  "badge_number": "BDG00024",
-  "rank_id": 8,
-  "station_id": 40,
-  "date_of_joining": "2013-01-06",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9782239841"
- },
- {
-  "user_id": "USER_0025",
-  "badge_number": "BDG00025",
-  "rank_id": 5,
-  "station_id": 15,
-  "date_of_joining": "2025-02-22",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9438179104"
- },
- {
-  "user_id": "USER_0026",
-  "badge_number": "BDG00026",
-  "rank_id": 4,
-  "station_id": 43,
-  "date_of_joining": "2012-05-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9570596939"
- },
- {
-  "user_id": "USER_0027",
-  "badge_number": "BDG00027",
-  "rank_id": 2,
-  "station_id": 25,
-  "date_of_joining": "2017-06-20",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9471171114"
- },
- {
-  "user_id": "USER_0028",
-  "badge_number": "BDG00028",
-  "rank_id": 5,
-  "station_id": 47,
-  "date_of_joining": "2013-03-08",
-  "operational_status": "ACTIVE",
-  "contact_number": "9918030150"
- },
- {
-  "user_id": "USER_0029",
-  "badge_number": "BDG00029",
-  "rank_id": 8,
-  "station_id": 30,
-  "date_of_joining": "2015-02-03",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9738242692"
- },
- {
-  "user_id": "USER_0030",
-  "badge_number": "BDG00030",
-  "rank_id": 9,
-  "station_id": 35,
-  "date_of_joining": "2023-02-13",
-  "operational_status": "ACTIVE",
-  "contact_number": "9620712640"
- },
- {
-  "user_id": "USER_0031",
-  "badge_number": "BDG00031",
-  "rank_id": 5,
-  "station_id": 30,
-  "date_of_joining": "2013-02-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9404471465"
- },
- {
-  "user_id": "USER_0032",
-  "badge_number": "BDG00032",
-  "rank_id": 10,
-  "station_id": 22,
-  "date_of_joining": "2025-12-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9853597294"
- },
- {
-  "user_id": "USER_0033",
-  "badge_number": "BDG00033",
-  "rank_id": 4,
-  "station_id": 36,
-  "date_of_joining": "2023-08-21",
-  "operational_status": "ACTIVE",
-  "contact_number": "9806789252"
- },
- {
-  "user_id": "USER_0034",
-  "badge_number": "BDG00034",
-  "rank_id": 11,
-  "station_id": 25,
-  "date_of_joining": "2023-02-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9532322086"
- },
- {
-  "user_id": "USER_0035",
-  "badge_number": "BDG00035",
-  "rank_id": 10,
-  "station_id": 28,
-  "date_of_joining": "2019-01-11",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9691585926"
- },
- {
-  "user_id": "USER_0036",
-  "badge_number": "BDG00036",
-  "rank_id": 6,
-  "station_id": 5,
-  "date_of_joining": "2020-07-11",
-  "operational_status": "ACTIVE",
-  "contact_number": "9239093158"
- },
- {
-  "user_id": "USER_0037",
-  "badge_number": "BDG00037",
-  "rank_id": 5,
-  "station_id": 4,
-  "date_of_joining": "2016-08-12",
-  "operational_status": "ACTIVE",
-  "contact_number": "9168458137"
- },
- {
-  "user_id": "USER_0038",
-  "badge_number": "BDG00038",
-  "rank_id": 5,
-  "station_id": 48,
-  "date_of_joining": "2015-08-07",
-  "operational_status": "ACTIVE",
-  "contact_number": "9457689317"
- },
- {
-  "user_id": "USER_0039",
-  "badge_number": "BDG00039",
-  "rank_id": 2,
-  "station_id": 42,
-  "date_of_joining": "2020-01-13",
-  "operational_status": "ACTIVE",
-  "contact_number": "9789966021"
- },
- {
-  "user_id": "USER_0040",
-  "badge_number": "BDG00040",
-  "rank_id": 9,
-  "station_id": 45,
-  "date_of_joining": "2025-03-26",
-  "operational_status": "ACTIVE",
-  "contact_number": "9474553151"
- },
- {
-  "user_id": "USER_0041",
-  "badge_number": "BDG00041",
-  "rank_id": 12,
-  "station_id": 5,
-  "date_of_joining": "2011-02-13",
-  "operational_status": "ACTIVE",
-  "contact_number": "9169278300"
- },
- {
-  "user_id": "USER_0042",
-  "badge_number": "BDG00042",
-  "rank_id": 9,
-  "station_id": 9,
-  "date_of_joining": "2016-04-02",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9355434293"
- },
- {
-  "user_id": "USER_0043",
-  "badge_number": "BDG00043",
-  "rank_id": 7,
-  "station_id": 47,
-  "date_of_joining": "2021-11-01",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9553329310"
- },
- {
-  "user_id": "USER_0044",
-  "badge_number": "BDG00044",
-  "rank_id": 3,
-  "station_id": 6,
-  "date_of_joining": "2024-12-28",
-  "operational_status": "ACTIVE",
-  "contact_number": "9799191203"
- },
- {
-  "user_id": "USER_0045",
-  "badge_number": "BDG00045",
-  "rank_id": 7,
-  "station_id": 28,
-  "date_of_joining": "2016-03-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9910690275"
- },
- {
-  "user_id": "USER_0046",
-  "badge_number": "BDG00046",
-  "rank_id": 11,
-  "station_id": 19,
-  "date_of_joining": "2022-10-26",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9398083045"
- },
- {
-  "user_id": "USER_0047",
-  "badge_number": "BDG00047",
-  "rank_id": 6,
-  "station_id": 38,
-  "date_of_joining": "2011-11-11",
-  "operational_status": "ACTIVE",
-  "contact_number": "9896259600"
- },
- {
-  "user_id": "USER_0048",
-  "badge_number": "BDG00048",
-  "rank_id": 6,
-  "station_id": 19,
-  "date_of_joining": "2021-09-10",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9396512745"
- },
- {
-  "user_id": "USER_0049",
-  "badge_number": "BDG00049",
-  "rank_id": 4,
-  "station_id": 8,
-  "date_of_joining": "2023-05-18",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9759608271"
- },
- {
-  "user_id": "USER_0050",
-  "badge_number": "BDG00050",
-  "rank_id": 1,
-  "station_id": 5,
-  "date_of_joining": "2014-01-20",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9545007611"
- },
- {
-  "user_id": "USER_0051",
-  "badge_number": "BDG00051",
-  "rank_id": 9,
-  "station_id": 29,
-  "date_of_joining": "2020-05-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9844210686"
- },
- {
-  "user_id": "USER_0052",
-  "badge_number": "BDG00052",
-  "rank_id": 2,
-  "station_id": 4,
-  "date_of_joining": "2023-09-26",
-  "operational_status": "ACTIVE",
-  "contact_number": "9518642775"
- },
- {
-  "user_id": "USER_0053",
-  "badge_number": "BDG00053",
-  "rank_id": 8,
-  "station_id": 36,
-  "date_of_joining": "2011-01-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9704817666"
- },
- {
-  "user_id": "USER_0054",
-  "badge_number": "BDG00054",
-  "rank_id": 6,
-  "station_id": 47,
-  "date_of_joining": "2019-05-15",
-  "operational_status": "ACTIVE",
-  "contact_number": "9553973448"
- },
- {
-  "user_id": "USER_0055",
-  "badge_number": "BDG00055",
-  "rank_id": 5,
-  "station_id": 9,
-  "date_of_joining": "2017-07-28",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9327686152"
- },
- {
-  "user_id": "USER_0056",
-  "badge_number": "BDG00056",
-  "rank_id": 1,
-  "station_id": 43,
-  "date_of_joining": "2011-10-17",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9348918322"
- },
- {
-  "user_id": "USER_0057",
-  "badge_number": "BDG00057",
-  "rank_id": 1,
-  "station_id": 45,
-  "date_of_joining": "2013-05-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9861091944"
- },
- {
-  "user_id": "USER_0058",
-  "badge_number": "BDG00058",
-  "rank_id": 12,
-  "station_id": 25,
-  "date_of_joining": "2023-12-13",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9723624866"
- },
- {
-  "user_id": "USER_0059",
-  "badge_number": "BDG00059",
-  "rank_id": 9,
-  "station_id": 23,
-  "date_of_joining": "2020-02-08",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9294741246"
- },
- {
-  "user_id": "USER_0060",
-  "badge_number": "BDG00060",
-  "rank_id": 11,
-  "station_id": 16,
-  "date_of_joining": "2012-11-26",
-  "operational_status": "ACTIVE",
-  "contact_number": "9551722874"
- },
- {
-  "user_id": "USER_0061",
-  "badge_number": "BDG00061",
-  "rank_id": 1,
-  "station_id": 47,
-  "date_of_joining": "2013-01-25",
-  "operational_status": "ACTIVE",
-  "contact_number": "9156818665"
- },
- {
-  "user_id": "USER_0062",
-  "badge_number": "BDG00062",
-  "rank_id": 11,
-  "station_id": 48,
-  "date_of_joining": "2023-08-12",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9558818184"
- },
- {
-  "user_id": "USER_0063",
-  "badge_number": "BDG00063",
-  "rank_id": 12,
-  "station_id": 8,
-  "date_of_joining": "2021-09-19",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9111872314"
- },
- {
-  "user_id": "USER_0064",
-  "badge_number": "BDG00064",
-  "rank_id": 6,
-  "station_id": 43,
-  "date_of_joining": "2016-03-05",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9765051309"
- },
- {
-  "user_id": "USER_0065",
-  "badge_number": "BDG00065",
-  "rank_id": 3,
-  "station_id": 32,
-  "date_of_joining": "2019-01-28",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9253781104"
- },
- {
-  "user_id": "USER_0066",
-  "badge_number": "BDG00066",
-  "rank_id": 4,
-  "station_id": 45,
-  "date_of_joining": "2012-12-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9154047703"
- },
- {
-  "user_id": "USER_0067",
-  "badge_number": "BDG00067",
-  "rank_id": 8,
-  "station_id": 26,
-  "date_of_joining": "2016-04-23",
-  "operational_status": "ACTIVE",
-  "contact_number": "9104736771"
- },
- {
-  "user_id": "USER_0068",
-  "badge_number": "BDG00068",
-  "rank_id": 11,
-  "station_id": 38,
-  "date_of_joining": "2020-06-19",
-  "operational_status": "ACTIVE",
-  "contact_number": "9852064220"
- },
- {
-  "user_id": "USER_0069",
-  "badge_number": "BDG00069",
-  "rank_id": 3,
-  "station_id": 36,
-  "date_of_joining": "2023-07-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9967447408"
- },
- {
-  "user_id": "USER_0070",
-  "badge_number": "BDG00070",
-  "rank_id": 4,
-  "station_id": 43,
-  "date_of_joining": "2017-12-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9224466103"
- },
- {
-  "user_id": "USER_0071",
-  "badge_number": "BDG00071",
-  "rank_id": 5,
-  "station_id": 30,
-  "date_of_joining": "2022-07-09",
-  "operational_status": "ACTIVE",
-  "contact_number": "9185627872"
- },
- {
-  "user_id": "USER_0072",
-  "badge_number": "BDG00072",
-  "rank_id": 5,
-  "station_id": 33,
-  "date_of_joining": "2018-02-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9410930268"
- },
- {
-  "user_id": "USER_0073",
-  "badge_number": "BDG00073",
-  "rank_id": 10,
-  "station_id": 24,
-  "date_of_joining": "2025-08-09",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9656094811"
- },
- {
-  "user_id": "USER_0074",
-  "badge_number": "BDG00074",
-  "rank_id": 1,
-  "station_id": 22,
-  "date_of_joining": "2019-10-19",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9601850537"
- },
- {
-  "user_id": "USER_0075",
-  "badge_number": "BDG00075",
-  "rank_id": 8,
-  "station_id": 41,
-  "date_of_joining": "2023-02-19",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9469380499"
- },
- {
-  "user_id": "USER_0076",
-  "badge_number": "BDG00076",
-  "rank_id": 12,
-  "station_id": 38,
-  "date_of_joining": "2025-11-23",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9370826711"
- },
- {
-  "user_id": "USER_0077",
-  "badge_number": "BDG00077",
-  "rank_id": 3,
-  "station_id": 9,
-  "date_of_joining": "2018-06-01",
-  "operational_status": "ACTIVE",
-  "contact_number": "9545846506"
- },
- {
-  "user_id": "USER_0078",
-  "badge_number": "BDG00078",
-  "rank_id": 5,
-  "station_id": 12,
-  "date_of_joining": "2024-12-23",
-  "operational_status": "ACTIVE",
-  "contact_number": "9886747752"
- },
- {
-  "user_id": "USER_0079",
-  "badge_number": "BDG00079",
-  "rank_id": 6,
-  "station_id": 8,
-  "date_of_joining": "2021-04-09",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9323081721"
- },
- {
-  "user_id": "USER_0080",
-  "badge_number": "BDG00080",
-  "rank_id": 7,
-  "station_id": 10,
-  "date_of_joining": "2011-01-08",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9120678983"
- },
- {
-  "user_id": "USER_0081",
-  "badge_number": "BDG00081",
-  "rank_id": 12,
-  "station_id": 29,
-  "date_of_joining": "2017-02-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9395294234"
- },
- {
-  "user_id": "USER_0082",
-  "badge_number": "BDG00082",
-  "rank_id": 3,
-  "station_id": 11,
-  "date_of_joining": "2020-10-09",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9835003738"
- },
- {
-  "user_id": "USER_0083",
-  "badge_number": "BDG00083",
-  "rank_id": 12,
-  "station_id": 9,
-  "date_of_joining": "2019-09-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9802300632"
- },
- {
-  "user_id": "USER_0084",
-  "badge_number": "BDG00084",
-  "rank_id": 2,
-  "station_id": 31,
-  "date_of_joining": "2018-07-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9975452963"
- },
- {
-  "user_id": "USER_0085",
-  "badge_number": "BDG00085",
-  "rank_id": 8,
-  "station_id": 9,
-  "date_of_joining": "2012-08-24",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9435391394"
- },
- {
-  "user_id": "USER_0086",
-  "badge_number": "BDG00086",
-  "rank_id": 1,
-  "station_id": 12,
-  "date_of_joining": "2021-03-02",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9825562995"
- },
- {
-  "user_id": "USER_0087",
-  "badge_number": "BDG00087",
-  "rank_id": 5,
-  "station_id": 43,
-  "date_of_joining": "2016-08-21",
-  "operational_status": "ACTIVE",
-  "contact_number": "9969048304"
- },
- {
-  "user_id": "USER_0088",
-  "badge_number": "BDG00088",
-  "rank_id": 5,
-  "station_id": 26,
-  "date_of_joining": "2025-06-21",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9853037424"
- },
- {
-  "user_id": "USER_0089",
-  "badge_number": "BDG00089",
-  "rank_id": 6,
-  "station_id": 18,
-  "date_of_joining": "2017-10-08",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9178055291"
- },
- {
-  "user_id": "USER_0090",
-  "badge_number": "BDG00090",
-  "rank_id": 3,
-  "station_id": 9,
-  "date_of_joining": "2022-11-25",
-  "operational_status": "ACTIVE",
-  "contact_number": "9520235729"
- },
- {
-  "user_id": "USER_0091",
-  "badge_number": "BDG00091",
-  "rank_id": 10,
-  "station_id": 17,
-  "date_of_joining": "2019-11-22",
-  "operational_status": "ACTIVE",
-  "contact_number": "9404038483"
- },
- {
-  "user_id": "USER_0092",
-  "badge_number": "BDG00092",
-  "rank_id": 10,
-  "station_id": 16,
-  "date_of_joining": "2023-02-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9204566590"
- },
- {
-  "user_id": "USER_0093",
-  "badge_number": "BDG00093",
-  "rank_id": 8,
-  "station_id": 29,
-  "date_of_joining": "2012-09-20",
-  "operational_status": "ACTIVE",
-  "contact_number": "9140213803"
- },
- {
-  "user_id": "USER_0094",
-  "badge_number": "BDG00094",
-  "rank_id": 3,
-  "station_id": 18,
-  "date_of_joining": "2015-06-05",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9237173534"
- },
- {
-  "user_id": "USER_0095",
-  "badge_number": "BDG00095",
-  "rank_id": 7,
-  "station_id": 29,
-  "date_of_joining": "2024-10-22",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9410723571"
- },
- {
-  "user_id": "USER_0096",
-  "badge_number": "BDG00096",
-  "rank_id": 3,
-  "station_id": 3,
-  "date_of_joining": "2019-03-10",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9698031002"
- },
- {
-  "user_id": "USER_0097",
-  "badge_number": "BDG00097",
-  "rank_id": 8,
-  "station_id": 14,
-  "date_of_joining": "2010-06-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9180349496"
- },
- {
-  "user_id": "USER_0098",
-  "badge_number": "BDG00098",
-  "rank_id": 6,
-  "station_id": 11,
-  "date_of_joining": "2022-09-07",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9789206680"
- },
- {
-  "user_id": "USER_0099",
-  "badge_number": "BDG00099",
-  "rank_id": 7,
-  "station_id": 27,
-  "date_of_joining": "2020-11-12",
-  "operational_status": "ACTIVE",
-  "contact_number": "9868672069"
- },
- {
-  "user_id": "USER_0100",
-  "badge_number": "BDG00100",
-  "rank_id": 9,
-  "station_id": 39,
-  "date_of_joining": "2025-09-19",
-  "operational_status": "ACTIVE",
-  "contact_number": "9426295653"
- },
- {
-  "user_id": "USER_0101",
-  "badge_number": "BDG00101",
-  "rank_id": 4,
-  "station_id": 13,
-  "date_of_joining": "2025-11-16",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9635251321"
- },
- {
-  "user_id": "USER_0102",
-  "badge_number": "BDG00102",
-  "rank_id": 6,
-  "station_id": 19,
-  "date_of_joining": "2024-08-11",
-  "operational_status": "ACTIVE",
-  "contact_number": "9232783785"
- },
- {
-  "user_id": "USER_0103",
-  "badge_number": "BDG00103",
-  "rank_id": 2,
-  "station_id": 4,
-  "date_of_joining": "2018-08-12",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9625739554"
- },
- {
-  "user_id": "USER_0104",
-  "badge_number": "BDG00104",
-  "rank_id": 9,
-  "station_id": 2,
-  "date_of_joining": "2011-12-13",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9734820940"
- },
- {
-  "user_id": "USER_0105",
-  "badge_number": "BDG00105",
-  "rank_id": 8,
-  "station_id": 4,
-  "date_of_joining": "2021-06-16",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9914593129"
- },
- {
-  "user_id": "USER_0106",
-  "badge_number": "BDG00106",
-  "rank_id": 4,
-  "station_id": 11,
-  "date_of_joining": "2020-09-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9265967622"
- },
- {
-  "user_id": "USER_0107",
-  "badge_number": "BDG00107",
-  "rank_id": 2,
-  "station_id": 27,
-  "date_of_joining": "2013-07-18",
-  "operational_status": "ACTIVE",
-  "contact_number": "9550067028"
- },
- {
-  "user_id": "USER_0108",
-  "badge_number": "BDG00108",
-  "rank_id": 3,
-  "station_id": 14,
-  "date_of_joining": "2013-05-21",
-  "operational_status": "ACTIVE",
-  "contact_number": "9819750504"
- },
- {
-  "user_id": "USER_0109",
-  "badge_number": "BDG00109",
-  "rank_id": 12,
-  "station_id": 28,
-  "date_of_joining": "2019-03-13",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9644176113"
- },
- {
-  "user_id": "USER_0110",
-  "badge_number": "BDG00110",
-  "rank_id": 3,
-  "station_id": 26,
-  "date_of_joining": "2015-06-04",
-  "operational_status": "ACTIVE",
-  "contact_number": "9790442518"
- },
- {
-  "user_id": "USER_0111",
-  "badge_number": "BDG00111",
-  "rank_id": 9,
-  "station_id": 29,
-  "date_of_joining": "2021-03-14",
-  "operational_status": "ACTIVE",
-  "contact_number": "9501230260"
- },
- {
-  "user_id": "USER_0112",
-  "badge_number": "BDG00112",
-  "rank_id": 10,
-  "station_id": 26,
-  "date_of_joining": "2012-08-03",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9861509696"
- },
- {
-  "user_id": "USER_0113",
-  "badge_number": "BDG00113",
-  "rank_id": 3,
-  "station_id": 5,
-  "date_of_joining": "2023-04-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9361793690"
- },
- {
-  "user_id": "USER_0114",
-  "badge_number": "BDG00114",
-  "rank_id": 11,
-  "station_id": 5,
-  "date_of_joining": "2014-04-14",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9415645417"
- },
- {
-  "user_id": "USER_0115",
-  "badge_number": "BDG00115",
-  "rank_id": 11,
-  "station_id": 21,
-  "date_of_joining": "2013-11-26",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9267748737"
- },
- {
-  "user_id": "USER_0116",
-  "badge_number": "BDG00116",
-  "rank_id": 11,
-  "station_id": 41,
-  "date_of_joining": "2012-01-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9282678671"
- },
- {
-  "user_id": "USER_0117",
-  "badge_number": "BDG00117",
-  "rank_id": 3,
-  "station_id": 1,
-  "date_of_joining": "2021-03-17",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9522710213"
- },
- {
-  "user_id": "USER_0118",
-  "badge_number": "BDG00118",
-  "rank_id": 8,
-  "station_id": 14,
-  "date_of_joining": "2019-04-14",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9293321475"
- },
- {
-  "user_id": "USER_0119",
-  "badge_number": "BDG00119",
-  "rank_id": 1,
-  "station_id": 34,
-  "date_of_joining": "2014-05-20",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9517490783"
- },
- {
-  "user_id": "USER_0120",
-  "badge_number": "BDG00120",
-  "rank_id": 6,
-  "station_id": 11,
-  "date_of_joining": "2014-08-08",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9780306454"
- },
- {
-  "user_id": "USER_0121",
-  "badge_number": "BDG00121",
-  "rank_id": 1,
-  "station_id": 35,
-  "date_of_joining": "2022-05-27",
-  "operational_status": "ACTIVE",
-  "contact_number": "9932171481"
- },
- {
-  "user_id": "USER_0122",
-  "badge_number": "BDG00122",
-  "rank_id": 8,
-  "station_id": 37,
-  "date_of_joining": "2010-02-08",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9437516921"
- },
- {
-  "user_id": "USER_0123",
-  "badge_number": "BDG00123",
-  "rank_id": 7,
-  "station_id": 32,
-  "date_of_joining": "2018-08-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9462644350"
- },
- {
-  "user_id": "USER_0124",
-  "badge_number": "BDG00124",
-  "rank_id": 12,
-  "station_id": 2,
-  "date_of_joining": "2015-05-01",
-  "operational_status": "ACTIVE",
-  "contact_number": "9758795249"
- },
- {
-  "user_id": "USER_0125",
-  "badge_number": "BDG00125",
-  "rank_id": 1,
-  "station_id": 29,
-  "date_of_joining": "2022-08-09",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9603754633"
- },
- {
-  "user_id": "USER_0126",
-  "badge_number": "BDG00126",
-  "rank_id": 11,
-  "station_id": 14,
-  "date_of_joining": "2014-02-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9341225226"
- },
- {
-  "user_id": "USER_0127",
-  "badge_number": "BDG00127",
-  "rank_id": 7,
-  "station_id": 28,
-  "date_of_joining": "2019-10-26",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9257271961"
- },
- {
-  "user_id": "USER_0128",
-  "badge_number": "BDG00128",
-  "rank_id": 1,
-  "station_id": 8,
-  "date_of_joining": "2014-03-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9259399222"
- },
- {
-  "user_id": "USER_0129",
-  "badge_number": "BDG00129",
-  "rank_id": 5,
-  "station_id": 27,
-  "date_of_joining": "2019-09-17",
-  "operational_status": "ACTIVE",
-  "contact_number": "9256933223"
- },
- {
-  "user_id": "USER_0130",
-  "badge_number": "BDG00130",
-  "rank_id": 12,
-  "station_id": 20,
-  "date_of_joining": "2024-06-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9676913083"
- },
- {
-  "user_id": "USER_0131",
-  "badge_number": "BDG00131",
-  "rank_id": 7,
-  "station_id": 15,
-  "date_of_joining": "2024-04-10",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9102681989"
- },
- {
-  "user_id": "USER_0132",
-  "badge_number": "BDG00132",
-  "rank_id": 9,
-  "station_id": 15,
-  "date_of_joining": "2014-11-12",
-  "operational_status": "ACTIVE",
-  "contact_number": "9496251033"
- },
- {
-  "user_id": "USER_0133",
-  "badge_number": "BDG00133",
-  "rank_id": 6,
-  "station_id": 31,
-  "date_of_joining": "2021-11-22",
-  "operational_status": "ACTIVE",
-  "contact_number": "9257933925"
- },
- {
-  "user_id": "USER_0134",
-  "badge_number": "BDG00134",
-  "rank_id": 8,
-  "station_id": 40,
-  "date_of_joining": "2023-04-23",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9639652835"
- },
- {
-  "user_id": "USER_0135",
-  "badge_number": "BDG00135",
-  "rank_id": 7,
-  "station_id": 24,
-  "date_of_joining": "2018-02-27",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9644011612"
- },
- {
-  "user_id": "USER_0136",
-  "badge_number": "BDG00136",
-  "rank_id": 11,
-  "station_id": 29,
-  "date_of_joining": "2011-08-19",
-  "operational_status": "ACTIVE",
-  "contact_number": "9295966962"
- },
- {
-  "user_id": "USER_0137",
-  "badge_number": "BDG00137",
-  "rank_id": 4,
-  "station_id": 36,
-  "date_of_joining": "2014-03-04",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9994677839"
- },
- {
-  "user_id": "USER_0138",
-  "badge_number": "BDG00138",
-  "rank_id": 8,
-  "station_id": 9,
-  "date_of_joining": "2024-07-03",
-  "operational_status": "ACTIVE",
-  "contact_number": "9528469675"
- },
- {
-  "user_id": "USER_0139",
-  "badge_number": "BDG00139",
-  "rank_id": 9,
-  "station_id": 12,
-  "date_of_joining": "2022-01-17",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9520740491"
- },
- {
-  "user_id": "USER_0140",
-  "badge_number": "BDG00140",
-  "rank_id": 11,
-  "station_id": 31,
-  "date_of_joining": "2014-08-28",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9138486327"
- },
- {
-  "user_id": "USER_0141",
-  "badge_number": "BDG00141",
-  "rank_id": 5,
-  "station_id": 21,
-  "date_of_joining": "2020-11-18",
-  "operational_status": "ACTIVE",
-  "contact_number": "9907808991"
- },
- {
-  "user_id": "USER_0142",
-  "badge_number": "BDG00142",
-  "rank_id": 6,
-  "station_id": 42,
-  "date_of_joining": "2015-10-26",
-  "operational_status": "ACTIVE",
-  "contact_number": "9602044832"
- },
- {
-  "user_id": "USER_0143",
-  "badge_number": "BDG00143",
-  "rank_id": 7,
-  "station_id": 3,
-  "date_of_joining": "2012-05-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9999979937"
- },
- {
-  "user_id": "USER_0144",
-  "badge_number": "BDG00144",
-  "rank_id": 12,
-  "station_id": 22,
-  "date_of_joining": "2016-12-18",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9560019371"
- },
- {
-  "user_id": "USER_0145",
-  "badge_number": "BDG00145",
-  "rank_id": 1,
-  "station_id": 20,
-  "date_of_joining": "2025-03-08",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9647063331"
- },
- {
-  "user_id": "USER_0146",
-  "badge_number": "BDG00146",
-  "rank_id": 12,
-  "station_id": 37,
-  "date_of_joining": "2025-03-09",
-  "operational_status": "ACTIVE",
-  "contact_number": "9266429774"
- },
- {
-  "user_id": "USER_0147",
-  "badge_number": "BDG00147",
-  "rank_id": 12,
-  "station_id": 39,
-  "date_of_joining": "2024-04-09",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9579910691"
- },
- {
-  "user_id": "USER_0148",
-  "badge_number": "BDG00148",
-  "rank_id": 6,
-  "station_id": 24,
-  "date_of_joining": "2012-09-11",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9338115735"
- },
- {
-  "user_id": "USER_0149",
-  "badge_number": "BDG00149",
-  "rank_id": 7,
-  "station_id": 40,
-  "date_of_joining": "2013-03-19",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9498678672"
- },
- {
-  "user_id": "USER_0150",
-  "badge_number": "BDG00150",
-  "rank_id": 4,
-  "station_id": 42,
-  "date_of_joining": "2021-04-14",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9202135114"
- },
- {
-  "user_id": "USER_0151",
-  "badge_number": "BDG00151",
-  "rank_id": 2,
-  "station_id": 16,
-  "date_of_joining": "2011-05-18",
-  "operational_status": "ACTIVE",
-  "contact_number": "9953342334"
- },
- {
-  "user_id": "USER_0152",
-  "badge_number": "BDG00152",
-  "rank_id": 12,
-  "station_id": 31,
-  "date_of_joining": "2010-01-26",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9344412422"
- },
- {
-  "user_id": "USER_0153",
-  "badge_number": "BDG00153",
-  "rank_id": 9,
-  "station_id": 35,
-  "date_of_joining": "2018-12-05",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9629727605"
- },
- {
-  "user_id": "USER_0154",
-  "badge_number": "BDG00154",
-  "rank_id": 6,
-  "station_id": 38,
-  "date_of_joining": "2012-05-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9776414835"
- },
- {
-  "user_id": "USER_0155",
-  "badge_number": "BDG00155",
-  "rank_id": 2,
-  "station_id": 16,
-  "date_of_joining": "2013-09-16",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9692002775"
- },
- {
-  "user_id": "USER_0156",
-  "badge_number": "BDG00156",
-  "rank_id": 8,
-  "station_id": 7,
-  "date_of_joining": "2017-07-21",
-  "operational_status": "ACTIVE",
-  "contact_number": "9425500630"
- },
- {
-  "user_id": "USER_0157",
-  "badge_number": "BDG00157",
-  "rank_id": 10,
-  "station_id": 1,
-  "date_of_joining": "2010-05-27",
-  "operational_status": "ACTIVE",
-  "contact_number": "9818249045"
- },
- {
-  "user_id": "USER_0158",
-  "badge_number": "BDG00158",
-  "rank_id": 11,
-  "station_id": 11,
-  "date_of_joining": "2021-12-10",
-  "operational_status": "ACTIVE",
-  "contact_number": "9104205673"
- },
- {
-  "user_id": "USER_0159",
-  "badge_number": "BDG00159",
-  "rank_id": 5,
-  "station_id": 30,
-  "date_of_joining": "2021-02-02",
-  "operational_status": "ACTIVE",
-  "contact_number": "9411256298"
- },
- {
-  "user_id": "USER_0160",
-  "badge_number": "BDG00160",
-  "rank_id": 11,
-  "station_id": 44,
-  "date_of_joining": "2018-02-25",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9266865214"
- },
- {
-  "user_id": "USER_0161",
-  "badge_number": "BDG00161",
-  "rank_id": 1,
-  "station_id": 40,
-  "date_of_joining": "2015-02-12",
-  "operational_status": "ACTIVE",
-  "contact_number": "9637637290"
- },
- {
-  "user_id": "USER_0162",
-  "badge_number": "BDG00162",
-  "rank_id": 4,
-  "station_id": 41,
-  "date_of_joining": "2017-10-03",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9697259431"
- },
- {
-  "user_id": "USER_0163",
-  "badge_number": "BDG00163",
-  "rank_id": 4,
-  "station_id": 47,
-  "date_of_joining": "2021-04-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9597069774"
- },
- {
-  "user_id": "USER_0164",
-  "badge_number": "BDG00164",
-  "rank_id": 3,
-  "station_id": 33,
-  "date_of_joining": "2019-07-01",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9699386864"
- },
- {
-  "user_id": "USER_0165",
-  "badge_number": "BDG00165",
-  "rank_id": 8,
-  "station_id": 27,
-  "date_of_joining": "2012-06-25",
-  "operational_status": "ACTIVE",
-  "contact_number": "9330189246"
- },
- {
-  "user_id": "USER_0166",
-  "badge_number": "BDG00166",
-  "rank_id": 6,
-  "station_id": 50,
-  "date_of_joining": "2014-03-24",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9257911023"
- },
- {
-  "user_id": "USER_0167",
-  "badge_number": "BDG00167",
-  "rank_id": 7,
-  "station_id": 18,
-  "date_of_joining": "2014-02-07",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9285038934"
- },
- {
-  "user_id": "USER_0168",
-  "badge_number": "BDG00168",
-  "rank_id": 11,
-  "station_id": 4,
-  "date_of_joining": "2023-06-21",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9170521194"
- },
- {
-  "user_id": "USER_0169",
-  "badge_number": "BDG00169",
-  "rank_id": 5,
-  "station_id": 43,
-  "date_of_joining": "2024-07-15",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9641385453"
- },
- {
-  "user_id": "USER_0170",
-  "badge_number": "BDG00170",
-  "rank_id": 2,
-  "station_id": 20,
-  "date_of_joining": "2014-07-16",
-  "operational_status": "ACTIVE",
-  "contact_number": "9716818290"
- },
- {
-  "user_id": "USER_0171",
-  "badge_number": "BDG00171",
-  "rank_id": 11,
-  "station_id": 20,
-  "date_of_joining": "2014-01-03",
-  "operational_status": "ACTIVE",
-  "contact_number": "9754305568"
- },
- {
-  "user_id": "USER_0172",
-  "badge_number": "BDG00172",
-  "rank_id": 1,
-  "station_id": 32,
-  "date_of_joining": "2024-05-18",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9340435963"
- },
- {
-  "user_id": "USER_0173",
-  "badge_number": "BDG00173",
-  "rank_id": 6,
-  "station_id": 20,
-  "date_of_joining": "2023-07-13",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9766948350"
- },
- {
-  "user_id": "USER_0174",
-  "badge_number": "BDG00174",
-  "rank_id": 5,
-  "station_id": 13,
-  "date_of_joining": "2022-10-03",
-  "operational_status": "ACTIVE",
-  "contact_number": "9499645425"
- },
- {
-  "user_id": "USER_0175",
-  "badge_number": "BDG00175",
-  "rank_id": 8,
-  "station_id": 30,
-  "date_of_joining": "2015-12-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9199501566"
- },
- {
-  "user_id": "USER_0176",
-  "badge_number": "BDG00176",
-  "rank_id": 2,
-  "station_id": 35,
-  "date_of_joining": "2012-07-05",
-  "operational_status": "ACTIVE",
-  "contact_number": "9630556911"
- },
- {
-  "user_id": "USER_0177",
-  "badge_number": "BDG00177",
-  "rank_id": 9,
-  "station_id": 26,
-  "date_of_joining": "2020-08-03",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9795471753"
- },
- {
-  "user_id": "USER_0178",
-  "badge_number": "BDG00178",
-  "rank_id": 10,
-  "station_id": 15,
-  "date_of_joining": "2021-06-24",
-  "operational_status": "ACTIVE",
-  "contact_number": "9854320477"
- },
- {
-  "user_id": "USER_0179",
-  "badge_number": "BDG00179",
-  "rank_id": 2,
-  "station_id": 15,
-  "date_of_joining": "2011-07-20",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9624965390"
- },
- {
-  "user_id": "USER_0180",
-  "badge_number": "BDG00180",
-  "rank_id": 2,
-  "station_id": 8,
-  "date_of_joining": "2025-11-14",
-  "operational_status": "ACTIVE",
-  "contact_number": "9458365652"
- },
- {
-  "user_id": "USER_0181",
-  "badge_number": "BDG00181",
-  "rank_id": 4,
-  "station_id": 34,
-  "date_of_joining": "2023-01-18",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9233189930"
- },
- {
-  "user_id": "USER_0182",
-  "badge_number": "BDG00182",
-  "rank_id": 11,
-  "station_id": 41,
-  "date_of_joining": "2013-02-08",
-  "operational_status": "ACTIVE",
-  "contact_number": "9305808285"
- },
- {
-  "user_id": "USER_0183",
-  "badge_number": "BDG00183",
-  "rank_id": 7,
-  "station_id": 27,
-  "date_of_joining": "2015-09-20",
-  "operational_status": "ACTIVE",
-  "contact_number": "9824164549"
- },
- {
-  "user_id": "USER_0184",
-  "badge_number": "BDG00184",
-  "rank_id": 10,
-  "station_id": 46,
-  "date_of_joining": "2016-02-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9327160435"
- },
- {
-  "user_id": "USER_0185",
-  "badge_number": "BDG00185",
-  "rank_id": 8,
-  "station_id": 15,
-  "date_of_joining": "2019-11-01",
-  "operational_status": "ACTIVE",
-  "contact_number": "9396514102"
- },
- {
-  "user_id": "USER_0186",
-  "badge_number": "BDG00186",
-  "rank_id": 2,
-  "station_id": 44,
-  "date_of_joining": "2011-08-19",
-  "operational_status": "ACTIVE",
-  "contact_number": "9631267658"
- },
- {
-  "user_id": "USER_0187",
-  "badge_number": "BDG00187",
-  "rank_id": 4,
-  "station_id": 24,
-  "date_of_joining": "2011-04-28",
-  "operational_status": "ACTIVE",
-  "contact_number": "9665769130"
- },
- {
-  "user_id": "USER_0188",
-  "badge_number": "BDG00188",
-  "rank_id": 8,
-  "station_id": 17,
-  "date_of_joining": "2020-04-21",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9535881123"
- },
- {
-  "user_id": "USER_0189",
-  "badge_number": "BDG00189",
-  "rank_id": 2,
-  "station_id": 13,
-  "date_of_joining": "2013-08-15",
-  "operational_status": "ACTIVE",
-  "contact_number": "9691141978"
- },
- {
-  "user_id": "USER_0190",
-  "badge_number": "BDG00190",
-  "rank_id": 4,
-  "station_id": 29,
-  "date_of_joining": "2021-05-05",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9341985845"
- },
- {
-  "user_id": "USER_0191",
-  "badge_number": "BDG00191",
-  "rank_id": 9,
-  "station_id": 50,
-  "date_of_joining": "2018-02-07",
-  "operational_status": "ON_LEAVE",
-  "contact_number": "9168551140"
- },
- {
-  "user_id": "USER_0192",
-  "badge_number": "BDG00192",
-  "rank_id": 3,
-  "station_id": 16,
-  "date_of_joining": "2022-01-04",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9737089269"
- },
- {
-  "user_id": "USER_0193",
-  "badge_number": "BDG00193",
-  "rank_id": 8,
-  "station_id": 30,
-  "date_of_joining": "2024-05-28",
-  "operational_status": "ACTIVE",
-  "contact_number": "9159248890"
- },
- {
-  "user_id": "USER_0194",
-  "badge_number": "BDG00194",
-  "rank_id": 5,
-  "station_id": 4,
-  "date_of_joining": "2010-08-03",
-  "operational_status": "ACTIVE",
-  "contact_number": "9679745635"
- },
- {
-  "user_id": "USER_0195",
-  "badge_number": "BDG00195",
-  "rank_id": 2,
-  "station_id": 18,
-  "date_of_joining": "2010-05-21",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9109286976"
- },
- {
-  "user_id": "USER_0196",
-  "badge_number": "BDG00196",
-  "rank_id": 7,
-  "station_id": 40,
-  "date_of_joining": "2022-09-22",
-  "operational_status": "ACTIVE",
-  "contact_number": "9657404046"
- },
- {
-  "user_id": "USER_0197",
-  "badge_number": "BDG00197",
-  "rank_id": 1,
-  "station_id": 22,
-  "date_of_joining": "2019-08-06",
-  "operational_status": "ACTIVE",
-  "contact_number": "9894905684"
- },
- {
-  "user_id": "USER_0198",
-  "badge_number": "BDG00198",
-  "rank_id": 7,
-  "station_id": 20,
-  "date_of_joining": "2024-05-08",
-  "operational_status": "ACTIVE",
-  "contact_number": "9189223115"
- },
- {
-  "user_id": "USER_0199",
-  "badge_number": "BDG00199",
-  "rank_id": 1,
-  "station_id": 12,
-  "date_of_joining": "2010-12-11",
-  "operational_status": "ACTIVE",
-  "contact_number": "9675503799"
- },
- {
-  "user_id": "USER_0200",
-  "badge_number": "BDG00200",
-  "rank_id": 4,
-  "station_id": 4,
-  "date_of_joining": "2013-03-27",
-  "operational_status": "SUSPENDED",
-  "contact_number": "9138105745"
- }
+  {
+    "user_id": "USER_0001",
+    "badge_number": "BDG00001",
+    "date_of_joining": "2017-06-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9416169920",
+    "rank_name": "Head Constable",
+    "station_name": "Hospet Town PS"
+  },
+  {
+    "user_id": "USER_0002",
+    "badge_number": "BDG00002",
+    "date_of_joining": "2020-04-13",
+    "operational_status": "ACTIVE",
+    "contact_number": "9182837391",
+    "rank_name": "ADGP",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0003",
+    "badge_number": "BDG00003",
+    "date_of_joining": "2012-04-28",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9363252742",
+    "rank_name": "IGP",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0004",
+    "badge_number": "BDG00004",
+    "date_of_joining": "2013-06-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9165538405",
+    "rank_name": "ADGP",
+    "station_name": "Lingasugur PS"
+  },
+  {
+    "user_id": "USER_0005",
+    "badge_number": "BDG00005",
+    "date_of_joining": "2012-01-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9288248390",
+    "rank_name": "ASI",
+    "station_name": "Maski PS"
+  },
+  {
+    "user_id": "USER_0006",
+    "badge_number": "BDG00006",
+    "date_of_joining": "2010-01-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9814268685",
+    "rank_name": "DIG",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0007",
+    "badge_number": "BDG00007",
+    "date_of_joining": "2024-03-25",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9329649537",
+    "rank_name": "SP",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0008",
+    "badge_number": "BDG00008",
+    "date_of_joining": "2013-09-22",
+    "operational_status": "ACTIVE",
+    "contact_number": "9659095867",
+    "rank_name": "SP",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0009",
+    "badge_number": "BDG00009",
+    "date_of_joining": "2018-04-18",
+    "operational_status": "ACTIVE",
+    "contact_number": "9243424893",
+    "rank_name": "ASI",
+    "station_name": "Alwandi PS"
+  },
+  {
+    "user_id": "USER_0010",
+    "badge_number": "BDG00010",
+    "date_of_joining": "2010-07-01",
+    "operational_status": "ACTIVE",
+    "contact_number": "9787032687",
+    "rank_name": "ASI",
+    "station_name": "Alwandi PS"
+  },
+  {
+    "user_id": "USER_0011",
+    "badge_number": "BDG00011",
+    "date_of_joining": "2020-04-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9711642506",
+    "rank_name": "ADGP",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0012",
+    "badge_number": "BDG00012",
+    "date_of_joining": "2025-07-13",
+    "operational_status": "ACTIVE",
+    "contact_number": "9660700251",
+    "rank_name": "ADGP",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0013",
+    "badge_number": "BDG00013",
+    "date_of_joining": "2021-03-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9229178589",
+    "rank_name": "DSP",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0014",
+    "badge_number": "BDG00014",
+    "date_of_joining": "2020-06-11",
+    "operational_status": "ACTIVE",
+    "contact_number": "9877369323",
+    "rank_name": "ASI",
+    "station_name": "Thoranagal PS"
+  },
+  {
+    "user_id": "USER_0015",
+    "badge_number": "BDG00015",
+    "date_of_joining": "2012-06-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9347769683",
+    "rank_name": "ASP",
+    "station_name": "Maski PS"
+  },
+  {
+    "user_id": "USER_0016",
+    "badge_number": "BDG00016",
+    "date_of_joining": "2016-04-22",
+    "operational_status": "ACTIVE",
+    "contact_number": "9496895411",
+    "rank_name": "ASI",
+    "station_name": "Hadagali PS"
+  },
+  {
+    "user_id": "USER_0017",
+    "badge_number": "BDG00017",
+    "date_of_joining": "2010-02-24",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9583682098",
+    "rank_name": "SI",
+    "station_name": "Marriyammanahalli PS"
+  },
+  {
+    "user_id": "USER_0018",
+    "badge_number": "BDG00018",
+    "date_of_joining": "2022-07-01",
+    "operational_status": "ACTIVE",
+    "contact_number": "9505506218",
+    "rank_name": "ASP",
+    "station_name": "Cowlbazar PS"
+  },
+  {
+    "user_id": "USER_0019",
+    "badge_number": "BDG00019",
+    "date_of_joining": "2019-02-10",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9490215303",
+    "rank_name": "DIG",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0020",
+    "badge_number": "BDG00020",
+    "date_of_joining": "2011-02-21",
+    "operational_status": "ACTIVE",
+    "contact_number": "9236971086",
+    "rank_name": "Inspector",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0021",
+    "badge_number": "BDG00021",
+    "date_of_joining": "2016-04-17",
+    "operational_status": "ACTIVE",
+    "contact_number": "9843634201",
+    "rank_name": "ADGP",
+    "station_name": "Hutti PS"
+  },
+  {
+    "user_id": "USER_0022",
+    "badge_number": "BDG00022",
+    "date_of_joining": "2019-11-18",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9197335805",
+    "rank_name": "DGP",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0023",
+    "badge_number": "BDG00023",
+    "date_of_joining": "2016-12-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9280221657",
+    "rank_name": "IGP",
+    "station_name": "Sandur PS"
+  },
+  {
+    "user_id": "USER_0024",
+    "badge_number": "BDG00024",
+    "date_of_joining": "2013-01-06",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9782239841",
+    "rank_name": "Inspector",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0025",
+    "badge_number": "BDG00025",
+    "date_of_joining": "2025-02-22",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9438179104",
+    "rank_name": "SP",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0026",
+    "badge_number": "BDG00026",
+    "date_of_joining": "2012-05-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9570596939",
+    "rank_name": "DIG",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0027",
+    "badge_number": "BDG00027",
+    "date_of_joining": "2017-06-20",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9471171114",
+    "rank_name": "ADGP",
+    "station_name": "Marriyammanahalli PS"
+  },
+  {
+    "user_id": "USER_0028",
+    "badge_number": "BDG00028",
+    "date_of_joining": "2013-03-08",
+    "operational_status": "ACTIVE",
+    "contact_number": "9918030150",
+    "rank_name": "SP",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0029",
+    "badge_number": "BDG00029",
+    "date_of_joining": "2015-02-03",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9738242692",
+    "rank_name": "Inspector",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0030",
+    "badge_number": "BDG00030",
+    "date_of_joining": "2023-02-13",
+    "operational_status": "ACTIVE",
+    "contact_number": "9620712640",
+    "rank_name": "SI",
+    "station_name": "Hanumasagar PS"
+  },
+  {
+    "user_id": "USER_0031",
+    "badge_number": "BDG00031",
+    "date_of_joining": "2013-02-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9404471465",
+    "rank_name": "SP",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0032",
+    "badge_number": "BDG00032",
+    "date_of_joining": "2025-12-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9853597294",
+    "rank_name": "ASI",
+    "station_name": "Sandur PS"
+  },
+  {
+    "user_id": "USER_0033",
+    "badge_number": "BDG00033",
+    "date_of_joining": "2023-08-21",
+    "operational_status": "ACTIVE",
+    "contact_number": "9806789252",
+    "rank_name": "DIG",
+    "station_name": "Kushtagi PS"
+  },
+  {
+    "user_id": "USER_0034",
+    "badge_number": "BDG00034",
+    "date_of_joining": "2023-02-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9532322086",
+    "rank_name": "Head Constable",
+    "station_name": "Marriyammanahalli PS"
+  },
+  {
+    "user_id": "USER_0035",
+    "badge_number": "BDG00035",
+    "date_of_joining": "2019-01-11",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9691585926",
+    "rank_name": "ASI",
+    "station_name": "Kottur PS"
+  },
+  {
+    "user_id": "USER_0036",
+    "badge_number": "BDG00036",
+    "date_of_joining": "2020-07-11",
+    "operational_status": "ACTIVE",
+    "contact_number": "9239093158",
+    "rank_name": "ASP",
+    "station_name": "P.D. Halli PS"
+  },
+  {
+    "user_id": "USER_0037",
+    "badge_number": "BDG00037",
+    "date_of_joining": "2016-08-12",
+    "operational_status": "ACTIVE",
+    "contact_number": "9168458137",
+    "rank_name": "SP",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0038",
+    "badge_number": "BDG00038",
+    "date_of_joining": "2015-08-07",
+    "operational_status": "ACTIVE",
+    "contact_number": "9457689317",
+    "rank_name": "SP",
+    "station_name": "Hutti PS"
+  },
+  {
+    "user_id": "USER_0039",
+    "badge_number": "BDG00039",
+    "date_of_joining": "2020-01-13",
+    "operational_status": "ACTIVE",
+    "contact_number": "9789966021",
+    "rank_name": "ADGP",
+    "station_name": "Koppal Town PS"
+  },
+  {
+    "user_id": "USER_0040",
+    "badge_number": "BDG00040",
+    "date_of_joining": "2025-03-26",
+    "operational_status": "ACTIVE",
+    "contact_number": "9474553151",
+    "rank_name": "SI",
+    "station_name": "Devadurga PS"
+  },
+  {
+    "user_id": "USER_0041",
+    "badge_number": "BDG00041",
+    "date_of_joining": "2011-02-13",
+    "operational_status": "ACTIVE",
+    "contact_number": "9169278300",
+    "rank_name": "Constable",
+    "station_name": "P.D. Halli PS"
+  },
+  {
+    "user_id": "USER_0042",
+    "badge_number": "BDG00042",
+    "date_of_joining": "2016-04-02",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9355434293",
+    "rank_name": "SI",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0043",
+    "badge_number": "BDG00043",
+    "date_of_joining": "2021-11-01",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9553329310",
+    "rank_name": "DSP",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0044",
+    "badge_number": "BDG00044",
+    "date_of_joining": "2024-12-28",
+    "operational_status": "ACTIVE",
+    "contact_number": "9799191203",
+    "rank_name": "IGP",
+    "station_name": "Siruguppa PS"
+  },
+  {
+    "user_id": "USER_0045",
+    "badge_number": "BDG00045",
+    "date_of_joining": "2016-03-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9910690275",
+    "rank_name": "DSP",
+    "station_name": "Kottur PS"
+  },
+  {
+    "user_id": "USER_0046",
+    "badge_number": "BDG00046",
+    "date_of_joining": "2022-10-26",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9398083045",
+    "rank_name": "Head Constable",
+    "station_name": "Hadagali PS"
+  },
+  {
+    "user_id": "USER_0047",
+    "badge_number": "BDG00047",
+    "date_of_joining": "2011-11-11",
+    "operational_status": "ACTIVE",
+    "contact_number": "9896259600",
+    "rank_name": "ASP",
+    "station_name": null
+  },
+  {
+    "user_id": "USER_0048",
+    "badge_number": "BDG00048",
+    "date_of_joining": "2021-09-10",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9396512745",
+    "rank_name": "ASP",
+    "station_name": "Hadagali PS"
+  },
+  {
+    "user_id": "USER_0049",
+    "badge_number": "BDG00049",
+    "date_of_joining": "2023-05-18",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9759608271",
+    "rank_name": "DIG",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0050",
+    "badge_number": "BDG00050",
+    "date_of_joining": "2014-01-20",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9545007611",
+    "rank_name": "DGP",
+    "station_name": "P.D. Halli PS"
+  },
+  {
+    "user_id": "USER_0051",
+    "badge_number": "BDG00051",
+    "date_of_joining": "2020-05-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9844210686",
+    "rank_name": "SI",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0052",
+    "badge_number": "BDG00052",
+    "date_of_joining": "2023-09-26",
+    "operational_status": "ACTIVE",
+    "contact_number": "9518642775",
+    "rank_name": "ADGP",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0053",
+    "badge_number": "BDG00053",
+    "date_of_joining": "2011-01-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9704817666",
+    "rank_name": "Inspector",
+    "station_name": "Kushtagi PS"
+  },
+  {
+    "user_id": "USER_0054",
+    "badge_number": "BDG00054",
+    "date_of_joining": "2019-05-15",
+    "operational_status": "ACTIVE",
+    "contact_number": "9553973448",
+    "rank_name": "ASP",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0055",
+    "badge_number": "BDG00055",
+    "date_of_joining": "2017-07-28",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9327686152",
+    "rank_name": "SP",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0056",
+    "badge_number": "BDG00056",
+    "date_of_joining": "2011-10-17",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9348918322",
+    "rank_name": "DGP",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0057",
+    "badge_number": "BDG00057",
+    "date_of_joining": "2013-05-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9861091944",
+    "rank_name": "DGP",
+    "station_name": "Devadurga PS"
+  },
+  {
+    "user_id": "USER_0058",
+    "badge_number": "BDG00058",
+    "date_of_joining": "2023-12-13",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9723624866",
+    "rank_name": "Constable",
+    "station_name": "Marriyammanahalli PS"
+  },
+  {
+    "user_id": "USER_0059",
+    "badge_number": "BDG00059",
+    "date_of_joining": "2020-02-08",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9294741246",
+    "rank_name": "SI",
+    "station_name": "Thoranagal PS"
+  },
+  {
+    "user_id": "USER_0060",
+    "badge_number": "BDG00060",
+    "date_of_joining": "2012-11-26",
+    "operational_status": "ACTIVE",
+    "contact_number": "9551722874",
+    "rank_name": "Head Constable",
+    "station_name": "Kamalapur PS"
+  },
+  {
+    "user_id": "USER_0061",
+    "badge_number": "BDG00061",
+    "date_of_joining": "2013-01-25",
+    "operational_status": "ACTIVE",
+    "contact_number": "9156818665",
+    "rank_name": "DGP",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0062",
+    "badge_number": "BDG00062",
+    "date_of_joining": "2023-08-12",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9558818184",
+    "rank_name": "Head Constable",
+    "station_name": "Hutti PS"
+  },
+  {
+    "user_id": "USER_0063",
+    "badge_number": "BDG00063",
+    "date_of_joining": "2021-09-19",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9111872314",
+    "rank_name": "Constable",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0064",
+    "badge_number": "BDG00064",
+    "date_of_joining": "2016-03-05",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9765051309",
+    "rank_name": "ASP",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0065",
+    "badge_number": "BDG00065",
+    "date_of_joining": "2019-01-28",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9253781104",
+    "rank_name": "IGP",
+    "station_name": "Kanakagiri PS"
+  },
+  {
+    "user_id": "USER_0066",
+    "badge_number": "BDG00066",
+    "date_of_joining": "2012-12-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9154047703",
+    "rank_name": "DIG",
+    "station_name": "Devadurga PS"
+  },
+  {
+    "user_id": "USER_0067",
+    "badge_number": "BDG00067",
+    "date_of_joining": "2016-04-23",
+    "operational_status": "ACTIVE",
+    "contact_number": "9104736771",
+    "rank_name": "Inspector",
+    "station_name": "Kudligi PS"
+  },
+  {
+    "user_id": "USER_0068",
+    "badge_number": "BDG00068",
+    "date_of_joining": "2020-06-19",
+    "operational_status": "ACTIVE",
+    "contact_number": "9852064220",
+    "rank_name": "Head Constable",
+    "station_name": null
+  },
+  {
+    "user_id": "USER_0069",
+    "badge_number": "BDG00069",
+    "date_of_joining": "2023-07-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9967447408",
+    "rank_name": "IGP",
+    "station_name": "Kushtagi PS"
+  },
+  {
+    "user_id": "USER_0070",
+    "badge_number": "BDG00070",
+    "date_of_joining": "2017-12-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9224466103",
+    "rank_name": "DIG",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0071",
+    "badge_number": "BDG00071",
+    "date_of_joining": "2022-07-09",
+    "operational_status": "ACTIVE",
+    "contact_number": "9185627872",
+    "rank_name": "SP",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0072",
+    "badge_number": "BDG00072",
+    "date_of_joining": "2018-02-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9410930268",
+    "rank_name": "SP",
+    "station_name": "Karatagi PS"
+  },
+  {
+    "user_id": "USER_0073",
+    "badge_number": "BDG00073",
+    "date_of_joining": "2025-08-09",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9656094811",
+    "rank_name": "ASI",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0074",
+    "badge_number": "BDG00074",
+    "date_of_joining": "2019-10-19",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9601850537",
+    "rank_name": "DGP",
+    "station_name": "Sandur PS"
+  },
+  {
+    "user_id": "USER_0075",
+    "badge_number": "BDG00075",
+    "date_of_joining": "2023-02-19",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9469380499",
+    "rank_name": "Inspector",
+    "station_name": "Munirabad PS"
+  },
+  {
+    "user_id": "USER_0076",
+    "badge_number": "BDG00076",
+    "date_of_joining": "2025-11-23",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9370826711",
+    "rank_name": "Constable",
+    "station_name": null
+  },
+  {
+    "user_id": "USER_0077",
+    "badge_number": "BDG00077",
+    "date_of_joining": "2018-06-01",
+    "operational_status": "ACTIVE",
+    "contact_number": "9545846506",
+    "rank_name": "IGP",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0078",
+    "badge_number": "BDG00078",
+    "date_of_joining": "2024-12-23",
+    "operational_status": "ACTIVE",
+    "contact_number": "9886747752",
+    "rank_name": "SP",
+    "station_name": "Hospet Town PS"
+  },
+  {
+    "user_id": "USER_0079",
+    "badge_number": "BDG00079",
+    "date_of_joining": "2021-04-09",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9323081721",
+    "rank_name": "ASP",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0080",
+    "badge_number": "BDG00080",
+    "date_of_joining": "2011-01-08",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9120678983",
+    "rank_name": "DSP",
+    "station_name": "Kurugodu PS"
+  },
+  {
+    "user_id": "USER_0081",
+    "badge_number": "BDG00081",
+    "date_of_joining": "2017-02-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9395294234",
+    "rank_name": "Constable",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0082",
+    "badge_number": "BDG00082",
+    "date_of_joining": "2020-10-09",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9835003738",
+    "rank_name": "IGP",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0083",
+    "badge_number": "BDG00083",
+    "date_of_joining": "2019-09-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9802300632",
+    "rank_name": "Constable",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0084",
+    "badge_number": "BDG00084",
+    "date_of_joining": "2018-07-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9975452963",
+    "rank_name": "ADGP",
+    "station_name": "Gangavathi Rural PS"
+  },
+  {
+    "user_id": "USER_0085",
+    "badge_number": "BDG00085",
+    "date_of_joining": "2012-08-24",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9435391394",
+    "rank_name": "Inspector",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0086",
+    "badge_number": "BDG00086",
+    "date_of_joining": "2021-03-02",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9825562995",
+    "rank_name": "DGP",
+    "station_name": "Hospet Town PS"
+  },
+  {
+    "user_id": "USER_0087",
+    "badge_number": "BDG00087",
+    "date_of_joining": "2016-08-21",
+    "operational_status": "ACTIVE",
+    "contact_number": "9969048304",
+    "rank_name": "SP",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0088",
+    "badge_number": "BDG00088",
+    "date_of_joining": "2025-06-21",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9853037424",
+    "rank_name": "SP",
+    "station_name": "Kudligi PS"
+  },
+  {
+    "user_id": "USER_0089",
+    "badge_number": "BDG00089",
+    "date_of_joining": "2017-10-08",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9178055291",
+    "rank_name": "ASP",
+    "station_name": "TB Halli PS"
+  },
+  {
+    "user_id": "USER_0090",
+    "badge_number": "BDG00090",
+    "date_of_joining": "2022-11-25",
+    "operational_status": "ACTIVE",
+    "contact_number": "9520235729",
+    "rank_name": "IGP",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0091",
+    "badge_number": "BDG00091",
+    "date_of_joining": "2019-11-22",
+    "operational_status": "ACTIVE",
+    "contact_number": "9404038483",
+    "rank_name": "ASI",
+    "station_name": "Hagaribommanahalli PS"
+  },
+  {
+    "user_id": "USER_0092",
+    "badge_number": "BDG00092",
+    "date_of_joining": "2023-02-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9204566590",
+    "rank_name": "ASI",
+    "station_name": "Kamalapur PS"
+  },
+  {
+    "user_id": "USER_0093",
+    "badge_number": "BDG00093",
+    "date_of_joining": "2012-09-20",
+    "operational_status": "ACTIVE",
+    "contact_number": "9140213803",
+    "rank_name": "Inspector",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0094",
+    "badge_number": "BDG00094",
+    "date_of_joining": "2015-06-05",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9237173534",
+    "rank_name": "IGP",
+    "station_name": "TB Halli PS"
+  },
+  {
+    "user_id": "USER_0095",
+    "badge_number": "BDG00095",
+    "date_of_joining": "2024-10-22",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9410723571",
+    "rank_name": "DSP",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0096",
+    "badge_number": "BDG00096",
+    "date_of_joining": "2019-03-10",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9698031002",
+    "rank_name": "IGP",
+    "station_name": "Gandhinagar PS"
+  },
+  {
+    "user_id": "USER_0097",
+    "badge_number": "BDG00097",
+    "date_of_joining": "2010-06-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9180349496",
+    "rank_name": "Inspector",
+    "station_name": "Hospet Rural PS"
+  },
+  {
+    "user_id": "USER_0098",
+    "badge_number": "BDG00098",
+    "date_of_joining": "2022-09-07",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9789206680",
+    "rank_name": "ASP",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0099",
+    "badge_number": "BDG00099",
+    "date_of_joining": "2020-11-12",
+    "operational_status": "ACTIVE",
+    "contact_number": "9868672069",
+    "rank_name": "DSP",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0100",
+    "badge_number": "BDG00100",
+    "date_of_joining": "2025-09-19",
+    "operational_status": "ACTIVE",
+    "contact_number": "9426295653",
+    "rank_name": "SI",
+    "station_name": "Alwandi PS"
+  },
+  {
+    "user_id": "USER_0101",
+    "badge_number": "BDG00101",
+    "date_of_joining": "2025-11-16",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9635251321",
+    "rank_name": "DIG",
+    "station_name": "Chittavadagi PS"
+  },
+  {
+    "user_id": "USER_0102",
+    "badge_number": "BDG00102",
+    "date_of_joining": "2024-08-11",
+    "operational_status": "ACTIVE",
+    "contact_number": "9232783785",
+    "rank_name": "ASP",
+    "station_name": "Hadagali PS"
+  },
+  {
+    "user_id": "USER_0103",
+    "badge_number": "BDG00103",
+    "date_of_joining": "2018-08-12",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9625739554",
+    "rank_name": "ADGP",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0104",
+    "badge_number": "BDG00104",
+    "date_of_joining": "2011-12-13",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9734820940",
+    "rank_name": "SI",
+    "station_name": "Bruceept PS"
+  },
+  {
+    "user_id": "USER_0105",
+    "badge_number": "BDG00105",
+    "date_of_joining": "2021-06-16",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9914593129",
+    "rank_name": "Inspector",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0106",
+    "badge_number": "BDG00106",
+    "date_of_joining": "2020-09-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9265967622",
+    "rank_name": "DIG",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0107",
+    "badge_number": "BDG00107",
+    "date_of_joining": "2013-07-18",
+    "operational_status": "ACTIVE",
+    "contact_number": "9550067028",
+    "rank_name": "ADGP",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0108",
+    "badge_number": "BDG00108",
+    "date_of_joining": "2013-05-21",
+    "operational_status": "ACTIVE",
+    "contact_number": "9819750504",
+    "rank_name": "IGP",
+    "station_name": "Hospet Rural PS"
+  },
+  {
+    "user_id": "USER_0109",
+    "badge_number": "BDG00109",
+    "date_of_joining": "2019-03-13",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9644176113",
+    "rank_name": "Constable",
+    "station_name": "Kottur PS"
+  },
+  {
+    "user_id": "USER_0110",
+    "badge_number": "BDG00110",
+    "date_of_joining": "2015-06-04",
+    "operational_status": "ACTIVE",
+    "contact_number": "9790442518",
+    "rank_name": "IGP",
+    "station_name": "Kudligi PS"
+  },
+  {
+    "user_id": "USER_0111",
+    "badge_number": "BDG00111",
+    "date_of_joining": "2021-03-14",
+    "operational_status": "ACTIVE",
+    "contact_number": "9501230260",
+    "rank_name": "SI",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0112",
+    "badge_number": "BDG00112",
+    "date_of_joining": "2012-08-03",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9861509696",
+    "rank_name": "ASI",
+    "station_name": "Kudligi PS"
+  },
+  {
+    "user_id": "USER_0113",
+    "badge_number": "BDG00113",
+    "date_of_joining": "2023-04-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9361793690",
+    "rank_name": "IGP",
+    "station_name": "P.D. Halli PS"
+  },
+  {
+    "user_id": "USER_0114",
+    "badge_number": "BDG00114",
+    "date_of_joining": "2014-04-14",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9415645417",
+    "rank_name": "Head Constable",
+    "station_name": "P.D. Halli PS"
+  },
+  {
+    "user_id": "USER_0115",
+    "badge_number": "BDG00115",
+    "date_of_joining": "2013-11-26",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9267748737",
+    "rank_name": "Head Constable",
+    "station_name": "Itagi PS"
+  },
+  {
+    "user_id": "USER_0116",
+    "badge_number": "BDG00116",
+    "date_of_joining": "2012-01-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9282678671",
+    "rank_name": "Head Constable",
+    "station_name": "Munirabad PS"
+  },
+  {
+    "user_id": "USER_0117",
+    "badge_number": "BDG00117",
+    "date_of_joining": "2021-03-17",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9522710213",
+    "rank_name": "IGP",
+    "station_name": "Cowlbazar PS"
+  },
+  {
+    "user_id": "USER_0118",
+    "badge_number": "BDG00118",
+    "date_of_joining": "2019-04-14",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9293321475",
+    "rank_name": "Inspector",
+    "station_name": "Hospet Rural PS"
+  },
+  {
+    "user_id": "USER_0119",
+    "badge_number": "BDG00119",
+    "date_of_joining": "2014-05-20",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9517490783",
+    "rank_name": "DGP",
+    "station_name": "Gangavathi Town PS"
+  },
+  {
+    "user_id": "USER_0120",
+    "badge_number": "BDG00120",
+    "date_of_joining": "2014-08-08",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9780306454",
+    "rank_name": "ASP",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0121",
+    "badge_number": "BDG00121",
+    "date_of_joining": "2022-05-27",
+    "operational_status": "ACTIVE",
+    "contact_number": "9932171481",
+    "rank_name": "DGP",
+    "station_name": "Hanumasagar PS"
+  },
+  {
+    "user_id": "USER_0122",
+    "badge_number": "BDG00122",
+    "date_of_joining": "2010-02-08",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9437516921",
+    "rank_name": "Inspector",
+    "station_name": "Tavaregera PS"
+  },
+  {
+    "user_id": "USER_0123",
+    "badge_number": "BDG00123",
+    "date_of_joining": "2018-08-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9462644350",
+    "rank_name": "DSP",
+    "station_name": "Kanakagiri PS"
+  },
+  {
+    "user_id": "USER_0124",
+    "badge_number": "BDG00124",
+    "date_of_joining": "2015-05-01",
+    "operational_status": "ACTIVE",
+    "contact_number": "9758795249",
+    "rank_name": "Constable",
+    "station_name": "Bruceept PS"
+  },
+  {
+    "user_id": "USER_0125",
+    "badge_number": "BDG00125",
+    "date_of_joining": "2022-08-09",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9603754633",
+    "rank_name": "DGP",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0126",
+    "badge_number": "BDG00126",
+    "date_of_joining": "2014-02-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9341225226",
+    "rank_name": "Head Constable",
+    "station_name": "Hospet Rural PS"
+  },
+  {
+    "user_id": "USER_0127",
+    "badge_number": "BDG00127",
+    "date_of_joining": "2019-10-26",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9257271961",
+    "rank_name": "DSP",
+    "station_name": "Kottur PS"
+  },
+  {
+    "user_id": "USER_0128",
+    "badge_number": "BDG00128",
+    "date_of_joining": "2014-03-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9259399222",
+    "rank_name": "DGP",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0129",
+    "badge_number": "BDG00129",
+    "date_of_joining": "2019-09-17",
+    "operational_status": "ACTIVE",
+    "contact_number": "9256933223",
+    "rank_name": "SP",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0130",
+    "badge_number": "BDG00130",
+    "date_of_joining": "2024-06-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9676913083",
+    "rank_name": "Constable",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0131",
+    "badge_number": "BDG00131",
+    "date_of_joining": "2024-04-10",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9102681989",
+    "rank_name": "DSP",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0132",
+    "badge_number": "BDG00132",
+    "date_of_joining": "2014-11-12",
+    "operational_status": "ACTIVE",
+    "contact_number": "9496251033",
+    "rank_name": "SI",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0133",
+    "badge_number": "BDG00133",
+    "date_of_joining": "2021-11-22",
+    "operational_status": "ACTIVE",
+    "contact_number": "9257933925",
+    "rank_name": "ASP",
+    "station_name": "Gangavathi Rural PS"
+  },
+  {
+    "user_id": "USER_0134",
+    "badge_number": "BDG00134",
+    "date_of_joining": "2023-04-23",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9639652835",
+    "rank_name": "Inspector",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0135",
+    "badge_number": "BDG00135",
+    "date_of_joining": "2018-02-27",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9644011612",
+    "rank_name": "DSP",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0136",
+    "badge_number": "BDG00136",
+    "date_of_joining": "2011-08-19",
+    "operational_status": "ACTIVE",
+    "contact_number": "9295966962",
+    "rank_name": "Head Constable",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0137",
+    "badge_number": "BDG00137",
+    "date_of_joining": "2014-03-04",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9994677839",
+    "rank_name": "DIG",
+    "station_name": "Kushtagi PS"
+  },
+  {
+    "user_id": "USER_0138",
+    "badge_number": "BDG00138",
+    "date_of_joining": "2024-07-03",
+    "operational_status": "ACTIVE",
+    "contact_number": "9528469675",
+    "rank_name": "Inspector",
+    "station_name": "Sirigeri PS"
+  },
+  {
+    "user_id": "USER_0139",
+    "badge_number": "BDG00139",
+    "date_of_joining": "2022-01-17",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9520740491",
+    "rank_name": "SI",
+    "station_name": "Hospet Town PS"
+  },
+  {
+    "user_id": "USER_0140",
+    "badge_number": "BDG00140",
+    "date_of_joining": "2014-08-28",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9138486327",
+    "rank_name": "Head Constable",
+    "station_name": "Gangavathi Rural PS"
+  },
+  {
+    "user_id": "USER_0141",
+    "badge_number": "BDG00141",
+    "date_of_joining": "2020-11-18",
+    "operational_status": "ACTIVE",
+    "contact_number": "9907808991",
+    "rank_name": "SP",
+    "station_name": "Itagi PS"
+  },
+  {
+    "user_id": "USER_0142",
+    "badge_number": "BDG00142",
+    "date_of_joining": "2015-10-26",
+    "operational_status": "ACTIVE",
+    "contact_number": "9602044832",
+    "rank_name": "ASP",
+    "station_name": "Koppal Town PS"
+  },
+  {
+    "user_id": "USER_0143",
+    "badge_number": "BDG00143",
+    "date_of_joining": "2012-05-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9999979937",
+    "rank_name": "DSP",
+    "station_name": "Gandhinagar PS"
+  },
+  {
+    "user_id": "USER_0144",
+    "badge_number": "BDG00144",
+    "date_of_joining": "2016-12-18",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9560019371",
+    "rank_name": "Constable",
+    "station_name": "Sandur PS"
+  },
+  {
+    "user_id": "USER_0145",
+    "badge_number": "BDG00145",
+    "date_of_joining": "2025-03-08",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9647063331",
+    "rank_name": "DGP",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0146",
+    "badge_number": "BDG00146",
+    "date_of_joining": "2025-03-09",
+    "operational_status": "ACTIVE",
+    "contact_number": "9266429774",
+    "rank_name": "Constable",
+    "station_name": "Tavaregera PS"
+  },
+  {
+    "user_id": "USER_0147",
+    "badge_number": "BDG00147",
+    "date_of_joining": "2024-04-09",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9579910691",
+    "rank_name": "Constable",
+    "station_name": "Alwandi PS"
+  },
+  {
+    "user_id": "USER_0148",
+    "badge_number": "BDG00148",
+    "date_of_joining": "2012-09-11",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9338115735",
+    "rank_name": "ASP",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0149",
+    "badge_number": "BDG00149",
+    "date_of_joining": "2013-03-19",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9498678672",
+    "rank_name": "DSP",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0150",
+    "badge_number": "BDG00150",
+    "date_of_joining": "2021-04-14",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9202135114",
+    "rank_name": "DIG",
+    "station_name": "Koppal Town PS"
+  },
+  {
+    "user_id": "USER_0151",
+    "badge_number": "BDG00151",
+    "date_of_joining": "2011-05-18",
+    "operational_status": "ACTIVE",
+    "contact_number": "9953342334",
+    "rank_name": "ADGP",
+    "station_name": "Kamalapur PS"
+  },
+  {
+    "user_id": "USER_0152",
+    "badge_number": "BDG00152",
+    "date_of_joining": "2010-01-26",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9344412422",
+    "rank_name": "Constable",
+    "station_name": "Gangavathi Rural PS"
+  },
+  {
+    "user_id": "USER_0153",
+    "badge_number": "BDG00153",
+    "date_of_joining": "2018-12-05",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9629727605",
+    "rank_name": "SI",
+    "station_name": "Hanumasagar PS"
+  },
+  {
+    "user_id": "USER_0154",
+    "badge_number": "BDG00154",
+    "date_of_joining": "2012-05-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9776414835",
+    "rank_name": "ASP",
+    "station_name": null
+  },
+  {
+    "user_id": "USER_0155",
+    "badge_number": "BDG00155",
+    "date_of_joining": "2013-09-16",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9692002775",
+    "rank_name": "ADGP",
+    "station_name": "Kamalapur PS"
+  },
+  {
+    "user_id": "USER_0156",
+    "badge_number": "BDG00156",
+    "date_of_joining": "2017-07-21",
+    "operational_status": "ACTIVE",
+    "contact_number": "9425500630",
+    "rank_name": "Inspector",
+    "station_name": "Hatcholli PS"
+  },
+  {
+    "user_id": "USER_0157",
+    "badge_number": "BDG00157",
+    "date_of_joining": "2010-05-27",
+    "operational_status": "ACTIVE",
+    "contact_number": "9818249045",
+    "rank_name": "ASI",
+    "station_name": "Cowlbazar PS"
+  },
+  {
+    "user_id": "USER_0158",
+    "badge_number": "BDG00158",
+    "date_of_joining": "2021-12-10",
+    "operational_status": "ACTIVE",
+    "contact_number": "9104205673",
+    "rank_name": "Head Constable",
+    "station_name": "Kuduthini PS"
+  },
+  {
+    "user_id": "USER_0159",
+    "badge_number": "BDG00159",
+    "date_of_joining": "2021-02-02",
+    "operational_status": "ACTIVE",
+    "contact_number": "9411256298",
+    "rank_name": "SP",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0160",
+    "badge_number": "BDG00160",
+    "date_of_joining": "2018-02-25",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9266865214",
+    "rank_name": "Head Constable",
+    "station_name": "Yelburga PS"
+  },
+  {
+    "user_id": "USER_0161",
+    "badge_number": "BDG00161",
+    "date_of_joining": "2015-02-12",
+    "operational_status": "ACTIVE",
+    "contact_number": "9637637290",
+    "rank_name": "DGP",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0162",
+    "badge_number": "BDG00162",
+    "date_of_joining": "2017-10-03",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9697259431",
+    "rank_name": "DIG",
+    "station_name": "Munirabad PS"
+  },
+  {
+    "user_id": "USER_0163",
+    "badge_number": "BDG00163",
+    "date_of_joining": "2021-04-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9597069774",
+    "rank_name": "DIG",
+    "station_name": "Jalhalli PS"
+  },
+  {
+    "user_id": "USER_0164",
+    "badge_number": "BDG00164",
+    "date_of_joining": "2019-07-01",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9699386864",
+    "rank_name": "IGP",
+    "station_name": "Karatagi PS"
+  },
+  {
+    "user_id": "USER_0165",
+    "badge_number": "BDG00165",
+    "date_of_joining": "2012-06-25",
+    "operational_status": "ACTIVE",
+    "contact_number": "9330189246",
+    "rank_name": "Inspector",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0166",
+    "badge_number": "BDG00166",
+    "date_of_joining": "2014-03-24",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9257911023",
+    "rank_name": "ASP",
+    "station_name": "Maski PS"
+  },
+  {
+    "user_id": "USER_0167",
+    "badge_number": "BDG00167",
+    "date_of_joining": "2014-02-07",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9285038934",
+    "rank_name": "DSP",
+    "station_name": "TB Halli PS"
+  },
+  {
+    "user_id": "USER_0168",
+    "badge_number": "BDG00168",
+    "date_of_joining": "2023-06-21",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9170521194",
+    "rank_name": "Head Constable",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0169",
+    "badge_number": "BDG00169",
+    "date_of_joining": "2024-07-15",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9641385453",
+    "rank_name": "SP",
+    "station_name": "Kuknoor PS"
+  },
+  {
+    "user_id": "USER_0170",
+    "badge_number": "BDG00170",
+    "date_of_joining": "2014-07-16",
+    "operational_status": "ACTIVE",
+    "contact_number": "9716818290",
+    "rank_name": "ADGP",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0171",
+    "badge_number": "BDG00171",
+    "date_of_joining": "2014-01-03",
+    "operational_status": "ACTIVE",
+    "contact_number": "9754305568",
+    "rank_name": "Head Constable",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0172",
+    "badge_number": "BDG00172",
+    "date_of_joining": "2024-05-18",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9340435963",
+    "rank_name": "DGP",
+    "station_name": "Kanakagiri PS"
+  },
+  {
+    "user_id": "USER_0173",
+    "badge_number": "BDG00173",
+    "date_of_joining": "2023-07-13",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9766948350",
+    "rank_name": "ASP",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0174",
+    "badge_number": "BDG00174",
+    "date_of_joining": "2022-10-03",
+    "operational_status": "ACTIVE",
+    "contact_number": "9499645425",
+    "rank_name": "SP",
+    "station_name": "Chittavadagi PS"
+  },
+  {
+    "user_id": "USER_0175",
+    "badge_number": "BDG00175",
+    "date_of_joining": "2015-12-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9199501566",
+    "rank_name": "Inspector",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0176",
+    "badge_number": "BDG00176",
+    "date_of_joining": "2012-07-05",
+    "operational_status": "ACTIVE",
+    "contact_number": "9630556911",
+    "rank_name": "ADGP",
+    "station_name": "Hanumasagar PS"
+  },
+  {
+    "user_id": "USER_0177",
+    "badge_number": "BDG00177",
+    "date_of_joining": "2020-08-03",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9795471753",
+    "rank_name": "SI",
+    "station_name": "Kudligi PS"
+  },
+  {
+    "user_id": "USER_0178",
+    "badge_number": "BDG00178",
+    "date_of_joining": "2021-06-24",
+    "operational_status": "ACTIVE",
+    "contact_number": "9854320477",
+    "rank_name": "ASI",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0179",
+    "badge_number": "BDG00179",
+    "date_of_joining": "2011-07-20",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9624965390",
+    "rank_name": "ADGP",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0180",
+    "badge_number": "BDG00180",
+    "date_of_joining": "2025-11-14",
+    "operational_status": "ACTIVE",
+    "contact_number": "9458365652",
+    "rank_name": "ADGP",
+    "station_name": "Tekkalkota PS"
+  },
+  {
+    "user_id": "USER_0181",
+    "badge_number": "BDG00181",
+    "date_of_joining": "2023-01-18",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9233189930",
+    "rank_name": "DIG",
+    "station_name": "Gangavathi Town PS"
+  },
+  {
+    "user_id": "USER_0182",
+    "badge_number": "BDG00182",
+    "date_of_joining": "2013-02-08",
+    "operational_status": "ACTIVE",
+    "contact_number": "9305808285",
+    "rank_name": "Head Constable",
+    "station_name": "Munirabad PS"
+  },
+  {
+    "user_id": "USER_0183",
+    "badge_number": "BDG00183",
+    "date_of_joining": "2015-09-20",
+    "operational_status": "ACTIVE",
+    "contact_number": "9824164549",
+    "rank_name": "DSP",
+    "station_name": "Gudekota PS"
+  },
+  {
+    "user_id": "USER_0184",
+    "badge_number": "BDG00184",
+    "date_of_joining": "2016-02-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9327160435",
+    "rank_name": "ASI",
+    "station_name": "Gabbur PS"
+  },
+  {
+    "user_id": "USER_0185",
+    "badge_number": "BDG00185",
+    "date_of_joining": "2019-11-01",
+    "operational_status": "ACTIVE",
+    "contact_number": "9396514102",
+    "rank_name": "Inspector",
+    "station_name": "Kampli PS"
+  },
+  {
+    "user_id": "USER_0186",
+    "badge_number": "BDG00186",
+    "date_of_joining": "2011-08-19",
+    "operational_status": "ACTIVE",
+    "contact_number": "9631267658",
+    "rank_name": "ADGP",
+    "station_name": "Yelburga PS"
+  },
+  {
+    "user_id": "USER_0187",
+    "badge_number": "BDG00187",
+    "date_of_joining": "2011-04-28",
+    "operational_status": "ACTIVE",
+    "contact_number": "9665769130",
+    "rank_name": "DIG",
+    "station_name": "Gadiganur PS"
+  },
+  {
+    "user_id": "USER_0188",
+    "badge_number": "BDG00188",
+    "date_of_joining": "2020-04-21",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9535881123",
+    "rank_name": "Inspector",
+    "station_name": "Hagaribommanahalli PS"
+  },
+  {
+    "user_id": "USER_0189",
+    "badge_number": "BDG00189",
+    "date_of_joining": "2013-08-15",
+    "operational_status": "ACTIVE",
+    "contact_number": "9691141978",
+    "rank_name": "ADGP",
+    "station_name": "Chittavadagi PS"
+  },
+  {
+    "user_id": "USER_0190",
+    "badge_number": "BDG00190",
+    "date_of_joining": "2021-05-05",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9341985845",
+    "rank_name": "DIG",
+    "station_name": "Hosahalli PS"
+  },
+  {
+    "user_id": "USER_0191",
+    "badge_number": "BDG00191",
+    "date_of_joining": "2018-02-07",
+    "operational_status": "ON_LEAVE",
+    "contact_number": "9168551140",
+    "rank_name": "SI",
+    "station_name": "Maski PS"
+  },
+  {
+    "user_id": "USER_0192",
+    "badge_number": "BDG00192",
+    "date_of_joining": "2022-01-04",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9737089269",
+    "rank_name": "IGP",
+    "station_name": "Kamalapur PS"
+  },
+  {
+    "user_id": "USER_0193",
+    "badge_number": "BDG00193",
+    "date_of_joining": "2024-05-28",
+    "operational_status": "ACTIVE",
+    "contact_number": "9159248890",
+    "rank_name": "Inspector",
+    "station_name": "Ballari Rural PS"
+  },
+  {
+    "user_id": "USER_0194",
+    "badge_number": "BDG00194",
+    "date_of_joining": "2010-08-03",
+    "operational_status": "ACTIVE",
+    "contact_number": "9679745635",
+    "rank_name": "SP",
+    "station_name": "Moka PS"
+  },
+  {
+    "user_id": "USER_0195",
+    "badge_number": "BDG00195",
+    "date_of_joining": "2010-05-21",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9109286976",
+    "rank_name": "ADGP",
+    "station_name": "TB Halli PS"
+  },
+  {
+    "user_id": "USER_0196",
+    "badge_number": "BDG00196",
+    "date_of_joining": "2022-09-22",
+    "operational_status": "ACTIVE",
+    "contact_number": "9657404046",
+    "rank_name": "DSP",
+    "station_name": "Koppal Rural PS"
+  },
+  {
+    "user_id": "USER_0197",
+    "badge_number": "BDG00197",
+    "date_of_joining": "2019-08-06",
+    "operational_status": "ACTIVE",
+    "contact_number": "9894905684",
+    "rank_name": "DGP",
+    "station_name": "Sandur PS"
+  },
+  {
+    "user_id": "USER_0198",
+    "badge_number": "BDG00198",
+    "date_of_joining": "2024-05-08",
+    "operational_status": "ACTIVE",
+    "contact_number": "9189223115",
+    "rank_name": "DSP",
+    "station_name": "Hirehadagali PS"
+  },
+  {
+    "user_id": "USER_0199",
+    "badge_number": "BDG00199",
+    "date_of_joining": "2010-12-11",
+    "operational_status": "ACTIVE",
+    "contact_number": "9675503799",
+    "rank_name": "DGP",
+    "station_name": "Hospet Town PS"
+  },
+  {
+    "user_id": "USER_0200",
+    "badge_number": "BDG00200",
+    "date_of_joining": "2013-03-27",
+    "operational_status": "SUSPENDED",
+    "contact_number": "9138105745",
+    "rank_name": "DIG",
+    "station_name": "Moka PS"
+  }
 ]
