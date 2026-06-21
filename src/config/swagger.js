@@ -1,46 +1,71 @@
-'use strict';
+"use strict";
 
-const swaggerJSDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+const swaggerJSDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'CrimeLens BE Express API Documentation',
-      version: '1.0.0',
-      description: 'API Documentation for the CrimeLens Backend Express application, running under Zoho Catalyst.',
+      title: "CrimeLens BE Express API Documentation",
+      version: "1.0.0",
+      description:
+        "API Documentation for the CrimeLens Backend Express application, running under Zoho Catalyst.",
     },
+    tags: [
+      {
+        name: "Seed Data",
+        description: "Bootstrap and seed-related endpoints",
+      },
+      { name: "User Invites", description: "Invite and onboarding endpoints" },
+      { name: "Users", description: "User management endpoints" },
+      { name: "Police Officers", description: "Police officer management" },
+      { name: "Police Ranks", description: "Police rank management" },
+      { name: "Police Stations", description: "Police station management" },
+      { name: "Crimes", description: "Crime incident endpoints" },
+      { name: "FIRs", description: "FIR endpoints" },
+      { name: "Criminals", description: "Criminal records" },
+      { name: "Geo Data", description: "Geospatial/district data" },
+    ],
     servers: [
       {
-        url: '/',
-        description: 'Default API path',
+        url: "/",
+        description: "Default API path",
       },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
     },
   },
   // Paths to files containing OpenAPI annotations
   apis: [
-    './src/routes/*.js',
-    './src/modules/scaffolding/**/swagger/*.js',
-    './src/modules/business/**/swagger/*.js'
+    "./src/routes/*.js",
+    "./src/modules/scaffolding/**/swagger/*.js",
+    "./src/modules/business/**/swagger/*.js",
+    "./src/modules/seed-data/swagger/*.js",
   ],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 function setupSwagger(app) {
-  app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  app.get('/api.json', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
+  const swaggerUiOptions = {
+    swaggerOptions: { filter: true },
+    explorer: true,
+  };
+  app.use(
+    "/api",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, swaggerUiOptions),
+  );
+  app.get("/api.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpec);
   });
 }

@@ -6,6 +6,11 @@ const fs = require("fs").promises;
 const path = require("path");
 const policeRepo = require("../business/police/police-officer/police-officer.repository");
 const stationRepo = require("../business/police/police-station/police-station.repository");
+const crimeRepo = require("../business/crime/crime.repository");
+const criminalRepo = require("../business/criminal/criminal.repository");
+const firRepo = require("../business/fir/fir.repository");
+const userRepo = require("../scaffolding/user/user.repository");
+const catalystAuth = require("../../catalyst/auth/auth");
 const env = require("../../config/env");
 
 module.exports = {
@@ -147,5 +152,280 @@ module.exports = {
     }
 
     return { created, skipped, total: features.length };
+  },
+  
+  async bootstrapCrimeCategory(req) {
+    logger.info("bootstrapCrimeCategory");
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "crimie",
+      "crime_category.json",
+    );
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    const table = req.catalyst
+      ? req.catalyst.datastore().table(env.TABLE_CRIME_CATEGORY)
+      : null;
+
+    let created = 0;
+    let skipped = 0;
+    for (const e of entries) {
+      const name = (e.crime_category_name || "").trim();
+      if (!name) continue;
+      let exists = false;
+      try {
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT ROWID FROM ${env.TABLE_CRIME_CATEGORY} WHERE crime_category_name = '${name.replace(/'/g, "''")}' LIMIT 1`,
+        );
+        if (rows && rows.length) exists = true;
+      } catch (err) {
+        logger.warn(
+          "crime category lookup failed",
+          err && err.message ? err.message : err,
+        );
+      }
+      if (exists) {
+        skipped++;
+        continue;
+      }
+      try {
+        await table.insertRow({
+          crime_category_name: name,
+          description: e.description || null,
+        });
+        created++;
+      } catch (err) {
+        logger.warn(
+          "failed to insert crime category",
+          name,
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+    return { created, skipped };
+  },
+
+  async bootstrapPoliceOfficer(req) {
+    logger.info("bootstrapPoliceOfficer");
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "police-officer",
+      "police_officer.json",
+    );
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0,
+      skipped = 0,
+      createdAuth = 0;
+    for (const e of entries) {
+      try {
+        const dto = {
+          email: (e.email || "").trim(),
+          badge_number: e.badge_number || e.badge || e.badgeNo || null,
+          name:
+            e.name ||
+            e.full_name ||
+            `${e.first_name || ""} ${e.last_name || ""}`.trim(),
+          rank_id: e.rank_id || null,
+          station_id: null,
+          date_of_joining: e.date_of_joining || null,
+          operational_status: e.operational_status || "ACTIVE",
+          contact_number: e.contact_number || e.phone || null,
+        };
+        // try create officer, if duplicate badge exists createOfficer will throw
+        await policeRepo.createOfficer(dto, req);
+        created++;
+
+        // create catalyst auth user if email present
+        if (dto.email) {
+          try {
+            const createdAuthRes = await catalystAuth.createUser(
+              req,
+              dto.email,
+              "police@123",
+              dto.name || undefined,
+            );
+            // attempt to find sys_user row for this email and set catalyst_user_id
+            const zcql = req.catalyst.zcql();
+            const infoRows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${dto.email.replace(/'/g, "''")}' LIMIT 1`,
+            );
+            if (infoRows && infoRows.length) {
+              const userInfoId =
+                infoRows[0].ROWID || infoRows[0][env.TABLE_USER_INFO]?.ROWID;
+              const userRows = await zcql.executeZCQLQuery(
+                `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = '${userInfoId}' LIMIT 1`,
+              );
+              if (userRows && userRows.length) {
+                const userId =
+                  userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID;
+                const catalystUserId =
+                  createdAuthRes?.user_details?.user_id ||
+                  createdAuthRes?.user_details?.zuid ||
+                  createdAuthRes?.user_id ||
+                  null;
+                if (catalystUserId) {
+                  const userTable = req.catalyst
+                    .datastore()
+                    .table(env.TABLE_USER);
+                  await userTable.updateRow({
+                    ROWID: userId,
+                    catalyst_user_id: catalystUserId,
+                  });
+                  createdAuth++;
+                }
+              }
+            }
+          } catch (err) {
+            logger.warn(
+              "failed to create catalyst auth for officer",
+              dto.email,
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+      } catch (err) {
+        skipped++;
+        logger.warn(
+          "skipping officer insert",
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+    return { created, skipped, createdAuth };
+  },
+
+  async bootstrapCriminal(req) {
+    logger.info("bootstrapCriminal");
+    const filePath = path.join(__dirname, "data", "criminal", "criminal.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0,
+      skipped = 0;
+    const zcql = req.catalyst.zcql();
+    for (const e of entries) {
+      try {
+        // map district code (KA_10) to geo table district_code (KA-10)
+        let district_id = null;
+        const code = (
+          e.district_code_of_criminal ||
+          e.district_code ||
+          ""
+        ).replace(/_/g, "-");
+        if (code) {
+          try {
+            const rows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_code = '${code.replace(/'/g, "''")}' LIMIT 1`,
+            );
+            if (rows && rows.length)
+              district_id =
+                rows[0].ROWID || rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID;
+          } catch (err) {
+            logger.warn(
+              "district lookup failed",
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+        const dto = {
+          criminal_number: e.criminal_number || null,
+          full_name: e.full_name || e.name || null,
+          gender: e.gender || null,
+          date_of_birth: e.date_of_birth || null,
+          nationality: e.nationality || null,
+          photo_url: e.photo_url || null,
+          status: e.status || "ACTIVE",
+          address: e.address || null,
+          district_id_of_criminal: district_id,
+        };
+        await criminalRepo.addCriminal(dto, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn(
+          "failed to insert criminal",
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+    return { created, skipped };
+  },
+
+  async bootstrapFirs(req) {
+    logger.info("bootstrapFirs");
+    const filePath = path.join(__dirname, "data", "crimie", "FIRs.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0,
+      skipped = 0;
+    const zcql = req.catalyst.zcql();
+    for (const e of entries) {
+      try {
+        const fir_number =
+          e.fir_number ||
+          (e.fir_id ? `FIR-${String(e.fir_id).padStart(6, "0")}` : null);
+        // find district id
+        let district_id = null;
+        const dcode = (e.district_code || e.fir_district_code || "").replace(
+          /_/g,
+          "-",
+        );
+        if (dcode) {
+          try {
+            const rows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_code = '${dcode.replace(/'/g, "''")}' LIMIT 1`,
+            );
+            if (rows && rows.length)
+              district_id =
+                rows[0].ROWID || rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID;
+          } catch (err) {
+            logger.warn(
+              "district lookup failed",
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+        // find police station id by name
+        let police_station_id = null;
+        if (e.police_station_name) {
+          try {
+            const srows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_POLICE_STATION} WHERE station_name = '${e.police_station_name.replace(/'/g, "''")} ' LIMIT 1`,
+            );
+            if (srows && srows.length)
+              police_station_id =
+                srows[0].ROWID || srows[0][env.TABLE_POLICE_STATION]?.ROWID;
+          } catch (err) {
+            logger.warn(
+              "station lookup failed",
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+        const dto = {
+          fir_number,
+          complainant_name: e.complainant_name || e.complainant || null,
+          complainant_phone: e.complainant_phone || e.complainant_phone || null,
+          incident_description:
+            e.incident_description || e.incident_description || null,
+          assigned_officer_id: null,
+          district_id,
+          fir_status: e.fir_status || null,
+          police_station_id,
+        };
+        await firRepo.addFir(dto, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn(
+          "failed to insert FIR",
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+    return { created, skipped };
   },
 };
