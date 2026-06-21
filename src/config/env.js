@@ -23,7 +23,6 @@ const env = {
   TABLE_POLICE_RANK: "biz_police_rank",
   TABLE_POLICE_STATION: "biz_police_station",
   TABLE_STATION_TYPE: "biz_station_type",
-  TABLE_DISTRICT: "biz_district_detail",
   TABLE_DISTRICT_GEODATA: "biz_district_geodata",
   // Default role assigned to newly created officers
   DEFAULT_OFFICER_ROLE: process.env.DEFAULT_OFFICER_ROLE || "OFFICER",

@@ -116,9 +116,18 @@ module.exports = {
         try {
           const safeName = districtName.replace(/'/g, "''");
           const rows = await zcql.executeZCQLQuery(
-            `SELECT ROWID FROM ${env.TABLE_DISTRICT} WHERE district_name = '${safeName}' LIMIT 1`,
+            `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_name = '${safeName}' LIMIT 1`,
           );
-          if (rows && rows.length) district_id = rows[0].ROWID || null;
+          if (rows && rows.length) {
+            district_id =
+              rows[0].ROWID ||
+              rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID ||
+              null;
+            logger.info("district lookup by name", {
+              districtName,
+              district_id,
+            });
+          }
         } catch (err) {
           logger.warn(
             "district lookup failed",
@@ -142,18 +151,22 @@ module.exports = {
         );
         created++;
       } catch (err) {
-        logger.warn(
-          "failed to insert station",
-          name,
-          err && err.message ? err.message : err,
-        );
+        logger.warn("failed to insert station", {
+          station: name,
+          error:
+            err && err.stack
+              ? err.stack
+              : err && err.message
+                ? err.message
+                : err,
+        });
         skipped++;
       }
     }
 
     return { created, skipped, total: features.length };
   },
-  
+
   async bootstrapCrimeCategory(req) {
     logger.info("bootstrapCrimeCategory");
     const filePath = path.join(
@@ -220,8 +233,62 @@ module.exports = {
     let created = 0,
       skipped = 0,
       createdAuth = 0;
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+
     for (const e of entries) {
       try {
+        // Lookup rank_id by rank_name
+        let rank_id = e.rank_id || null;
+        const rankName = (e.rank_name || "").trim();
+        if (!rank_id && rankName && zcql) {
+          try {
+            const rankRows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_POLICE_RANK} WHERE rank_name = '${rankName.replace(/'/g, "''")}' LIMIT 1`,
+            );
+            if (rankRows && rankRows.length) {
+              rank_id =
+                rankRows[0].ROWID ||
+                rankRows[0][env.TABLE_POLICE_RANK]?.ROWID ||
+                null;
+              logger.debug("rank lookup", {
+                rankName,
+                rank_id,
+              });
+            }
+          } catch (err) {
+            logger.warn(
+              "rank lookup failed",
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+
+        // Lookup station_id by station_name
+        let station_id = e.station_id || null;
+        const stationName = (e.station_name || "").trim();
+        if (!station_id && stationName && zcql) {
+          try {
+            const stationRows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_POLICE_STATION} WHERE station_name = '${stationName.replace(/'/g, "''")}' LIMIT 1`,
+            );
+            if (stationRows && stationRows.length) {
+              station_id =
+                stationRows[0].ROWID ||
+                stationRows[0][env.TABLE_POLICE_STATION]?.ROWID ||
+                null;
+              logger.debug("station lookup", {
+                stationName,
+                station_id,
+              });
+            }
+          } catch (err) {
+            logger.warn(
+              "station lookup failed",
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+
         const dto = {
           email: (e.email || "").trim(),
           badge_number: e.badge_number || e.badge || e.badgeNo || null,
@@ -229,8 +296,8 @@ module.exports = {
             e.name ||
             e.full_name ||
             `${e.first_name || ""} ${e.last_name || ""}`.trim(),
-          rank_id: e.rank_id || null,
-          station_id: null,
+          rank_id,
+          station_id,
           date_of_joining: e.date_of_joining || null,
           operational_status: e.operational_status || "ACTIVE",
           contact_number: e.contact_number || e.phone || null,
@@ -249,7 +316,6 @@ module.exports = {
               dto.name || undefined,
             );
             // attempt to find sys_user row for this email and set catalyst_user_id
-            const zcql = req.catalyst.zcql();
             const infoRows = await zcql.executeZCQLQuery(
               `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${dto.email.replace(/'/g, "''")}' LIMIT 1`,
             );
@@ -308,7 +374,7 @@ module.exports = {
     const zcql = req.catalyst.zcql();
     for (const e of entries) {
       try {
-        // map district code (KA_10) to geo table district_code (KA-10)
+        // map district code (KA-10) to geo table district_code (KA-10)
         let district_id = null;
         const code = (
           e.district_code_of_criminal ||

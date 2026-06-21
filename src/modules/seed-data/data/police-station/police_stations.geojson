@@ -16967,7 +16967,8 @@
         "OBJECTID": "849",
         "DepartmentCode": "164421814",
         "POL_STAName": "Chennarayapatana PS",
-        "districtName": "Bangalore Rural"
+        "districtName": "Bangalore Rural",
+        "KGISPSCode": "PS - 893"
       },
       "geometry": {
         "type": "Point",
@@ -16983,7 +16984,8 @@
         "OBJECTID": "850",
         "DepartmentCode": "164431359",
         "POL_STAName": "Mahalakshmipuram PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 894"
       },
       "geometry": {
         "type": "Point",
@@ -16999,7 +17001,8 @@
         "OBJECTID": "851",
         "DepartmentCode": "164431369",
         "POL_STAName": "Shankarpura PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 895"
       },
       "geometry": {
         "type": "Point",
@@ -17015,7 +17018,8 @@
         "OBJECTID": "852",
         "DepartmentCode": "164432197",
         "POL_STAName": "Suddaguntepalya PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 896"
       },
       "geometry": {
         "type": "Point",
@@ -17031,7 +17035,8 @@
         "OBJECTID": "853",
         "DepartmentCode": "164442243",
         "POL_STAName": "Belagavi Women PS",
-        "districtName": "Belgaum"
+        "districtName": "Belgaum",
+        "KGISPSCode": "PS - 897"
       },
       "geometry": {
         "type": "Point",
@@ -17047,7 +17052,8 @@
         "OBJECTID": "854",
         "DepartmentCode": "169861883",
         "POL_STAName": "Hampi Tourism PS",
-        "districtName": "Bellary"
+        "districtName": "Bellary",
+        "KGISPSCode": "PS - 898"
       },
       "geometry": {
         "type": "Point",
@@ -17063,7 +17069,8 @@
         "OBJECTID": "855",
         "DepartmentCode": "164472216",
         "POL_STAName": "Indi Rural PS",
-        "districtName": "Bijapur"
+        "districtName": "Bijapur",
+        "KGISPSCode": "PS - 899"
       },
       "geometry": {
         "type": "Point",
@@ -17079,7 +17086,8 @@
         "OBJECTID": "856",
         "DepartmentCode": "164472250",
         "POL_STAName": "Kudagi PS",
-        "districtName": "Bijapur"
+        "districtName": "Bijapur",
+        "KGISPSCode": "PS - 900"
       },
       "geometry": {
         "type": "Point",
@@ -17095,7 +17103,8 @@
         "OBJECTID": "857",
         "DepartmentCode": "164472239",
         "POL_STAName": "Vijayapura Women PS",
-        "districtName": "Bijapur"
+        "districtName": "Bijapur",
+        "KGISPSCode": "PS - 901"
       },
       "geometry": {
         "type": "Point",
@@ -17111,7 +17120,8 @@
         "OBJECTID": "858",
         "DepartmentCode": "164541570",
         "POL_STAName": "Jewargi PS",
-        "districtName": "Gulbarga"
+        "districtName": "Gulbarga",
+        "KGISPSCode": "PS - 902"
       },
       "geometry": {
         "type": "Point",
@@ -17127,7 +17137,8 @@
         "OBJECTID": "859",
         "DepartmentCode": "164540718",
         "POL_STAName": "Kalagi PS",
-        "districtName": "Gulbarga"
+        "districtName": "Gulbarga",
+        "KGISPSCode": "PS - 903"
       },
       "geometry": {
         "type": "Point",
@@ -17143,7 +17154,8 @@
         "OBJECTID": "860",
         "DepartmentCode": "164641085",
         "POL_STAName": "New Extention PS",
-        "districtName": "Tumkur"
+        "districtName": "Tumkur",
+        "KGISPSCode": "PS - 904"
       },
       "geometry": {
         "type": "Point",
@@ -17159,7 +17171,8 @@
         "OBJECTID": "861",
         "DepartmentCode": "164702217",
         "POL_STAName": "Bagalkot Women PS",
-        "districtName": "Bagalkot"
+        "districtName": "Bagalkot",
+        "KGISPSCode": "PS - 905"
       },
       "geometry": {
         "type": "Point",
@@ -17175,7 +17188,8 @@
         "OBJECTID": "862",
         "DepartmentCode": "164701259",
         "POL_STAName": "Banahatti PS",
-        "districtName": "Bagalkot"
+        "districtName": "Bagalkot",
+        "KGISPSCode": "PS - 906"
       },
       "geometry": {
         "type": "Point",
@@ -17191,7 +17205,8 @@
         "OBJECTID": "863",
         "DepartmentCode": "164702189",
         "POL_STAName": "Ilakal Rural PS",
-        "districtName": "Bagalkot"
+        "districtName": "Bagalkot",
+        "KGISPSCode": "PS - 907"
       },
       "geometry": {
         "type": "Point",
@@ -17207,7 +17222,8 @@
         "OBJECTID": "864",
         "DepartmentCode": "169712238",
         "POL_STAName": "E and N Crime PS HD city",
-        "districtName": "Dharwad"
+        "districtName": "Dharwad",
+        "KGISPSCode": "PS - 908"
       },
       "geometry": {
         "type": "Point",
@@ -17223,7 +17239,8 @@
         "OBJECTID": "865",
         "DepartmentCode": "169720223",
         "POL_STAName": "Champion Reefs  PS",
-        "districtName": "Kolar"
+        "districtName": "Kolar",
+        "KGISPSCode": "PS - 909"
       },
       "geometry": {
         "type": "Point",
@@ -17239,7 +17256,8 @@
         "OBJECTID": "866",
         "DepartmentCode": "169772153",
         "POL_STAName": "Ramanagar CEN Crime PS",
-        "districtName": "Ramanagara"
+        "districtName": "Ramanagara",
+        "KGISPSCode": "PS - 910"
       },
       "geometry": {
         "type": "Point",
@@ -17255,7 +17273,8 @@
         "OBJECTID": "867",
         "DepartmentCode": "169802164",
         "POL_STAName": "E and N Crime PS Mangaluru City",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 911"
       },
       "geometry": {
         "type": "Point",
@@ -17271,7 +17290,8 @@
         "OBJECTID": "868",
         "DepartmentCode": "169822240",
         "POL_STAName": "Belagavi City CEN Crime PS",
-        "districtName": "Belgaum"
+        "districtName": "Belgaum",
+        "KGISPSCode": "PS - 912"
       },
       "geometry": {
         "type": "Point",
@@ -17287,7 +17307,8 @@
         "OBJECTID": "869",
         "DepartmentCode": "169842021",
         "POL_STAName": "ISD PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 913"
       },
       "geometry": {
         "type": "Point",
@@ -17303,7 +17324,8 @@
         "OBJECTID": "870",
         "DepartmentCode": "164382136",
         "POL_STAName": "Davanagere CEN Crime PS",
-        "districtName": "Davanagere"
+        "districtName": "Davanagere",
+        "KGISPSCode": "PS - 914"
       },
       "geometry": {
         "type": "Point",
@@ -17319,7 +17341,8 @@
         "OBJECTID": "871",
         "DepartmentCode": "164392230",
         "POL_STAName": "Haveri CEN Crime PS",
-        "districtName": "Haveri"
+        "districtName": "Haveri",
+        "KGISPSCode": "PS - 915"
       },
       "geometry": {
         "type": "Point",
@@ -17335,7 +17358,8 @@
         "OBJECTID": "872",
         "DepartmentCode": "164402229",
         "POL_STAName": "Gadag CEN Crime PS",
-        "districtName": "Gadag"
+        "districtName": "Gadag",
+        "KGISPSCode": "PS - 916"
       },
       "geometry": {
         "type": "Point",
@@ -17351,7 +17375,8 @@
         "OBJECTID": "873",
         "DepartmentCode": "164422222",
         "POL_STAName": "Bengaluru CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 917"
       },
       "geometry": {
         "type": "Point",
@@ -17367,7 +17392,8 @@
         "OBJECTID": "874",
         "DepartmentCode": "164432146",
         "POL_STAName": "Central CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 918"
       },
       "geometry": {
         "type": "Point",
@@ -17383,7 +17409,8 @@
         "OBJECTID": "875",
         "DepartmentCode": "164432147",
         "POL_STAName": "East CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 919"
       },
       "geometry": {
         "type": "Point",
@@ -17399,7 +17426,8 @@
         "OBJECTID": "876",
         "DepartmentCode": "164432149",
         "POL_STAName": "North CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 920"
       },
       "geometry": {
         "type": "Point",
@@ -17415,7 +17443,8 @@
         "OBJECTID": "877",
         "DepartmentCode": "164432260",
         "POL_STAName": "NorthEast CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 921"
       },
       "geometry": {
         "type": "Point",
@@ -17431,7 +17460,8 @@
         "OBJECTID": "878",
         "DepartmentCode": "164432258",
         "POL_STAName": "South CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 922"
       },
       "geometry": {
         "type": "Point",
@@ -17447,7 +17477,8 @@
         "OBJECTID": "879",
         "DepartmentCode": "164432259",
         "POL_STAName": "SouthEast CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 923"
       },
       "geometry": {
         "type": "Point",
@@ -17463,7 +17494,8 @@
         "OBJECTID": "880",
         "DepartmentCode": "164432148",
         "POL_STAName": "West CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 924"
       },
       "geometry": {
         "type": "Point",
@@ -17479,7 +17511,8 @@
         "OBJECTID": "881",
         "DepartmentCode": "164432261",
         "POL_STAName": "Whitefield CEN Crime PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 925"
       },
       "geometry": {
         "type": "Point",
@@ -17495,7 +17528,8 @@
         "OBJECTID": "882",
         "DepartmentCode": "164442223",
         "POL_STAName": "Belagavi CEN Crime PS",
-        "districtName": "Belgaum"
+        "districtName": "Belgaum",
+        "KGISPSCode": "PS - 926"
       },
       "geometry": {
         "type": "Point",
@@ -17511,7 +17545,8 @@
         "OBJECTID": "883",
         "DepartmentCode": "164452221",
         "POL_STAName": "Ballari CEN Crime PS",
-        "districtName": "Bellary"
+        "districtName": "Bellary",
+        "KGISPSCode": "PS - 927"
       },
       "geometry": {
         "type": "Point",
@@ -17527,7 +17562,8 @@
         "OBJECTID": "884",
         "DepartmentCode": "164462224",
         "POL_STAName": "Bidar CEN Crime PS",
-        "districtName": "Bidar"
+        "districtName": "Bidar",
+        "KGISPSCode": "PS - 928"
       },
       "geometry": {
         "type": "Point",
@@ -17543,7 +17579,8 @@
         "OBJECTID": "885",
         "DepartmentCode": "164472225",
         "POL_STAName": "Vijayapur CEN Crime PS",
-        "districtName": "Bijapur"
+        "districtName": "Bijapur",
+        "KGISPSCode": "PS - 929"
       },
       "geometry": {
         "type": "Point",
@@ -17559,7 +17596,8 @@
         "OBJECTID": "886",
         "DepartmentCode": "164512232",
         "POL_STAName": "Kodagu CEN Crime PS",
-        "districtName": "Kodagu"
+        "districtName": "Kodagu",
+        "KGISPSCode": "PS - 930"
       },
       "geometry": {
         "type": "Point",
@@ -17575,7 +17613,8 @@
         "OBJECTID": "887",
         "DepartmentCode": "164522228",
         "POL_STAName": "Dharwad CEN Crime PS",
-        "districtName": "Dharwad"
+        "districtName": "Dharwad",
+        "KGISPSCode": "PS - 931"
       },
       "geometry": {
         "type": "Point",
@@ -17591,7 +17630,8 @@
         "OBJECTID": "888",
         "DepartmentCode": "164542231",
         "POL_STAName": "Kalaburagi CEN Crime PS",
-        "districtName": "Gulbarga"
+        "districtName": "Gulbarga",
+        "KGISPSCode": "PS - 932"
       },
       "geometry": {
         "type": "Point",
@@ -17607,7 +17647,8 @@
         "OBJECTID": "889",
         "DepartmentCode": "164552219",
         "POL_STAName": "Hassan CEN Crime PS",
-        "districtName": "Hassan"
+        "districtName": "Hassan",
+        "KGISPSCode": "PS - 933"
       },
       "geometry": {
         "type": "Point",
@@ -17623,7 +17664,8 @@
         "OBJECTID": "890",
         "DepartmentCode": "164572131",
         "POL_STAName": "Kolar CEN Crime PS",
-        "districtName": "Kolar"
+        "districtName": "Kolar",
+        "KGISPSCode": "PS - 934"
       },
       "geometry": {
         "type": "Point",
@@ -17639,7 +17681,8 @@
         "OBJECTID": "891",
         "DepartmentCode": "164582233",
         "POL_STAName": "Mandya CEN Crime PS",
-        "districtName": "Mandya"
+        "districtName": "Mandya",
+        "KGISPSCode": "PS - 935"
       },
       "geometry": {
         "type": "Point",
@@ -17655,7 +17698,8 @@
         "OBJECTID": "892",
         "DepartmentCode": "164592234",
         "POL_STAName": "Mysuru CEN Crime PS",
-        "districtName": "Mysore"
+        "districtName": "Mysore",
+        "KGISPSCode": "PS - 936"
       },
       "geometry": {
         "type": "Point",
@@ -17671,7 +17715,8 @@
         "OBJECTID": "893",
         "DepartmentCode": "164612235",
         "POL_STAName": "Raichur CEN Crime PS",
-        "districtName": "Raichur"
+        "districtName": "Raichur",
+        "KGISPSCode": "PS - 937"
       },
       "geometry": {
         "type": "Point",
@@ -17687,7 +17732,8 @@
         "OBJECTID": "894",
         "DepartmentCode": "164622175",
         "POL_STAName": "Shivamogga CEN Crime PS",
-        "districtName": "Shimoga"
+        "districtName": "Shimoga",
+        "KGISPSCode": "PS - 938"
       },
       "geometry": {
         "type": "Point",
@@ -17703,7 +17749,8 @@
         "OBJECTID": "895",
         "DepartmentCode": "164632227",
         "POL_STAName": "DK CEN Crime PS",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 939"
       },
       "geometry": {
         "type": "Point",
@@ -17719,7 +17766,8 @@
         "OBJECTID": "896",
         "DepartmentCode": "164642140",
         "POL_STAName": "Tumkur CEN Crime PS",
-        "districtName": "Tumkur"
+        "districtName": "Tumkur",
+        "KGISPSCode": "PS - 940"
       },
       "geometry": {
         "type": "Point",
@@ -17735,7 +17783,8 @@
         "OBJECTID": "897",
         "DepartmentCode": "164672178",
         "POL_STAName": "Chamarajanagar CEN Crime PS",
-        "districtName": "Chamarajanagar"
+        "districtName": "Chamarajanagar",
+        "KGISPSCode": "PS - 941"
       },
       "geometry": {
         "type": "Point",
@@ -17751,7 +17800,8 @@
         "OBJECTID": "898",
         "DepartmentCode": "164682145",
         "POL_STAName": "Koppal CEN Crime PS",
-        "districtName": "Koppal"
+        "districtName": "Koppal",
+        "KGISPSCode": "PS - 942"
       },
       "geometry": {
         "type": "Point",
@@ -17767,7 +17817,8 @@
         "OBJECTID": "899",
         "DepartmentCode": "164692156",
         "POL_STAName": "Udupi CEN Crime PS",
-        "districtName": "Udupi"
+        "districtName": "Udupi",
+        "KGISPSCode": "PS - 943"
       },
       "geometry": {
         "type": "Point",
@@ -17783,7 +17834,8 @@
         "OBJECTID": "900",
         "DepartmentCode": "164702220",
         "POL_STAName": "Bagalkot CEN Crime PS",
-        "districtName": "Bagalkot"
+        "districtName": "Bagalkot",
+        "KGISPSCode": "PS - 944"
       },
       "geometry": {
         "type": "Point",
@@ -17799,7 +17851,8 @@
         "OBJECTID": "901",
         "DepartmentCode": "169722137",
         "POL_STAName": "KGF CEN Crime PS",
-        "districtName": "Kolar"
+        "districtName": "Kolar",
+        "KGISPSCode": "PS - 945"
       },
       "geometry": {
         "type": "Point",
@@ -17815,7 +17868,8 @@
         "OBJECTID": "902",
         "DepartmentCode": "169732215",
         "POL_STAName": "E and N Crime PS Mysuru City",
-        "districtName": "Mysore"
+        "districtName": "Mysore",
+        "KGISPSCode": "PS - 946"
       },
       "geometry": {
         "type": "Point",
@@ -17831,7 +17885,8 @@
         "OBJECTID": "903",
         "DepartmentCode": "169762299",
         "POL_STAName": "Peresandra PS",
-        "districtName": "Chikkaballapura"
+        "districtName": "Chikkaballapura",
+        "KGISPSCode": "PS - 947"
       },
       "geometry": {
         "type": "Point",
@@ -17847,7 +17902,8 @@
         "OBJECTID": "904",
         "DepartmentCode": "164492226",
         "POL_STAName": "Chitradurga CEN Crime PS",
-        "districtName": "Chitradurga"
+        "districtName": "Chitradurga",
+        "KGISPSCode": "PS - 948"
       },
       "geometry": {
         "type": "Point",
@@ -17863,7 +17919,8 @@
         "OBJECTID": "905",
         "DepartmentCode": "164482211",
         "POL_STAName": "Chickmagalur CEN Crime PS",
-        "districtName": "Chikmagalur"
+        "districtName": "Chikmagalur",
+        "KGISPSCode": "PS - 949"
       },
       "geometry": {
         "type": "Point",
@@ -17879,7 +17936,8 @@
         "OBJECTID": "906",
         "DepartmentCode": "169801051",
         "POL_STAName": "Bajpe PS",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 950"
       },
       "geometry": {
         "type": "Point",
@@ -17895,7 +17953,8 @@
         "OBJECTID": "907",
         "DepartmentCode": "169801045",
         "POL_STAName": "Barke PS",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 951"
       },
       "geometry": {
         "type": "Point",
@@ -17911,7 +17970,8 @@
         "OBJECTID": "908",
         "DepartmentCode": "169722295",
         "POL_STAName": "Budikote PS",
-        "districtName": "Kolar"
+        "districtName": "Kolar",
+        "KGISPSCode": "PS - 952"
       },
       "geometry": {
         "type": "Point",
@@ -17927,7 +17987,8 @@
         "OBJECTID": "909",
         "DepartmentCode": "169722296",
         "POL_STAName": "Kyasamballi PS",
-        "districtName": "Kolar"
+        "districtName": "Kolar",
+        "KGISPSCode": "PS - 953"
       },
       "geometry": {
         "type": "Point",
@@ -17943,7 +18004,8 @@
         "OBJECTID": "910",
         "DepartmentCode": "169732214",
         "POL_STAName": "CEN Crime PS Mysuru City",
-        "districtName": "Mysore"
+        "districtName": "Mysore",
+        "KGISPSCode": "PS - 954"
       },
       "geometry": {
         "type": "Point",
@@ -17959,7 +18021,8 @@
         "OBJECTID": "911",
         "DepartmentCode": "164452306",
         "POL_STAName": "Choranuru PS",
-        "districtName": "Bellary"
+        "districtName": "Bellary",
+        "KGISPSCode": "PS - 955"
       },
       "geometry": {
         "type": "Point",
@@ -17975,7 +18038,8 @@
         "OBJECTID": "912",
         "DepartmentCode": "164432268",
         "POL_STAName": "Govindapura PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 956"
       },
       "geometry": {
         "type": "Point",
@@ -17991,7 +18055,8 @@
         "OBJECTID": "913",
         "DepartmentCode": "164432303",
         "POL_STAName": "Govindaraja Nagar PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 957"
       },
       "geometry": {
         "type": "Point",
@@ -18007,7 +18072,8 @@
         "OBJECTID": "914",
         "DepartmentCode": "164432200",
         "POL_STAName": "Cyber Crime Police Station",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 958"
       },
       "geometry": {
         "type": "Point",
@@ -18023,7 +18089,8 @@
         "OBJECTID": "915",
         "DepartmentCode": "169802297",
         "POL_STAName": "CEN Crime PS Mangaluru City",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 959"
       },
       "geometry": {
         "type": "Point",
@@ -18039,7 +18106,8 @@
         "OBJECTID": "916",
         "DepartmentCode": "164422247",
         "POL_STAName": "Bengaluru Dist Women PS",
-        "districtName": "Bangalore Rural"
+        "districtName": "Bangalore Rural",
+        "KGISPSCode": "PS - 960"
       },
       "geometry": {
         "type": "Point",
@@ -18055,7 +18123,8 @@
         "OBJECTID": "917",
         "DepartmentCode": "169802163",
         "POL_STAName": "Cyber Crime PS Mangaluru City",
-        "districtName": "Dakshina Kannada"
+        "districtName": "Dakshina Kannada",
+        "KGISPSCode": "PS - 961"
       },
       "geometry": {
         "type": "Point",
@@ -18071,7 +18140,8 @@
         "OBJECTID": "918",
         "DepartmentCode": "164432123",
         "POL_STAName": "Byadarahalli PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 962"
       },
       "geometry": {
         "type": "Point",
@@ -18087,7 +18157,8 @@
         "OBJECTID": "919",
         "DepartmentCode": "169712237",
         "POL_STAName": "CEN Crime PS Hubballi Dharwad City",
-        "districtName": "Dharwad"
+        "districtName": "Dharwad",
+        "KGISPSCode": "PS - 963"
       },
       "geometry": {
         "type": "Point",
@@ -18103,7 +18174,8 @@
         "OBJECTID": "920",
         "DepartmentCode": "164431387",
         "POL_STAName": "East Zone Women PS",
-        "districtName": "Bangalore Urban"
+        "districtName": "Bangalore Urban",
+        "KGISPSCode": "PS - 964"
       },
       "geometry": {
         "type": "Point",
@@ -18120,7 +18192,8 @@
         "DepartmentCode": "164622338",
         "KGISVillageID": "12754",
         "POL_STAName": "Anandapura PS",
-        "districtName": "Shimoga"
+        "districtName": "Shimoga",
+        "KGISPSCode": "PS - 965"
       },
       "geometry": {
         "type": "Point",

@@ -1,6 +1,7 @@
 "use strict";
 
 const env = require("../../../config/env");
+const logger = require("../../../config/logger");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -17,29 +18,41 @@ function getTable(req, tableName) {
 
 module.exports = {
   async addDistrict(dto, req) {
-    const table = getTable(req, env.TABLE_DISTRICT);
-    const saved = await table.insertRow({ district_name: dto.district_name });
-    return { id: saved.ROWID };
+    const table = getTable(req, env.TABLE_DISTRICT_GEODATA);
+    const row = {
+      district_code:
+        dto.district_code ||
+        (dto.district_slug
+          ? dto.district_slug.toString().toUpperCase()
+          : null) ||
+        (dto.district_name
+          ? dto.district_name
+              .replace(/[^A-Za-z0-9]/g, "")
+              .substring(0, 20)
+              .toUpperCase()
+          : "UNKNOWN"),
+      district_slug: dto.district_slug || null,
+      district_name: dto.district_name,
+      geometry_type: dto.geometry_type || "MultiPolygon",
+      boundary:
+        dto.boundary ||
+        JSON.stringify({ type: "MultiPolygon", coordinates: [] }),
+      center_lat: dto.center_lat || null,
+      center_lng: dto.center_lng || null,
+      coordinate_count: dto.coordinate_count || null,
+    };
+    try {
+      const saved = await table.insertRow(row);
+      return { id: saved.ROWID };
+    } catch (err) {
+      logger.warn("addDistrict failed", {
+        dto: row,
+        error: err && err.message ? err.message : err,
+      });
+      throw err;
+    }
   },
 
-  async getAllDistrict(query, req) {
-    const sql = `SELECT * FROM ${env.TABLE_DISTRICT}`;
-    const res = await executeQuery(req, sql);
-    return res.map((r) => r[env.TABLE_DISTRICT]);
-  },
-
-  async getOneDistrict(id, req) {
-    const sql = `SELECT * FROM ${env.TABLE_DISTRICT} WHERE ROWID = '${id}'`;
-    const res = await executeQuery(req, sql);
-    if (!res || res.length === 0) throw new Error("District not found");
-    return res[0][env.TABLE_DISTRICT];
-  },
-
-  async deleteDistrict(id, req) {
-    const table = getTable(req, env.TABLE_DISTRICT);
-    await table.deleteRow(id);
-    return { message: "District deleted" };
-  },
   // GeoJSON operations stored in separate geodata table
   async addDistrictGeoJson(dto, req) {
     const table = getTable(req, env.TABLE_DISTRICT_GEODATA);
@@ -76,4 +89,80 @@ module.exports = {
     return { message: "District geojson deleted" };
   },
 
+  async bootstrapDistrictGeoJson(req) {
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "seed-data",
+      "data",
+      "district",
+      "karnataka-districts.geojson",
+    );
+    const raw = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw || "{}");
+    const features =
+      parsed.type === "FeatureCollection" && Array.isArray(parsed.features)
+        ? parsed.features
+        : Array.isArray(parsed)
+          ? parsed
+          : [];
+
+    const table = getTable(req, env.TABLE_DISTRICT_GEODATA);
+    let created = 0;
+    let skipped = 0;
+
+    for (const feat of features) {
+      const props = feat.properties || {};
+      const geom = feat.geometry || null;
+
+      const district_code = props.district_code || props.districtCode || null;
+      const district_slug = props.districtId || props.district_id || null;
+      const district_name = props.districtName || props.district_name || null;
+      const geometry_type = geom ? geom.type : null;
+      const boundary = JSON.stringify(geom || {});
+
+      // compute a simple centroid by averaging all coordinate pairs
+      let latSum = 0,
+        lngSum = 0,
+        coordCount = 0;
+      function collect(coords) {
+        if (!Array.isArray(coords)) return;
+        if (typeof coords[0] === "number" && typeof coords[1] === "number") {
+          lngSum += coords[0];
+          latSum += coords[1];
+          coordCount++;
+          return;
+        }
+        for (const c of coords) collect(c);
+      }
+      collect(geom && geom.coordinates);
+
+      const center_lat = coordCount ? latSum / coordCount : null;
+      const center_lng = coordCount ? lngSum / coordCount : null;
+
+      try {
+        await table.insertRow({
+          district_code,
+          district_slug,
+          district_name,
+          geometry_type,
+          boundary,
+          center_lat,
+          center_lng,
+          coordinate_count: coordCount,
+        });
+        created++;
+      } catch (err) {
+        logger.warn(
+          "failed to insert district geodata",
+          district_name,
+          err && err.message ? err.message : err,
+        );
+        skipped++;
+      }
+    }
+
+    return { created, skipped, total: features.length };
+  },
 };
