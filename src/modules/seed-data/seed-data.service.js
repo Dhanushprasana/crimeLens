@@ -228,8 +228,27 @@ module.exports = {
       "police-officer",
       "police_officer.json",
     );
+    const infoFilePath = path.join(
+      __dirname,
+      "data",
+      "police-officer",
+      "police_officer_info.json",
+    );
     const raw = await fs.readFile(filePath, "utf8");
+    const infoRaw = await fs.readFile(infoFilePath, "utf8");
     const entries = JSON.parse(raw || "[]");
+    const infoEntries = JSON.parse(infoRaw || "[]");
+
+    // Create email and full_name lookup by officer_id
+    const emailMap = {};
+    const fullNameMap = {};
+    for (const info of infoEntries) {
+      if (info.officer_id) {
+        if (info.email) emailMap[info.officer_id] = info.email;
+        if (info.full_name) fullNameMap[info.officer_id] = info.full_name;
+      }
+    }
+
     let created = 0,
       skipped = 0,
       createdAuth = 0;
@@ -306,59 +325,170 @@ module.exports = {
         await policeRepo.createOfficer(dto, req);
         created++;
 
-        // create catalyst auth user if email present
-        if (dto.email) {
+        // Create or link sys_user record for the officer
+        // Get email from police_officer_info if available, otherwise use provided or generate
+        const officerId =
+          e.user_id && e.user_id.match(/\d+/)
+            ? parseInt(e.user_id.match(/\d+/)[0], 10)
+            : null;
+        const officerEmail =
+          (officerId && emailMap[officerId]) ||
+          dto.email ||
+          `${dto.badge_number}@police.local`.toLowerCase();
+        if (officerEmail && zcql) {
           try {
-            const createdAuthRes = await catalystAuth.createUser(
-              req,
-              dto.email,
-              "police@123",
-              dto.name || undefined,
+            // Check if user already exists
+            const userInfoRows = await zcql.executeZCQLQuery(
+              `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${officerEmail.replace(/'/g, "''")}' LIMIT 1`,
             );
-            // attempt to find sys_user row for this email and set catalyst_user_id
-            const infoRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${dto.email.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (infoRows && infoRows.length) {
-              const userInfoId =
-                infoRows[0].ROWID || infoRows[0][env.TABLE_USER_INFO]?.ROWID;
+
+            let userId = null;
+            let userInfoId = null;
+
+            if (userInfoRows && userInfoRows.length) {
+              // User exists, get their IDs
+              userInfoId =
+                userInfoRows[0].ROWID ||
+                userInfoRows[0][env.TABLE_USER_INFO]?.ROWID;
               const userRows = await zcql.executeZCQLQuery(
                 `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = '${userInfoId}' LIMIT 1`,
               );
               if (userRows && userRows.length) {
-                const userId =
+                userId =
                   userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID;
-                const catalystUserId =
-                  createdAuthRes?.user_details?.user_id ||
-                  createdAuthRes?.user_details?.zuid ||
-                  createdAuthRes?.user_id ||
-                  null;
-                if (catalystUserId) {
-                  const userTable = req.catalyst
-                    .datastore()
-                    .table(env.TABLE_USER);
-                  await userTable.updateRow({
-                    ROWID: userId,
-                    catalyst_user_id: catalystUserId,
-                  });
-                  createdAuth++;
+              }
+            } else {
+              // Create new sys_user_info record
+              const userInfoTable = req.catalyst
+                .datastore()
+                .table(env.TABLE_USER_INFO);
+
+              // Use full_name from police_officer_info, fallback to dto.name
+              const fullName =
+                (officerId && fullNameMap[officerId]) || dto.name || "";
+              const nameParts = fullName.split(" ");
+              const userFirstName = nameParts[0] || "";
+              const userLastName = nameParts.slice(1).join(" ") || "";
+
+              const userInfoSaved = await userInfoTable.insertRow({
+                email: officerEmail,
+                user_first_name: userFirstName,
+                user_last_name: userLastName,
+                phone: e.contact_number || null,
+              });
+              userInfoId = userInfoSaved.ROWID;
+
+              // Create new sys_user record
+              const userTable = req.catalyst.datastore().table(env.TABLE_USER);
+              const userSaved = await userTable.insertRow({
+                user_info_id: userInfoId,
+                is_archived: false,
+              });
+              userId = userSaved.ROWID;
+              logger.info("created sys_user for officer", {
+                badge: dto.badge_number,
+                email: officerEmail,
+                userId,
+              });
+            }
+
+            // Assign default OFFICER role if not already assigned
+            if (userId) {
+              try {
+                // Find OFFICER role
+                const roleRows = await zcql.executeZCQLQuery(
+                  `SELECT ROWID FROM ${env.TABLE_ROLE} WHERE role_name = '${env.DEFAULT_OFFICER_ROLE}' LIMIT 1`,
+                );
+                if (roleRows && roleRows.length) {
+                  const roleId =
+                    roleRows[0].ROWID || roleRows[0][env.TABLE_ROLE]?.ROWID;
+
+                  // Check if role already assigned
+                  const existingRoleRows = await zcql.executeZCQLQuery(
+                    `SELECT ROWID FROM ${env.TABLE_USER_ROLE} WHERE user_id = '${userId}' AND role_id = '${roleId}' LIMIT 1`,
+                  );
+
+                  if (!existingRoleRows || existingRoleRows.length === 0) {
+                    const userRoleTable = req.catalyst
+                      .datastore()
+                      .table(env.TABLE_USER_ROLE);
+                    await userRoleTable.insertRow({
+                      user_id: userId,
+                      role_id: roleId,
+                    });
+                    logger.info("assigned default role to officer", {
+                      badge: dto.badge_number,
+                      role: env.DEFAULT_OFFICER_ROLE,
+                    });
+                  }
                 }
+              } catch (err) {
+                logger.warn("failed to assign role to officer", {
+                  badge: dto.badge_number,
+                  error: err && err.message ? err.message : String(err),
+                });
               }
             }
+
+            // Create Catalyst auth user with default password
+            try {
+              const fullName =
+                (officerId && fullNameMap[officerId]) || dto.name || "";
+              const createdAuthRes = await catalystAuth.createUser(
+                req,
+                officerEmail,
+                "Police@123",
+                fullName || undefined,
+              );
+              const catalystUserId =
+                createdAuthRes?.user_details?.user_id ||
+                createdAuthRes?.user_details?.zuid ||
+                createdAuthRes?.user_id ||
+                null;
+              if (catalystUserId && userId) {
+                const userTable = req.catalyst
+                  .datastore()
+                  .table(env.TABLE_USER);
+                await userTable.updateRow({
+                  ROWID: userId,
+                  catalyst_user_id: catalystUserId,
+                });
+                createdAuth++;
+                logger.info("created catalyst auth for officer", {
+                  badge: dto.badge_number,
+                  email: officerEmail,
+                });
+              }
+            } catch (err) {
+              logger.warn("failed to create catalyst auth for officer", {
+                badge: dto.badge_number,
+                email: officerEmail,
+                error: err && err.message ? err.message : String(err),
+              });
+            }
           } catch (err) {
-            logger.warn(
-              "failed to create catalyst auth for officer",
-              dto.email,
-              err && err.message ? err.message : err,
-            );
+            logger.warn("failed to create sys_user for officer", {
+              badge: dto.badge_number,
+              email: officerEmail,
+              error: err && err.message ? err.message : String(err),
+            });
           }
         }
       } catch (err) {
         skipped++;
-        logger.warn(
-          "skipping officer insert",
-          err && err.message ? err.message : err,
-        );
+        logger.warn("skipping officer insert", {
+          badge: e.badge_number || e.user_id || "unknown",
+          name: e.name || e.full_name || "unknown",
+          rank: e.rank_name || "unknown",
+          station: e.station_name || "unknown",
+          error: err && err.message ? err.message : String(err),
+          fullError:
+            err && err.stack
+              ? err.stack
+              : err && err.message
+                ? err.message
+                : err,
+        });
       }
     }
     return { created, skipped, createdAuth };

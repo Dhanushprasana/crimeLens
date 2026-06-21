@@ -9,11 +9,11 @@ module.exports = {
     const userManagement = catalystApp.userManagement();
     const signupConfig = {
       // platform_type is required by the SDK — use 'embedded' to enable embedded widget flows
-      platform_type: "embedded",
-      // optional redirect_url: frontend callback after embedded auth completes
-      ...(env.FRONTEND_REDIRECT_URL
-        ? { redirect_url: env.FRONTEND_REDIRECT_URL }
-        : {}),
+      platform_type: "web",
+      // // optional redirect_url: frontend callback after embedded auth completes
+      // ...(env.FRONTEND_REDIRECT_URL
+      //   ? { redirect_url: env.FRONTEND_REDIRECT_URL }
+      //   : {}),
     };
 
     // helpful debug: log signupConfig without sensitive data
