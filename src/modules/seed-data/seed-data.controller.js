@@ -69,6 +69,16 @@ module.exports = {
     }
   },
 
+  async bootstrapIncidentCriminals(req, res, next) {
+    try {
+      const result = await service.bootstrapIncidentCriminals(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+
   // Generate a crime incident using valid reference data
   async generateCrime(req, res, next) {
     try {

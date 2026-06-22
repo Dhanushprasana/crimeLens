@@ -32,7 +32,7 @@ const env = {
   TABLE_FIR: "biz_FIR",
   TABLE_CRIME_EVIDENCE: "biz_crime_evidence",
   TABLE_INCIDENT_OFFICER: "biz_incident_officer",
-  TABLE_INCIDENT_CRIMINAL: "biz_incident_criminal",
+  TABLE_INCIDENT_CRIMINAL: "biz_incident_criminals",
   TABLE_CRIME_CATEGORY: "biz_crime_category",
 };
 

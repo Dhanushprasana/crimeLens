@@ -119,5 +119,22 @@
  */
 
 /**
+ * @openapi
+ * /seed/incident-criminal/bootstrap:
+ *   post:
+ *     summary: Bootstrap incident‑criminal relationships
+ *     tags: [Seed Data]
+ *     description: Reads `data/crimie/incident_criminal.json` and inserts links between crime incidents and criminals into `biz_incident_criminal`.
+ *     responses:
+ *       200:
+ *         description: Incident‑criminal links inserted/skipped counts
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+
+/**
  * Note: These endpoints are intended for development/bootstrapping only.
  */
+
