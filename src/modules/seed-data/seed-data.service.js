@@ -1029,18 +1029,15 @@ module.exports = {
           i.crime_happended_at_district_id, 
           i.police_station_id, 
           i.crime_category_id, 
-          c.gender, 
-          DATE(i.incident_registered_date) as incident_date,
+          i.incident_registered_date,
           COUNT(i.ROWID) as crime_count
         FROM ${env.TABLE_CRIME_INCIDENT} i 
         JOIN ${env.TABLE_INCIDENT_CRIMINAL} ic ON i.ROWID = ic.incident_id 
-        JOIN ${env.TABLE_CRIMINAL} c ON ic.criminal_id = c.ROWID 
         GROUP BY 
           i.crime_happended_at_district_id, 
           i.police_station_id, 
           i.crime_category_id, 
-          c.gender, 
-          DATE(i.incident_registered_date)
+          i.incident_registered_date
       `;
       aggregatedRows = await zcql.executeZCQLQuery(query);
     } catch (e) {
@@ -1063,7 +1060,6 @@ module.exports = {
       const crime_category_id = data.crime_category_id;
       let incident_registered_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
       if (!incident_registered_date) incident_registered_date = new Date().toISOString().split('T')[0];
-      const gender = cData.gender || 'Unknown';
       const crime_count = Number(data["COUNT(ROWID)"]);
 
       // Upsert logic: check if exists
@@ -1073,7 +1069,6 @@ module.exports = {
           WHERE district_id = '${district_id}' 
           AND police_station_id = '${police_station_id}' 
           AND crime_category_id = '${crime_category_id}' 
-          AND gender = '${gender}' 
           AND incident_registered_date = '${incident_registered_date}'
         `;
         const existing = await zcql.executeZCQLQuery(checkQuery);
@@ -1090,7 +1085,6 @@ module.exports = {
             district_id,
             police_station_id,
             crime_category_id,
-            gender,
             incident_registered_date,
             crime_count
           });
@@ -1136,7 +1130,7 @@ module.exports = {
       env.TABLE_CRIME_CATEGORY,
       env.TABLE_COMP_DISTRICT_CRIME_STATS,
     ];
-    
+
     const counts = {};
     for (const tbl of tables) {
       if (!tbl) continue;
