@@ -1012,88 +1012,133 @@ module.exports = {
     return result;
   },
 
-
   async calculateDistrictCrimeStats(req) {
-    logger.info("calculateDistrictCrimeStats using ZCQL aggregation");
+    logger.info("calculateDistrictCrimeStats in-memory grouping");
+
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
     if (!zcql) throw new Error("Catalyst not available");
 
     const datastore = req.catalyst.datastore();
     const statsTable = datastore.table(env.TABLE_COMP_DISTRICT_CRIME_STATS);
 
-    // ZCQL aggregation
-    let aggregatedRows = [];
+    let incidents = [];
+
     try {
-      const query = `
-        SELECT 
-          i.crime_happended_at_district_id, 
-          i.police_station_id, 
-          i.crime_category_id, 
-          i.incident_registered_date,
-          COUNT(i.ROWID) as crime_count
-        FROM ${env.TABLE_CRIME_INCIDENT} i 
-        JOIN ${env.TABLE_INCIDENT_CRIMINAL} ic ON i.ROWID = ic.incident_id 
-        GROUP BY 
-          i.crime_happended_at_district_id, 
-          i.police_station_id, 
-          i.crime_category_id, 
-          i.incident_registered_date
-      `;
-      aggregatedRows = await zcql.executeZCQLQuery(query);
+      // Fetch all incidents using Datastore pagination to bypass the ZCQL 300-row default limit
+      const incidentTable = datastore.table(env.TABLE_CRIME_INCIDENT);
+      let nextToken = undefined;
+      logger.info("Starting pagination fetch for crime incidents");
+      do {
+        const pagedResp = await incidentTable.getPagedRows({
+          nextToken,
+          maxRows: 200
+        });
+        if (pagedResp && pagedResp.data) {
+          incidents.push(...pagedResp.data);
+          logger.info(`Fetched ${pagedResp.data.length} incidents, nextToken=${pagedResp.next_token}`);
+        }
+        nextToken = pagedResp ? pagedResp.next_token : undefined;
+      } while (nextToken);
+
+      logger.info(`Fetched ${incidents.length} total incidents to group in memory`);
     } catch (e) {
-      logger.warn("Failed to execute ZCQL aggregation", e.message || e);
-      // Fallback or just re-throw if it's mandatory to use ZCQL directly
-      throw new Error("ZCQL aggregation failed: " + (e.message || e));
+      logger.warn("Failed to fetch all incidents via getPagedRows", e.message || e);
+      throw new Error("Failed to fetch incidents: " + (e.message || e));
     }
 
-    let updated = 0;
+    // In-memory grouping to correctly group by DATE (ignoring time)
+    const statsMap = {};
+
+    for (const row of incidents) {
+      const data = row[env.TABLE_CRIME_INCIDENT] || row;
+      const districtId = data.crime_happended_at_district_id;
+      const policeStationId = data.police_station_id;
+      const crimeCategoryId = data.crime_category_id;
+      
+      // Strip time from timestamp to group by date only
+      let incidentRegisteredDate = data.incident_registered_date 
+        ? data.incident_registered_date.split(" ")[0].split("T")[0] 
+        : new Date().toISOString().split("T")[0];
+
+      if (districtId && policeStationId && crimeCategoryId) {
+        const key = `${districtId}_${policeStationId}_${crimeCategoryId}_${incidentRegisteredDate}`;
+        if (!statsMap[key]) {
+          statsMap[key] = {
+            district_id: districtId,
+            police_station_id: policeStationId,
+            crime_category_id: crimeCategoryId,
+            incident_registered_date: incidentRegisteredDate,
+            crime_count: 0
+          };
+        }
+        statsMap[key].crime_count += 1;
+      }
+    }
+
+    const aggregatedRows = Object.values(statsMap);
+    logger.info(`Found ${aggregatedRows.length} grouped crime stat rows after in-memory aggregation`);
+
+    logger.info(`Processing ${aggregatedRows.length} aggregated rows for upsert`);
+    // Batch insert new stats rows to reduce API calls
+    const toInsert = [];
+    const BATCH_SIZE = 200;
     let created = 0;
+    let updated = 0;
 
-    for (const row of aggregatedRows) {
-      // The keys might depend on whether Catalyst preserves table aliases in the output object
-      const data = row.i || row[env.TABLE_CRIME_INCIDENT] || row;
-      const cData = row.c || row[env.TABLE_CRIMINAL] || row;
-      const countData = row.COUNT || row.crime_count || row[Object.keys(row).find(k => k.includes('COUNT'))] || row;
-
-      const district_id = data.crime_happended_at_district_id;
-      const police_station_id = data.police_station_id;
-      const crime_category_id = data.crime_category_id;
-      let incident_registered_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
-      if (!incident_registered_date) incident_registered_date = new Date().toISOString().split('T')[0];
-      const crime_count = Number(data["COUNT(ROWID)"]);
-
-      // Upsert logic: check if exists
+    for (const stat of aggregatedRows) {
+      logger.debug(`Upserting stat: district=${stat.district_id}, station=${stat.police_station_id}, category=${stat.crime_category_id}, date=${stat.incident_registered_date}`);
       try {
         const checkQuery = `
-          SELECT ROWID, crime_count FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS} 
-          WHERE district_id = '${district_id}' 
-          AND police_station_id = '${police_station_id}' 
-          AND crime_category_id = '${crime_category_id}' 
-          AND incident_registered_date = '${incident_registered_date}'
+        SELECT ROWID, crime_count
+        FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS}
+        WHERE district_id = '${stat.district_id}'
+          AND police_station_id = '${stat.police_station_id}'
+          AND crime_category_id = '${stat.crime_category_id}'
+          AND incident_registered_date = '${stat.incident_registered_date}'
         `;
         const existing = await zcql.executeZCQLQuery(checkQuery);
-
         if (existing && existing.length > 0) {
           const statRow = existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
-          await statsTable.updateRow({
-            ROWID: statRow.ROWID,
-            crime_count: crime_count
-          });
-          updated++;
+          if (Number(statRow.crime_count) !== stat.crime_count) {
+            await statsTable.updateRow({ ROWID: statRow.ROWID, crime_count: stat.crime_count });
+            updated++;
+          }
         } else {
-          await statsTable.insertRow({
-            district_id,
-            police_station_id,
-            crime_category_id,
-            incident_registered_date,
-            crime_count
+          // collect for batch insert
+          toInsert.push({
+            district_id: stat.district_id,
+            police_station_id: stat.police_station_id,
+            crime_category_id: stat.crime_category_id,
+            incident_registered_date: stat.incident_registered_date,
+            crime_count: stat.crime_count,
           });
-          created++;
         }
       } catch (err) {
         logger.warn("Failed to upsert stat", err.message || err);
       }
     }
+
+    // Insert new rows in batches
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const chunk = toInsert.slice(i, i + BATCH_SIZE);
+      try {
+        await statsTable.insertRows(chunk);
+        created += chunk.length;
+      } catch (e) {
+        logger.warn("Batch insert failed", e.message || e);
+        // fallback to individual inserts for this chunk
+        for (const row of chunk) {
+          try {
+            await statsTable.insertRow(row);
+            created++;
+          } catch (e2) {
+            logger.warn("Fallback insert failed", e2.message || e2);
+          }
+        }
+      }
+    }
+
+    logger.info(`Crime stats calculation completed. Created: ${created}, Updated: ${updated}`);
 
     return { created, updated };
   },
