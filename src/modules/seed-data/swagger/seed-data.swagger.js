@@ -140,7 +140,7 @@
  *   post:
  *     summary: Calculate and upsert district crime statistics
  *     tags: [Seed Data]
- *     description: Aggregates crime incidents by district, station, category, gender, and registration date, and upserts the statistics into `biz_comp_district_crime_stats`.
+ *     description: Aggregates crime incidents by district, station, category, and registration date, and upserts the statistics into `biz_comp_district_crime_stats`.
  *     responses:
  *       200:
  *         description: Statistics calculated and populated successfully
