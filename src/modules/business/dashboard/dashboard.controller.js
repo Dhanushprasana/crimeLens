@@ -11,5 +11,14 @@ module.exports = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async getTotalCrimeCount(req, res, next) {
+    try {
+      const result = await service.getTotalCrimeCount(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
   }
 };

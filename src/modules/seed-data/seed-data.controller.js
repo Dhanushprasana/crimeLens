@@ -107,4 +107,13 @@ module.exports = {
     }
   },
 
+  async getAllTableCounts(req, res, next) {
+    try {
+      const result = await service.getAllTableCounts(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
 };

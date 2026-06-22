@@ -1020,7 +1020,7 @@ module.exports = {
 
     const datastore = req.catalyst.datastore();
     const statsTable = datastore.table(env.TABLE_COMP_DISTRICT_CRIME_STATS);
-    
+
     // ZCQL aggregation
     let aggregatedRows = [];
     try {
@@ -1030,7 +1030,7 @@ module.exports = {
           i.police_station_id, 
           i.crime_category_id, 
           c.gender, 
-          i.incident_registered_date, 
+          DATE(i.incident_registered_date) as incident_date,
           COUNT(i.ROWID) as crime_count
         FROM ${env.TABLE_CRIME_INCIDENT} i 
         JOIN ${env.TABLE_INCIDENT_CRIMINAL} ic ON i.ROWID = ic.incident_id 
@@ -1040,7 +1040,7 @@ module.exports = {
           i.police_station_id, 
           i.crime_category_id, 
           c.gender, 
-          i.incident_registered_date
+          DATE(i.incident_registered_date)
       `;
       aggregatedRows = await zcql.executeZCQLQuery(query);
     } catch (e) {
@@ -1057,14 +1057,14 @@ module.exports = {
       const data = row.i || row[env.TABLE_CRIME_INCIDENT] || row;
       const cData = row.c || row[env.TABLE_CRIMINAL] || row;
       const countData = row.COUNT || row.crime_count || row[Object.keys(row).find(k => k.includes('COUNT'))] || row;
-      
+
       const district_id = data.crime_happended_at_district_id;
       const police_station_id = data.police_station_id;
       const crime_category_id = data.crime_category_id;
       let incident_registered_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
       if (!incident_registered_date) incident_registered_date = new Date().toISOString().split('T')[0];
       const gender = cData.gender || 'Unknown';
-      const crime_count = parseInt(countData.crime_count || countData['COUNT(i.ROWID)'] || countData.COUNT || 1, 10);
+      const crime_count = Number(data["COUNT(ROWID)"]);
 
       // Upsert logic: check if exists
       try {
@@ -1109,5 +1109,50 @@ module.exports = {
     const stations = await zcql.executeZCQLQuery(`SELECT station_name, district_id FROM ${env.TABLE_POLICE_STATION}`);
     const districts = await zcql.executeZCQLQuery(`SELECT ROWID, district_code, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
     return { stations, districts };
+  },
+
+  async getAllTableCounts(req) {
+    const zcql = req.catalyst.zcql();
+    const tables = [
+      env.TABLE_CONFIGURATION,
+      env.TABLE_PERMISSION,
+      env.TABLE_ROLE,
+      env.TABLE_ROLE_PERMISSION,
+      env.TABLE_USER,
+      env.TABLE_USER_INFO,
+      env.TABLE_USER_ROLE,
+      env.TABLE_USER_CONFIGURATION,
+      env.TABLE_POLICE_OFFICER,
+      env.TABLE_POLICE_RANK,
+      env.TABLE_POLICE_STATION,
+      env.TABLE_STATION_TYPE,
+      env.TABLE_DISTRICT_GEODATA,
+      env.TABLE_CRIMINAL,
+      env.TABLE_CRIME_INCIDENT,
+      env.TABLE_FIR,
+      env.TABLE_CRIME_EVIDENCE,
+      env.TABLE_INCIDENT_OFFICER,
+      env.TABLE_INCIDENT_CRIMINAL,
+      env.TABLE_CRIME_CATEGORY,
+      env.TABLE_COMP_DISTRICT_CRIME_STATS,
+    ];
+    
+    const counts = {};
+    for (const tbl of tables) {
+      if (!tbl) continue;
+      try {
+        const res = await zcql.executeZCQLQuery(`SELECT COUNT(ROWID) FROM ${tbl}`);
+        const firstRow = res && res[0] ? (res[0][tbl] || res[0]) : null;
+        let cnt = 0;
+        if (firstRow) {
+          cnt = firstRow["COUNT(ROWID)"] || Object.values(firstRow)[0] || 0;
+        }
+        counts[tbl] = Number(cnt);
+      } catch (e) {
+        logger.warn(`Failed to count table ${tbl}: ${e.message}`);
+        counts[tbl] = 0;
+      }
+    }
+    return counts;
   }
 };

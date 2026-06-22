@@ -151,3 +151,23 @@
 /**
  * Note: These endpoints are intended for development/bootstrapping only.
  */
+
+/**
+ * @openapi
+ * /seed/record-counts:
+ *   get:
+ *     summary: Get record counts for all tables
+ *     tags: [Seed Data]
+ *     description: Iterates through all database tables and returns the count of records for each.
+ *     responses:
+ *       200:
+ *         description: Record counts retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties:
+ *                 type: integer
+ *       500:
+ *         description: Server error
+ */
