@@ -83,5 +83,41 @@
  */
 
 /**
+ * @openapi
+ * /seed/crime-incident/bootstrap:
+ *   post:
+ *     summary: Bootstrap Crime Incidents
+ *     tags: [Seed Data]
+ *     description: Reads `data/crimie/crime_incident.json`, resolves categories, stations, districts, and FIR references and inserts into `biz_crime_incident`.
+ *     responses:
+ *       200:
+ *         description: Crime incidents inserted/skipped counts
+ */
+
+/**
+ * @openapi
+ * /seed/crime-incident/generate:
+ *   post:
+ *     summary: Generate a crime incident using valid reference data
+ *     tags: [Seed Data]
+ *     description: |
+ *       Creates a single crime incident. The request body may contain any of the
+ *       fields shown in the example below; missing fields are filled with valid
+ *       values resolved from the database (category, police station, district, etc.).
+ *
+ *     responses:
+ *       200:
+ *         description: Generated crime incident inserted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CrimeIncident'
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+
+/**
  * Note: These endpoints are intended for development/bootstrapping only.
  */

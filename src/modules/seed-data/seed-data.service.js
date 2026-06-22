@@ -624,4 +624,244 @@ module.exports = {
     }
     return { created, skipped };
   },
+
+  async bootstrapCrimeIncidents(req) {
+    logger.info("bootstrapCrimeIncidents");
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "crimie",
+      "crime_incident.json",
+    );
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    
+    let created = 0;
+    let skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    // 1. Fetch default user
+    let defaultUserId = null;
+    try {
+      const userRows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_USER} LIMIT 1`);
+      if (userRows && userRows.length) {
+        defaultUserId = userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID || null;
+      }
+    } catch (err) {
+      logger.warn("Failed to fetch default user for bootstrap", err.message || err);
+    }
+
+    if (!defaultUserId) {
+      try {
+        const email = "system@crimelens.local";
+        const infoTable = req.catalyst.datastore().table(env.TABLE_USER_INFO);
+        const userTable = req.catalyst.datastore().table(env.TABLE_USER);
+        
+        const infoSaved = await infoTable.insertRow({
+          user_first_name: "System",
+          user_last_name: "User",
+          email: email
+        });
+        const userSaved = await userTable.insertRow({
+          user_info_id: infoSaved.ROWID,
+          is_archived: false
+        });
+        defaultUserId = userSaved.ROWID;
+      } catch (err) {
+        logger.warn("Failed to create system user fallback", err.message || err);
+      }
+    }
+
+    // 2. Fetch and cache categories
+    const categoriesMap = {};
+    try {
+      const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+      for (const r of catRows) {
+        const cat = r[env.TABLE_CRIME_CATEGORY] || r;
+        if (cat && cat.crime_category_name) {
+          categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+        }
+      }
+    } catch (err) {
+      logger.warn("Failed to cache crime categories:", err.message);
+    }
+
+    // 3. Fetch and cache stations
+    const stationsMap = {};
+    try {
+      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+      for (const r of stationRows) {
+        const st = r[env.TABLE_POLICE_STATION] || r;
+        if (st && st.station_name) {
+          stationsMap[st.station_name.trim().toLowerCase()] = st.ROWID;
+        }
+      }
+      if (stationRows && stationRows.length) {
+        logger.info("Sample station row from DB: " + JSON.stringify(stationRows[0]));
+        logger.info("Cached stations count: " + Object.keys(stationsMap).length);
+        logger.info("Sample cached station key: " + Object.keys(stationsMap)[0]);
+      }
+    } catch (err) {
+      logger.warn("Failed to cache police stations:", err.message);
+    }
+
+    // 4. Fetch and cache districts
+    const districtsMap = {};
+    try {
+      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      for (const r of distRows) {
+        const dist = r[env.TABLE_DISTRICT_GEODATA] || r;
+        if (dist && dist.district_code) {
+          districtsMap[dist.district_code.trim().toLowerCase()] = dist.ROWID;
+        }
+      }
+    } catch (err) {
+      logger.warn("Failed to cache districts:", err.message);
+    }
+
+    // 5. Lazy FIR cache
+    const firsCache = {};
+    const getFirId = async (firNumber) => {
+      if (!firNumber) return null;
+      const key = firNumber.trim().toLowerCase();
+      if (firsCache[key] !== undefined) return firsCache[key];
+      try {
+        const rows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`);
+        if (rows && rows.length) {
+          firsCache[key] = rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
+        } else {
+          firsCache[key] = null;
+        }
+      } catch (err) {
+        logger.warn(`Failed lookup for FIR ${firNumber}:`, err.message);
+        firsCache[key] = null;
+      }
+      return firsCache[key];
+    };
+
+    // Prerequisite validations
+    if (Object.keys(districtsMap).length === 0) {
+      throw new Error("No districts found in the database. Please seed districts first using POST /seed/geojson/bootstrap");
+    }
+    if (Object.keys(stationsMap).length === 0) {
+      throw new Error("No police stations found in the database. Please seed stations first using POST /seed/police-station/bootstrap");
+    }
+    if (Object.keys(categoriesMap).length === 0) {
+      throw new Error("No crime categories found in the database. Please seed categories first using POST /seed/crime-category/bootstrap");
+    }
+
+    for (const e of entries) {
+      try {
+        const categoryName = (e.crime_category || "").trim().toLowerCase();
+        const crime_category_id = categoriesMap[categoryName] || null;
+
+        const stationName = (e.police_station || "").trim().toLowerCase();
+        const police_station_id = stationsMap[stationName] || null;
+
+        const districtCode = (e.crime_happened_at_district_code || "").trim().toLowerCase().replace(/_/g, "-");
+        const crime_happended_at_district_id = districtsMap[districtCode] || null;
+
+        const fir_id = await getFirId(e.fir_number);
+
+        const dto = {
+          crime_number: e.crime_number || null,
+          title: e.title || "Unknown Crime",
+          description: e.description || null,
+          crime_category_id,
+          police_station_id,
+          crime_happended_at_district_id,
+          crime_location_latitude: e.crime_location_latitude || null,
+          crime_location_longitude: e.crime_location_longitude || null,
+          status: e.status || "UNDER_INVESTIGATION",
+          crime_occured_date_time: e.crime_occured_date_time || null,
+          fir_id,
+          created_by: defaultUserId
+        };
+
+        await crimeRepo.addCrime(dto, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn(
+          `Failed to insert crime incident: ${e.crime_number}`,
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+
+    return { created, skipped };
+  },
+  
+async generateCrime(req) {
+  logger.info("generateCrime");
+  const zcql = req.catalyst ? req.catalyst.zcql() : null;
+  // Fetch reference maps
+  const categoriesMap = {};
+  const stationsMap = {};
+  const districtsMap = {};
+  try {
+    const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+    for (const r of catRows) {
+      const cat = r[env.TABLE_CRIME_CATEGORY] || r;
+      if (cat && cat.crime_category_name) {
+        categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+      }
+    }
+  } catch (e) { logger.warn("fetch categories error", e); }
+  try {
+    const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+    for (const r of stationRows) {
+      const st = r[env.TABLE_POLICE_STATION] || r;
+      if (st && st.station_name) {
+        stationsMap[st.station_name.trim().toLowerCase()] = st.ROWID;
+      }
+    }
+  } catch (e) { logger.warn("fetch stations error", e); }
+  try {
+    const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+    for (const r of distRows) {
+      const d = r[env.TABLE_DISTRICT_GEODATA] || r;
+      if (d && d.district_code) {
+        districtsMap[d.district_code.trim().toLowerCase()] = d.ROWID;
+      }
+    }
+  } catch (e) { logger.warn("fetch districts error", e); }
+
+  const categoryKeys = Object.keys(categoriesMap);
+  const stationKeys = Object.keys(stationsMap);
+  const districtKeys = Object.keys(districtsMap);
+  if (!categoryKeys.length || !stationKeys.length || !districtKeys.length) {
+    throw new Error("Required reference data missing for generateCrime");
+  }
+  const randomCategory = categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
+  const randomStation = stationKeys[Math.floor(Math.random() * stationKeys.length)];
+  const randomDistrict = districtKeys[Math.floor(Math.random() * districtKeys.length)];
+
+  const dto = {
+    crime_number: `CASE-${Date.now()}`,
+    title: "Generated Crime",
+    description: "Automatically generated incident",
+    crime_category_id: categoriesMap[randomCategory],
+    police_station_id: stationsMap[randomStation],
+    crime_happended_at_district_id: districtsMap[randomDistrict],
+    crime_location_latitude: null,
+    crime_location_longitude: null,
+    status: "UNDER_INVESTIGATION",
+    crime_occured_date_time: new Date().toISOString().slice(0,19).replace("T"," "),
+    fir_id: null,
+    created_by:"46044000000052002",
+  };
+  const result = await crimeRepo.addCrime(dto, req);
+  return result;
+},
+
+
+
+
+  async dumpData(req) {
+    const zcql = req.catalyst.zcql();
+    const stations = await zcql.executeZCQLQuery(`SELECT station_name, district_id FROM ${env.TABLE_POLICE_STATION}`);
+    const districts = await zcql.executeZCQLQuery(`SELECT ROWID, district_code, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
+    return { stations, districts };
+  }
 };

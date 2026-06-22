@@ -60,4 +60,32 @@ module.exports = {
       next(err);
     }
   },
+  async bootstrapCrimeIncidents(req, res, next) {
+    try {
+      const result = await service.bootstrapCrimeIncidents(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  // Generate a crime incident using valid reference data
+  async generateCrime(req, res, next) {
+    try {
+      const result = await service.generateCrime(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async dumpData(req, res, next) {
+    try {
+      const result = await service.dumpData(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
 };
