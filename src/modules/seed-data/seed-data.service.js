@@ -1061,8 +1061,8 @@ module.exports = {
       const district_id = data.crime_happended_at_district_id;
       const police_station_id = data.police_station_id;
       const crime_category_id = data.crime_category_id;
-      let crime_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
-      if (!crime_date) crime_date = new Date().toISOString().split('T')[0];
+      let incident_registered_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
+      if (!incident_registered_date) incident_registered_date = new Date().toISOString().split('T')[0];
       const gender = cData.gender || 'Unknown';
       const crime_count = parseInt(countData.crime_count || countData['COUNT(i.ROWID)'] || countData.COUNT || 1, 10);
 
@@ -1074,7 +1074,7 @@ module.exports = {
           AND police_station_id = '${police_station_id}' 
           AND crime_category_id = '${crime_category_id}' 
           AND gender = '${gender}' 
-          AND crime_date = '${crime_date}'
+          AND incident_registered_date = '${incident_registered_date}'
         `;
         const existing = await zcql.executeZCQLQuery(checkQuery);
 
@@ -1091,7 +1091,7 @@ module.exports = {
             police_station_id,
             crime_category_id,
             gender,
-            crime_date,
+            incident_registered_date,
             crime_count
           });
           created++;
