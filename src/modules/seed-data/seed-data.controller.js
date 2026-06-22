@@ -98,4 +98,13 @@ module.exports = {
     }
   },
 
+  async calculateDistrictCrimeStats(req, res, next) {
+    try {
+      const result = await service.calculateDistrictCrimeStats(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
 };

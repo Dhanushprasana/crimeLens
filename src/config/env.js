@@ -34,6 +34,7 @@ const env = {
   TABLE_INCIDENT_OFFICER: "biz_incident_officer",
   TABLE_INCIDENT_CRIMINAL: "biz_incident_criminals",
   TABLE_CRIME_CATEGORY: "biz_crime_category",
+  TABLE_COMP_DISTRICT_CRIME_STATS: "biz_comp_district_crime_stats",
 };
 
 module.exports = env;

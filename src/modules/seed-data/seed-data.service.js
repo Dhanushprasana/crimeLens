@@ -774,6 +774,7 @@ module.exports = {
           crime_location_longitude: e.crime_location_longitude || null,
           status: e.status || "UNDER_INVESTIGATION",
           crime_occured_date_time: e.crime_occured_date_time || null,
+          incident_registered_date: e.crime_occured_date_time ? e.crime_occured_date_time.split(' ')[0] : null,
           fir_id,
           created_by: defaultUserId
         };
@@ -1012,7 +1013,96 @@ module.exports = {
   },
 
 
+  async calculateDistrictCrimeStats(req) {
+    logger.info("calculateDistrictCrimeStats using ZCQL aggregation");
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    if (!zcql) throw new Error("Catalyst not available");
 
+    const datastore = req.catalyst.datastore();
+    const statsTable = datastore.table(env.TABLE_COMP_DISTRICT_CRIME_STATS);
+    
+    // ZCQL aggregation
+    let aggregatedRows = [];
+    try {
+      const query = `
+        SELECT 
+          i.crime_happended_at_district_id, 
+          i.police_station_id, 
+          i.crime_category_id, 
+          c.gender, 
+          i.incident_registered_date, 
+          COUNT(i.ROWID) as crime_count
+        FROM ${env.TABLE_CRIME_INCIDENT} i 
+        JOIN ${env.TABLE_INCIDENT_CRIMINAL} ic ON i.ROWID = ic.incident_id 
+        JOIN ${env.TABLE_CRIMINAL} c ON ic.criminal_id = c.ROWID 
+        GROUP BY 
+          i.crime_happended_at_district_id, 
+          i.police_station_id, 
+          i.crime_category_id, 
+          c.gender, 
+          i.incident_registered_date
+      `;
+      aggregatedRows = await zcql.executeZCQLQuery(query);
+    } catch (e) {
+      logger.warn("Failed to execute ZCQL aggregation", e.message || e);
+      // Fallback or just re-throw if it's mandatory to use ZCQL directly
+      throw new Error("ZCQL aggregation failed: " + (e.message || e));
+    }
+
+    let updated = 0;
+    let created = 0;
+
+    for (const row of aggregatedRows) {
+      // The keys might depend on whether Catalyst preserves table aliases in the output object
+      const data = row.i || row[env.TABLE_CRIME_INCIDENT] || row;
+      const cData = row.c || row[env.TABLE_CRIMINAL] || row;
+      const countData = row.COUNT || row.crime_count || row[Object.keys(row).find(k => k.includes('COUNT'))] || row;
+      
+      const district_id = data.crime_happended_at_district_id;
+      const police_station_id = data.police_station_id;
+      const crime_category_id = data.crime_category_id;
+      let crime_date = data.incident_registered_date ? data.incident_registered_date.split(' ')[0] : null;
+      if (!crime_date) crime_date = new Date().toISOString().split('T')[0];
+      const gender = cData.gender || 'Unknown';
+      const crime_count = parseInt(countData.crime_count || countData['COUNT(i.ROWID)'] || countData.COUNT || 1, 10);
+
+      // Upsert logic: check if exists
+      try {
+        const checkQuery = `
+          SELECT ROWID, crime_count FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS} 
+          WHERE district_id = '${district_id}' 
+          AND police_station_id = '${police_station_id}' 
+          AND crime_category_id = '${crime_category_id}' 
+          AND gender = '${gender}' 
+          AND crime_date = '${crime_date}'
+        `;
+        const existing = await zcql.executeZCQLQuery(checkQuery);
+
+        if (existing && existing.length > 0) {
+          const statRow = existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
+          await statsTable.updateRow({
+            ROWID: statRow.ROWID,
+            crime_count: crime_count
+          });
+          updated++;
+        } else {
+          await statsTable.insertRow({
+            district_id,
+            police_station_id,
+            crime_category_id,
+            gender,
+            crime_date,
+            crime_count
+          });
+          created++;
+        }
+      } catch (err) {
+        logger.warn("Failed to upsert stat", err.message || err);
+      }
+    }
+
+    return { created, updated };
+  },
 
   async dumpData(req) {
     const zcql = req.catalyst.zcql();
