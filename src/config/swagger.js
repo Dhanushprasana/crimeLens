@@ -47,6 +47,7 @@ const options = {
   // Paths to files containing OpenAPI annotations
   apis: [
     "./src/routes/*.js",
+    "./src/modules/forecast/swagger/*.js",
     "./src/modules/scaffolding/**/swagger/*.js",
     "./src/modules/business/**/swagger/*.js",
     "./src/modules/seed-data/swagger/*.js",

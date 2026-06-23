@@ -23,7 +23,7 @@
  *       200:
  *         description: List of criminals
  *
- * /criminals/{id}:
+ * /criminals/getOneCriminal/{id}:
  *   get:
  *     summary: Get one criminal
  *     tags: [Criminals]

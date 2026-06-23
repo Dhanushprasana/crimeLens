@@ -6,7 +6,7 @@ const controller = require('./criminal.controller');
 
 router.post('/', controller.addCriminal);
 router.get('/getAll', controller.getAllCriminals);
-router.get('/:id', controller.getOneCriminal);
+router.get('/getOneCriminal/:id', controller.getOneCriminal);
 router.put('/:id', controller.updateCriminal);
 router.delete('/:id', controller.deleteCriminal);
 

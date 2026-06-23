@@ -34,7 +34,7 @@
  *       200:
  *         description: List of crimes
  *
- * /crimes/{id}:
+ * /crimes/getOneCrime/{id}:
  *   get:
  *     summary: Get a crime by id (includes evidences)
  *     tags: [Crimes]

@@ -45,7 +45,7 @@
 
 /**
  * @openapi
- * /police/officers/{id}:
+ * /police/officers/getOneOfficer/{id}:
  *   get:
  *     summary: Get single officer
  *     tags: [Police Officers]

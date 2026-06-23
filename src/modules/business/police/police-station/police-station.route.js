@@ -12,7 +12,7 @@ router.delete("/types/:id", controller.deleteStationType);
 // Police stations CRUD
 router.post("/", controller.addPoliceStation);
 router.get("/", controller.getAllPoliceStation);       // GET /api/police/stations
-router.get("/:id", controller.getOnePoliceStation);   // GET /api/police/stations/:id
+router.get("/getOnePoliceStation/:id", controller.getOnePoliceStation);   // GET /api/police/stations/:id
 router.put("/:id", controller.updatePoliceStation);
 router.delete("/:id", controller.deletePoliceStation);
 

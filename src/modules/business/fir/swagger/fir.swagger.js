@@ -25,7 +25,7 @@
  *       200:
  *         description: List of FIRs
  *
- * /firs/{id}:
+ * /firs/getOneFir/{id}:
  *   get:
  *     summary: Get FIR by id
  *     tags: [FIRs]

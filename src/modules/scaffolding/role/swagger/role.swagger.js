@@ -58,7 +58,7 @@
 
 /**
  * @openapi
- * /roles/{id}:
+ * /roles/getOneRole/{id}:
  *   get:
  *     summary: Get single role by ID
  *     tags: [Roles]
