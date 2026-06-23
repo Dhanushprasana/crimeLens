@@ -344,6 +344,27 @@ module.exports = {
       }
     );
 
+    // Task 1: Implement profileConfidence
+    const profileConfidence = Math.min(
+      (
+        crimeFrequency * 2 +
+        associateCount +
+        phoneCount +
+        vehicleCount +
+        behavioralFlags.length * 5
+      ),
+      100
+    );
+    logger.info({
+      networkStrength,
+      districtSpread,
+      escalationTrend,
+      profileConfidence,
+      phoneCount,
+      vehicleCount,
+      associateCount,
+      crimeFrequency
+    });
     // Build profile data
     const profileData = {
       criminal_id: criminalId,
@@ -356,8 +377,21 @@ module.exports = {
       profile_type: profileType,
       associate_count: associateCount,
       primary_district: primaryDistrictId,
-      last_activity_date: lastActivityDate
+      last_activity_date: lastActivityDate,
+      // Task 2: Include additional metrics in profileData
+      network_strength: networkStrength,
+      district_spread: districtSpread,
+      escalation_trend: escalationTrend,
+      profile_confidence: profileConfidence
     };
+
+    // Task 4: Add temporary logs before persistence
+    logger.info('TEMPORARY LOGS BEFORE PERSISTENCE:', {
+      districtSpread,
+      networkStrength,
+      escalationTrend,
+      profileConfidence
+    });
 
     // Persist profile
     const existingProfile =
