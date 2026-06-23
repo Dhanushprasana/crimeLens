@@ -627,12 +627,12 @@ module.exports = {
 
   async bootstrapCrimeIncidents(req) {
     logger.info("bootstrapCrimeIncidents");
-    const filePath = path.join(
-      __dirname,
-      "data",
-      "crimie",
-      "crime_incident.json",
-    );
+    const requestedFile =
+      req && req.body && req.body.fileName ? String(req.body.fileName) : null;
+    const safeFileName = requestedFile
+      ? path.basename(requestedFile)
+      : "crime_incident.json";
+    const filePath = path.join(__dirname, "data", "crimie", safeFileName);
     const raw = await fs.readFile(filePath, "utf8");
     const entries = JSON.parse(raw || "[]");
 
@@ -741,38 +741,38 @@ module.exports = {
       logger.warn("Failed to cache districts:", err.message);
     }
 
-    // 5. Lazy FIR cache
-    const firsCache = {};
-    const getFirId = async (firNumber) => {
-      if (!firNumber) return null;
-      const key = firNumber.trim().toLowerCase();
-      if (firsCache[key] !== undefined) {
-        logger.debug && logger.debug(`FIR cache hit for ${firNumber}`);
-        return firsCache[key];
-      }
-      try {
-        logger.debug && logger.debug(`Looking up FIR id for ${firNumber}`);
-        const rows = await zcql.executeZCQLQuery(
-          `SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`,
-        );
-        if (rows && rows.length) {
-          firsCache[key] =
-            rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
-          logger.debug &&
-            logger.debug(`Cached FIR id for ${firNumber}: ${firsCache[key]}`);
-        } else {
-          firsCache[key] = null;
-          logger.debug && logger.debug(`No FIR found for ${firNumber}`);
-        }
-      } catch (err) {
-        logger.warn(
-          `Failed lookup for FIR ${firNumber}:`,
-          err && err.message ? err.message : err,
-        );
-        firsCache[key] = null;
-      }
-      return firsCache[key];
-    };
+    // // 5. Lazy FIR cache
+    // const firsCache = {};
+    // const getFirId = async (firNumber) => {
+    //   if (!firNumber) return null;
+    //   const key = firNumber.trim().toLowerCase();
+    //   if (firsCache[key] !== undefined) {
+    //     logger.debug && logger.debug(`FIR cache hit for ${firNumber}`);
+    //     return firsCache[key];
+    //   }
+    //   try {
+    //     logger.debug && logger.debug(`Looking up FIR id for ${firNumber}`);
+    //     const rows = await zcql.executeZCQLQuery(
+    //       `SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`,
+    //     );
+    //     if (rows && rows.length) {
+    //       firsCache[key] =
+    //         rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
+    //       logger.debug &&
+    //         logger.debug(`Cached FIR id for ${firNumber}: ${firsCache[key]}`);
+    //     } else {
+    //       firsCache[key] = null;
+    //       logger.debug && logger.debug(`No FIR found for ${firNumber}`);
+    //     }
+    //   } catch (err) {
+    //     logger.warn(
+    //       `Failed lookup for FIR ${firNumber}:`,
+    //       err && err.message ? err.message : err,
+    //     );
+    //     firsCache[key] = null;
+    //   }
+    //   return firsCache[key];
+    // };
 
     // Prefetch FIR ids for all FIR numbers present in the file to avoid per-row ZCQL calls
     try {
@@ -898,7 +898,8 @@ module.exports = {
         const crime_happended_at_district_id =
           districtsMap[districtCode] || null;
 
-        const fir_id = await getFirId(e.fir_number);
+        // const fir_id = await getFirId(e.fir_number);
+        const fir_id = null;
 
         const row = {
           crime_number: crimeNumber || null,
