@@ -89,20 +89,57 @@ async function calibrate(
     );
   }
 
-  // 2) For each group, request predictions and compute metrics per group
-  // Request predictions once for the whole test set to avoid per-group calls
-  let allPreds = [];
+  // 2) Build prediction rows for the entire test set and request batched predictions
+  const featureSql = `SELECT * FROM ${constants.TRAINING_TABLE} WHERE crime_registered_date >= '${safeStart}' AND crime_registered_date <= '${safeEnd}' ORDER BY district_id, police_station_id, crime_category_id, crime_registered_date`;
+  let featureRows = [];
   try {
-    allPreds = await prediction.predict(req, {
-      startDate: test_start,
-      horizonDays,
-    });
+    const fr = await zcql.executeZCQLQuery(featureSql);
+    featureRows = fr || [];
   } catch (err) {
-    logger.warn("Bulk prediction call failed during calibration", {
+    logger.warn("Failed to read training table for prediction rows", {
       error: err && err.message ? err.message : err,
     });
-    // fallback: leave allPreds empty so per-group calls below will be attempted
-    allPreds = [];
+    featureRows = [];
+  }
+
+  const predictionRows = [];
+  for (const r of featureRows) {
+    const rec = r[constants.TRAINING_TABLE] || r;
+    const district_id = rec.district_id || rec.DISTRICT_ID || null;
+    const police_station_id =
+      rec.police_station_id || rec.POLICE_STATION_ID || null;
+    const crime_category_id =
+      rec.crime_category_id || rec.CRIME_CATEGORY_ID || null;
+    const date = (
+      rec.crime_registered_date ||
+      rec.incident_registered_date ||
+      rec.date ||
+      ""
+    ).slice(0, 10);
+    if (!date) continue;
+    // include original training row fields so QuickML has necessary features
+    const row = Object.assign({}, rec, {
+      district_id,
+      police_station_id,
+      crime_category_id,
+      crime_registered_date: date,
+    });
+    predictionRows.push(row);
+  }
+
+  let allPreds = [];
+  if (predictionRows.length) {
+    try {
+      allPreds = await prediction.predict(req, {
+        predictionRows,
+        batchSize: 5000,
+      });
+    } catch (err) {
+      logger.warn("Bulk batch prediction failed during calibration", {
+        error: err && err.message ? err.message : err,
+      });
+      allPreds = [];
+    }
   }
 
   // Build a prediction map keyed by groupKey||date for fast lookup

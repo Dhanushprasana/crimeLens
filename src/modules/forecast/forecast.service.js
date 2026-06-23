@@ -7,6 +7,7 @@ const prediction = require("./forecast.prediction");
 const logger = require("../../config/logger");
 
 const training = require("./forecast.training");
+const generator = require("./forecast.generate");
 
 async function buildTrainingDataset(req, options = {}) {
   // build features and write to constants.TRAINING_TABLE
@@ -21,36 +22,7 @@ async function calibrateModel(req, options = {}) {
 }
 
 async function generateForecast(req, options = {}) {
-  // prepare context and call AutoML to generate forecasts
-  const startDate = options.startDate || null;
-  const horizon = options.horizonDays || 30;
-  const preds = await prediction.predict(req, {
-    startDate,
-    horizonDays: horizon,
-  });
-  // persist preds into constants.FORECAST_TABLE with model_version and generated_at
-  const generated_at = new Date().toISOString();
-  try {
-    const table = req.catalyst
-      ? req.catalyst.datastore().table(constants.FORECAST_TABLE)
-      : null;
-    if (table && Array.isArray(preds)) {
-      for (const p of preds) {
-        await table.insertRow({
-          district_id: p.district_id || null,
-          police_station_id: p.police_station_id || null,
-          crime_category_id: p.crime_category_id || null,
-          forecast_date: p.forecast_date,
-          predicted_count: p.predicted_count,
-          model_version: "crime_forecast_v1",
-          generated_at,
-        });
-      }
-    }
-  } catch (err) {
-    // ignore persistence errors for now
-  }
-  return { model_version: "crime_forecast_v1", generated_at, forecasts: preds };
+  return generator.generateForecast(req, options);
 }
 
 async function getForecasts(req, query = {}) {
