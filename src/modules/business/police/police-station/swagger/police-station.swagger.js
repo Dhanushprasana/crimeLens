@@ -25,7 +25,7 @@
  *       200:
  *         description: List of stations
  *
- * /police/stations/{id}:
+ * /police/stations/getOnePoliceStation/{id}:
  *   get:
  *     summary: Get single station
  *     tags: [Police Stations]

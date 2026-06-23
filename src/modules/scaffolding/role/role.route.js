@@ -11,7 +11,7 @@ router.post('/', controller.createRole);
 router.get('/getAll', controller.findAllRoles);
 
 // Get single role by ID
-router.get('/:id', controller.findRoleById);
+router.get('/getOneRole/:id', controller.findRoleById);
 
 // Update role and its permissions
 router.put('/:id', controller.updateRole);

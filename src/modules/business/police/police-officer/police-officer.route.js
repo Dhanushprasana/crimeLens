@@ -6,7 +6,7 @@ const controller = require('./police-officer.controller');
 
 router.post('/', controller.createOfficer);
 router.get('/getAll', controller.getAllOfficers);
-router.get('/:id', controller.getOneOfficer);
+router.get('/getOneOfficer/:id', controller.getOneOfficer);
 router.put('/:id', controller.updateOfficer);
 router.delete('/:id', controller.softDeleteOfficer);
 
