@@ -32,8 +32,19 @@ const env = {
   TABLE_FIR: "biz_FIR",
   TABLE_CRIME_EVIDENCE: "biz_crime_evidence",
   TABLE_INCIDENT_OFFICER: "biz_incident_officer",
-  TABLE_INCIDENT_CRIMINAL: "biz_incident_criminal",
+  TABLE_INCIDENT_CRIMINAL: "biz_incident_criminals",
   TABLE_CRIME_CATEGORY: "biz_crime_category",
+
+  // Profiling
+  TABLE_CRIMINAL_PROFILE: "biz_criminal_profile",
+  TABLE_CRIMINAL_ALIAS: "biz_criminal_alias",
+  TABLE_CRIMINAL_RELATIONSHIP: "biz_criminal_relationship",
+
+  // Intelligence
+  TABLE_CRIMINAL_PHONE: "biz_criminal_phone",
+  TABLE_CRIMINAL_VEHICLE: "biz_criminal_vehicle",
+  TABLE_BEHAVIORAL_FLAG: "biz_behavioral_flag",
+  TABLE_CRIMINAL_RISK_FACTOR: "biz_criminal_risk_factor",
 };
 
 module.exports = env;
