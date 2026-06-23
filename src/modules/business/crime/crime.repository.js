@@ -24,6 +24,7 @@ module.exports = {
       crime_location_longitude: dto.crime_location_longitude || null,
       status: dto.status || 'UNDER_INVESTIGATION',
       crime_occured_date_time: dto.crime_occured_date_time || null,
+      incident_registered_date: dto.incident_registered_date || null,
       fir_id: dto.fir_id || null,
       created_by: dto.created_by || null
     };
@@ -38,10 +39,49 @@ module.exports = {
     }
 
     // Map involved criminals
+    let genders = [];
     if (Array.isArray(dto.criminal_ids) && dto.criminal_ids.length > 0) {
       const icTable = getTable(req, env.TABLE_INCIDENT_CRIMINAL);
       for (const cid of dto.criminal_ids) {
         await icTable.insertRow({ incident_id: saved.ROWID, criminal_id: cid });
+        // fetch gender
+        try {
+          const crimRows = await executeQuery(req, `SELECT gender FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${cid}'`);
+          if (crimRows && crimRows.length > 0) {
+            const rec = crimRows[0][env.TABLE_CRIMINAL] || crimRows[0];
+            genders.push(rec.gender || 'Unknown');
+          } else {
+            genders.push('Unknown');
+          }
+        } catch (e) {
+          genders.push('Unknown');
+        }
+      }
+    } else {
+      genders.push('Unknown');
+    }
+
+    // Incremental update of statistics
+    const district_id = dto.crime_happended_at_district_id;
+    const police_station_id = dto.police_station_id;
+    const crime_category_id = dto.crime_category_id;
+    let incident_registered_date = dto.incident_registered_date ? dto.incident_registered_date.split(' ')[0].split('T')[0] : null;
+    if (!incident_registered_date) incident_registered_date = new Date().toISOString().split('T')[0];
+
+    if (district_id && police_station_id && crime_category_id) {
+      const statsTable = getTable(req, env.TABLE_COMP_DISTRICT_CRIME_STATS);
+      try {
+        const checkQuery = `SELECT ROWID, crime_count FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS} WHERE district_id = '${district_id}' AND police_station_id = '${police_station_id}' AND crime_category_id = '${crime_category_id}' AND incident_registered_date = '${incident_registered_date}'`;
+        const existing = await executeQuery(req, checkQuery);
+        if (existing && existing.length > 0) {
+          const statRow = existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
+          const newCount = (parseInt(statRow.crime_count || 0, 10) + 1);
+          await statsTable.updateRow({ ROWID: statRow.ROWID, crime_count: newCount });
+        } else {
+          await statsTable.insertRow({ district_id, police_station_id, crime_category_id, incident_registered_date, crime_count: 1 });
+        }
+      } catch (e) {
+        console.error("Incremental stat update failed", e.message || e);
       }
     }
 

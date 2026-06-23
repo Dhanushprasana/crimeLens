@@ -83,5 +83,91 @@
  */
 
 /**
+ * @openapi
+ * /seed/crime-incident/bootstrap:
+ *   post:
+ *     summary: Bootstrap Crime Incidents
+ *     tags: [Seed Data]
+ *     description: Reads `data/crimie/crime_incident.json`, resolves categories, stations, districts, and FIR references and inserts into `biz_crime_incident`.
+ *     responses:
+ *       200:
+ *         description: Crime incidents inserted/skipped counts
+ */
+
+/**
+ * @openapi
+ * /seed/crime-incident/generate:
+ *   post:
+ *     summary: Generate a crime incident using valid reference data
+ *     tags: [Seed Data]
+ *     description: |
+ *       Creates a single crime incident. The request body may contain any of the
+ *       fields shown in the example below; missing fields are filled with valid
+ *       values resolved from the database (category, police station, district, etc.).
+ *
+ *     responses:
+ *       200:
+ *         description: Generated crime incident inserted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CrimeIncident'
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @openapi
+ * /seed/incident-criminal/bootstrap:
+ *   post:
+ *     summary: Bootstrap incident‑criminal relationships
+ *     tags: [Seed Data]
+ *     description: Reads `data/crimie/incident_criminal.json` and inserts links between crime incidents and criminals into `biz_incident_criminal`.
+ *     responses:
+ *       200:
+ *         description: Incident‑criminal links inserted/skipped counts
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @openapi
+ * /seed/district-crime-stats/calculate:
+ *   post:
+ *     summary: Calculate and upsert district crime statistics
+ *     tags: [Seed Data]
+ *     description: Aggregates crime incidents by district, station, category, and registration date, and upserts the statistics into `biz_comp_district_crime_stats`.
+ *     responses:
+ *       200:
+ *         description: Statistics calculated and populated successfully
+ *       500:
+ *         description: Server error
+ */
+
+/**
  * Note: These endpoints are intended for development/bootstrapping only.
+ */
+
+/**
+ * @openapi
+ * /seed/record-counts:
+ *   get:
+ *     summary: Get record counts for all tables
+ *     tags: [Seed Data]
+ *     description: Iterates through all database tables and returns the count of records for each.
+ *     responses:
+ *       200:
+ *         description: Record counts retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties:
+ *                 type: integer
+ *       500:
+ *         description: Server error
  */

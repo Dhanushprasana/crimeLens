@@ -624,4 +624,574 @@ module.exports = {
     }
     return { created, skipped };
   },
+
+  async bootstrapCrimeIncidents(req) {
+    logger.info("bootstrapCrimeIncidents");
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "crimie",
+      "crime_incident.json",
+    );
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+
+    let created = 0;
+    let skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    // 1. Fetch default user
+    let defaultUserId = null;
+    try {
+      const userRows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_USER} LIMIT 1`);
+      if (userRows && userRows.length) {
+        defaultUserId = userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID || null;
+      }
+    } catch (err) {
+      logger.warn("Failed to fetch default user for bootstrap", err.message || err);
+    }
+
+    if (!defaultUserId) {
+      try {
+        const email = "system@crimelens.local";
+        const infoTable = req.catalyst.datastore().table(env.TABLE_USER_INFO);
+        const userTable = req.catalyst.datastore().table(env.TABLE_USER);
+
+        const infoSaved = await infoTable.insertRow({
+          user_first_name: "System",
+          user_last_name: "User",
+          email: email
+        });
+        const userSaved = await userTable.insertRow({
+          user_info_id: infoSaved.ROWID,
+          is_archived: false
+        });
+        defaultUserId = userSaved.ROWID;
+      } catch (err) {
+        logger.warn("Failed to create system user fallback", err.message || err);
+      }
+    }
+
+    // 2. Fetch and cache categories
+    const categoriesMap = {};
+    try {
+      const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+      for (const r of catRows) {
+        const cat = r[env.TABLE_CRIME_CATEGORY] || r;
+        if (cat && cat.crime_category_name) {
+          categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+        }
+      }
+    } catch (err) {
+      logger.warn("Failed to cache crime categories:", err.message);
+    }
+
+    // 3. Fetch and cache stations
+    const stationsMap = {};
+    try {
+      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+      for (const r of stationRows) {
+        const st = r[env.TABLE_POLICE_STATION] || r;
+        if (st && st.station_name) {
+          stationsMap[st.station_name.trim().toLowerCase()] = st.ROWID;
+        }
+      }
+      if (stationRows && stationRows.length) {
+        logger.info("Sample station row from DB: " + JSON.stringify(stationRows[0]));
+        logger.info("Cached stations count: " + Object.keys(stationsMap).length);
+        logger.info("Sample cached station key: " + Object.keys(stationsMap)[0]);
+      }
+    } catch (err) {
+      logger.warn("Failed to cache police stations:", err.message);
+    }
+
+    // 4. Fetch and cache districts
+    const districtsMap = {};
+    try {
+      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      for (const r of distRows) {
+        const dist = r[env.TABLE_DISTRICT_GEODATA] || r;
+        if (dist && dist.district_code) {
+          districtsMap[dist.district_code.trim().toLowerCase()] = dist.ROWID;
+        }
+      }
+    } catch (err) {
+      logger.warn("Failed to cache districts:", err.message);
+    }
+
+    // 5. Lazy FIR cache
+    const firsCache = {};
+    const getFirId = async (firNumber) => {
+      if (!firNumber) return null;
+      const key = firNumber.trim().toLowerCase();
+      if (firsCache[key] !== undefined) return firsCache[key];
+      try {
+        const rows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`);
+        if (rows && rows.length) {
+          firsCache[key] = rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
+        } else {
+          firsCache[key] = null;
+        }
+      } catch (err) {
+        logger.warn(`Failed lookup for FIR ${firNumber}:`, err.message);
+        firsCache[key] = null;
+      }
+      return firsCache[key];
+    };
+
+    // Prerequisite validations
+    if (Object.keys(districtsMap).length === 0) {
+      throw new Error("No districts found in the database. Please seed districts first using POST /seed/geojson/bootstrap");
+    }
+    if (Object.keys(stationsMap).length === 0) {
+      throw new Error("No police stations found in the database. Please seed stations first using POST /seed/police-station/bootstrap");
+    }
+    if (Object.keys(categoriesMap).length === 0) {
+      throw new Error("No crime categories found in the database. Please seed categories first using POST /seed/crime-category/bootstrap");
+    }
+
+    for (const e of entries) {
+      try {
+        const categoryName = (e.crime_category || "").trim().toLowerCase();
+        const crime_category_id = categoriesMap[categoryName] || null;
+
+        const stationName = (e.police_station || "").trim().toLowerCase();
+        const police_station_id = stationsMap[stationName] || null;
+
+        const districtCode = (e.crime_happened_at_district_code || "").trim().toLowerCase().replace(/_/g, "-");
+        const crime_happended_at_district_id = districtsMap[districtCode] || null;
+
+        const fir_id = await getFirId(e.fir_number);
+
+        const dto = {
+          crime_number: e.crime_number || null,
+          title: e.title || "Unknown Crime",
+          description: e.description || null,
+          crime_category_id,
+          police_station_id,
+          crime_happended_at_district_id,
+          crime_location_latitude: e.crime_location_latitude || null,
+          crime_location_longitude: e.crime_location_longitude || null,
+          status: e.status || "UNDER_INVESTIGATION",
+          crime_occured_date_time: e.crime_occured_date_time || null,
+          incident_registered_date: e.crime_occured_date_time ? e.crime_occured_date_time.split(' ')[0] : null,
+          fir_id,
+          created_by: defaultUserId
+        };
+
+        await crimeRepo.addCrime(dto, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn(
+          `Failed to insert crime incident: ${e.crime_number}`,
+          err && err.message ? err.message : err,
+        );
+      }
+    }
+
+    return { created, skipped };
+  },
+
+  async bootstrapIncidentCriminals(req) {
+    logger.info('bootstrapIncidentCriminals');
+    const filePath = path.join(__dirname, 'data', 'crimie', 'incident_criminal.json');
+    const raw = await fs.readFile(filePath, 'utf8');
+    const entries = JSON.parse(raw || '[]');
+
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    if (!zcql) throw new Error('Catalyst not available');
+
+    // 1️⃣ Cache crime incidents (crime_number → ROWID)
+    const crimeMap = {};
+    const validCrimes = [];
+    try {
+      const crimeRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, crime_number FROM ${env.TABLE_CRIME_INCIDENT}`
+      );
+      for (const r of crimeRows) {
+        const rec = r[env.TABLE_CRIME_INCIDENT] || r;
+        if (rec && rec.crime_number) {
+          crimeMap[rec.crime_number.trim().toLowerCase()] = rec.ROWID;
+          validCrimes.push(rec.crime_number);
+        }
+      }
+    } catch (e) {
+      logger.warn('Failed to cache crime incidents', e);
+    }
+
+    // 2️⃣ Cache criminals (criminal_number → ROWID)
+    const criminalMap = {};
+    const validCriminals = [];
+    try {
+      const crimRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL}`
+      );
+      for (const r of crimRows) {
+        const rec = r[env.TABLE_CRIMINAL] || r;
+        if (rec && rec.criminal_number) {
+          criminalMap[rec.criminal_number.trim().toLowerCase()] = rec.ROWID;
+          validCriminals.push(rec.criminal_number);
+        }
+      }
+    } catch (e) {
+      logger.warn('Failed to cache criminals', e);
+    }
+
+    // Replace invalid crimes and criminals with valid ones
+    let fileUpdated = false;
+    if (validCrimes.length > 0 && validCriminals.length > 0) {
+      for (const e of entries) {
+        const crimeKey = (e.crime_number || '').trim().toLowerCase();
+        if (!crimeMap[crimeKey]) {
+          const randCrime = validCrimes[Math.floor(Math.random() * validCrimes.length)];
+          e.crime_number = randCrime;
+          fileUpdated = true;
+        }
+
+        const crimKey = (e.criminal_number || '').trim().toLowerCase();
+        if (!criminalMap[crimKey]) {
+          const randCriminal = validCriminals[Math.floor(Math.random() * validCriminals.length)];
+          e.criminal_number = randCriminal;
+          fileUpdated = true;
+        }
+      }
+      if (fileUpdated) {
+        await fs.writeFile(filePath, JSON.stringify(entries, null, 2), 'utf8');
+        logger.info('Updated incident_criminal.json with valid db references.');
+      }
+    }
+
+    // 3️⃣ Fetch existing relationships in memory to avoid duplicate checking in the loop
+    const existingRelations = new Set();
+    try {
+      let offset = 0;
+      const limit = 100;
+      while (true) {
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT incident_id, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} LIMIT ${limit} OFFSET ${offset}`
+        );
+        if (!rows || rows.length === 0) break;
+        for (const r of rows) {
+          const rec = r[env.TABLE_INCIDENT_CRIMINAL] || r;
+          if (rec.incident_id && rec.criminal_id) {
+            existingRelations.add(`${rec.incident_id}-${rec.criminal_id}`);
+          }
+        }
+        if (rows.length < limit) break;
+        offset += limit;
+      }
+      logger.info(`Loaded ${existingRelations.size} existing incident-criminal relationships.`);
+    } catch (e) {
+      logger.warn('Failed to fetch existing relationships', e);
+    }
+
+    // 4️⃣ Identify relationships to insert
+    let created = 0;
+    let skipped = 0;
+    const icTable = req.catalyst.datastore().table(env.TABLE_INCIDENT_CRIMINAL);
+    const rowsToInsert = [];
+
+    for (const e of entries) {
+      const crimeKey = (e.crime_number || '').trim().toLowerCase();
+      const crimKey = (e.criminal_number || '').trim().toLowerCase();
+      const crimeId = crimeMap[crimeKey];
+      const criminalId = criminalMap[crimKey];
+
+      if (!crimeId || !criminalId) {
+        skipped++;
+        let reason = 'Missing ';
+        if (!crimeId && !criminalId) reason += 'crime and criminal';
+        else if (!crimeId) reason += 'crime';
+        else reason += 'criminal';
+        logger.info(`Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: ${reason}`);
+        continue;
+      }
+
+      if (existingRelations.has(`${crimeId}-${criminalId}`)) {
+        skipped++;
+        logger.info(`Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: Duplicate`);
+        continue;
+      }
+
+      rowsToInsert.push({
+        incident_id: crimeId,
+        criminal_id: criminalId,
+      });
+    }
+
+    // 5️⃣ Insert relationships in batches of 100
+    const chunkSize = 100;
+    for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
+      const chunk = rowsToInsert.slice(i, i + chunkSize);
+      try {
+        await icTable.insertRows(chunk);
+        created += chunk.length;
+        logger.info(`Inserted batch of ${chunk.length} relations (${i + chunk.length}/${rowsToInsert.length})`);
+      } catch (err) {
+        logger.warn(`Failed to insert batch of ${chunk.length} relations, falling back to single inserts...`, err.message || err);
+        for (const item of chunk) {
+          try {
+            await icTable.insertRow(item);
+            created++;
+          } catch (singleErr) {
+            logger.warn('Failed to insert single incident-criminal link', {
+              item,
+              error: singleErr.message || singleErr,
+            });
+            skipped++;
+          }
+        }
+      }
+    }
+
+    return { created, skipped };
+  },
+
+
+  async generateCrime(req) {
+    logger.info("generateCrime");
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    // Fetch reference maps
+    const categoriesMap = {};
+    const stationsMap = {};
+    const districtsMap = {};
+    try {
+      const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+      for (const r of catRows) {
+        const cat = r[env.TABLE_CRIME_CATEGORY] || r;
+        if (cat && cat.crime_category_name) {
+          categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+        }
+      }
+    } catch (e) { logger.warn("fetch categories error", e); }
+    try {
+      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+      for (const r of stationRows) {
+        const st = r[env.TABLE_POLICE_STATION] || r;
+        if (st && st.station_name) {
+          stationsMap[st.station_name.trim().toLowerCase()] = st.ROWID;
+        }
+      }
+    } catch (e) { logger.warn("fetch stations error", e); }
+    try {
+      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      for (const r of distRows) {
+        const d = r[env.TABLE_DISTRICT_GEODATA] || r;
+        if (d && d.district_code) {
+          districtsMap[d.district_code.trim().toLowerCase()] = d.ROWID;
+        }
+      }
+    } catch (e) { logger.warn("fetch districts error", e); }
+
+    const categoryKeys = Object.keys(categoriesMap);
+    const stationKeys = Object.keys(stationsMap);
+    const districtKeys = Object.keys(districtsMap);
+    if (!categoryKeys.length || !stationKeys.length || !districtKeys.length) {
+      throw new Error("Required reference data missing for generateCrime");
+    }
+    const randomCategory = categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
+    const randomStation = stationKeys[Math.floor(Math.random() * stationKeys.length)];
+    const randomDistrict = districtKeys[Math.floor(Math.random() * districtKeys.length)];
+
+    const dto = {
+      crime_number: `CASE-${Date.now()}`,
+      title: "Generated Crime",
+      description: "Automatically generated incident",
+      crime_category_id: categoriesMap[randomCategory],
+      police_station_id: stationsMap[randomStation],
+      crime_happended_at_district_id: districtsMap[randomDistrict],
+      crime_location_latitude: null,
+      crime_location_longitude: null,
+      status: "UNDER_INVESTIGATION",
+      crime_occured_date_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+      fir_id: null,
+      created_by: "46044000000052002",
+    };
+    const result = await crimeRepo.addCrime(dto, req);
+    return result;
+  },
+
+  async calculateDistrictCrimeStats(req) {
+    logger.info("calculateDistrictCrimeStats in-memory grouping");
+
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    if (!zcql) throw new Error("Catalyst not available");
+
+    const datastore = req.catalyst.datastore();
+    const statsTable = datastore.table(env.TABLE_COMP_DISTRICT_CRIME_STATS);
+
+    let incidents = [];
+
+    try {
+      // Fetch all incidents using Datastore pagination to bypass the ZCQL 300-row default limit
+      const incidentTable = datastore.table(env.TABLE_CRIME_INCIDENT);
+      let nextToken = undefined;
+      logger.info("Starting pagination fetch for crime incidents");
+      do {
+        const pagedResp = await incidentTable.getPagedRows({
+          nextToken,
+          maxRows: 200
+        });
+        if (pagedResp && pagedResp.data) {
+          incidents.push(...pagedResp.data);
+          logger.info(`Fetched ${pagedResp.data.length} incidents, nextToken=${pagedResp.next_token}`);
+        }
+        nextToken = pagedResp ? pagedResp.next_token : undefined;
+      } while (nextToken);
+
+      logger.info(`Fetched ${incidents.length} total incidents to group in memory`);
+    } catch (e) {
+      logger.warn("Failed to fetch all incidents via getPagedRows", e.message || e);
+      throw new Error("Failed to fetch incidents: " + (e.message || e));
+    }
+
+    // In-memory grouping to correctly group by DATE (ignoring time)
+    const statsMap = {};
+
+    for (const row of incidents) {
+      const data = row[env.TABLE_CRIME_INCIDENT] || row;
+      const districtId = data.crime_happended_at_district_id;
+      const policeStationId = data.police_station_id;
+      const crimeCategoryId = data.crime_category_id;
+      
+      // Strip time from timestamp to group by date only
+      let incidentRegisteredDate = data.incident_registered_date 
+        ? data.incident_registered_date.split(" ")[0].split("T")[0] 
+        : new Date().toISOString().split("T")[0];
+
+      if (districtId && policeStationId && crimeCategoryId) {
+        const key = `${districtId}_${policeStationId}_${crimeCategoryId}_${incidentRegisteredDate}`;
+        if (!statsMap[key]) {
+          statsMap[key] = {
+            district_id: districtId,
+            police_station_id: policeStationId,
+            crime_category_id: crimeCategoryId,
+            incident_registered_date: incidentRegisteredDate,
+            crime_count: 0
+          };
+        }
+        statsMap[key].crime_count += 1;
+      }
+    }
+
+    const aggregatedRows = Object.values(statsMap);
+    logger.info(`Found ${aggregatedRows.length} grouped crime stat rows after in-memory aggregation`);
+
+    logger.info(`Processing ${aggregatedRows.length} aggregated rows for upsert`);
+    // Batch insert new stats rows to reduce API calls
+    const toInsert = [];
+    const BATCH_SIZE = 200;
+    let created = 0;
+    let updated = 0;
+
+    for (const stat of aggregatedRows) {
+      logger.debug(`Upserting stat: district=${stat.district_id}, station=${stat.police_station_id}, category=${stat.crime_category_id}, date=${stat.incident_registered_date}`);
+      try {
+        const checkQuery = `
+        SELECT ROWID, crime_count
+        FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS}
+        WHERE district_id = '${stat.district_id}'
+          AND police_station_id = '${stat.police_station_id}'
+          AND crime_category_id = '${stat.crime_category_id}'
+          AND incident_registered_date = '${stat.incident_registered_date}'
+        `;
+        const existing = await zcql.executeZCQLQuery(checkQuery);
+        if (existing && existing.length > 0) {
+          const statRow = existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
+          if (Number(statRow.crime_count) !== stat.crime_count) {
+            await statsTable.updateRow({ ROWID: statRow.ROWID, crime_count: stat.crime_count });
+            updated++;
+          }
+        } else {
+          // collect for batch insert
+          toInsert.push({
+            district_id: stat.district_id,
+            police_station_id: stat.police_station_id,
+            crime_category_id: stat.crime_category_id,
+            incident_registered_date: stat.incident_registered_date,
+            crime_count: stat.crime_count,
+          });
+        }
+      } catch (err) {
+        logger.warn("Failed to upsert stat", err.message || err);
+      }
+    }
+
+    // Insert new rows in batches
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const chunk = toInsert.slice(i, i + BATCH_SIZE);
+      try {
+        await statsTable.insertRows(chunk);
+        created += chunk.length;
+      } catch (e) {
+        logger.warn("Batch insert failed", e.message || e);
+        // fallback to individual inserts for this chunk
+        for (const row of chunk) {
+          try {
+            await statsTable.insertRow(row);
+            created++;
+          } catch (e2) {
+            logger.warn("Fallback insert failed", e2.message || e2);
+          }
+        }
+      }
+    }
+
+    logger.info(`Crime stats calculation completed. Created: ${created}, Updated: ${updated}`);
+
+    return { created, updated };
+  },
+
+  async dumpData(req) {
+    const zcql = req.catalyst.zcql();
+    const stations = await zcql.executeZCQLQuery(`SELECT station_name, district_id FROM ${env.TABLE_POLICE_STATION}`);
+    const districts = await zcql.executeZCQLQuery(`SELECT ROWID, district_code, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
+    return { stations, districts };
+  },
+
+  async getAllTableCounts(req) {
+    const zcql = req.catalyst.zcql();
+    const tables = [
+      env.TABLE_CONFIGURATION,
+      env.TABLE_PERMISSION,
+      env.TABLE_ROLE,
+      env.TABLE_ROLE_PERMISSION,
+      env.TABLE_USER,
+      env.TABLE_USER_INFO,
+      env.TABLE_USER_ROLE,
+      env.TABLE_USER_CONFIGURATION,
+      env.TABLE_POLICE_OFFICER,
+      env.TABLE_POLICE_RANK,
+      env.TABLE_POLICE_STATION,
+      env.TABLE_STATION_TYPE,
+      env.TABLE_DISTRICT_GEODATA,
+      env.TABLE_CRIMINAL,
+      env.TABLE_CRIME_INCIDENT,
+      env.TABLE_FIR,
+      env.TABLE_CRIME_EVIDENCE,
+      env.TABLE_INCIDENT_OFFICER,
+      env.TABLE_INCIDENT_CRIMINAL,
+      env.TABLE_CRIME_CATEGORY,
+      env.TABLE_COMP_DISTRICT_CRIME_STATS,
+    ];
+
+    const counts = {};
+    for (const tbl of tables) {
+      if (!tbl) continue;
+      try {
+        const res = await zcql.executeZCQLQuery(`SELECT COUNT(ROWID) FROM ${tbl}`);
+        const firstRow = res && res[0] ? (res[0][tbl] || res[0]) : null;
+        let cnt = 0;
+        if (firstRow) {
+          cnt = firstRow["COUNT(ROWID)"] || Object.values(firstRow)[0] || 0;
+        }
+        counts[tbl] = Number(cnt);
+      } catch (e) {
+        logger.warn(`Failed to count table ${tbl}: ${e.message}`);
+        counts[tbl] = 0;
+      }
+    }
+    return counts;
+  }
 };
