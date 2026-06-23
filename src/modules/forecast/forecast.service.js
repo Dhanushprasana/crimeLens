@@ -17,31 +17,6 @@ async function buildTrainingDataset(req, options = {}) {
 async function calibrateModel(req, options = {}) {
   // orchestrate calibration using training table
   const res = await calibration.calibrate(req, options);
-  // persist res into constants.CALIBRATION_TABLE
-  try {
-    const table = req.catalyst
-      ? req.catalyst.datastore().table(constants.CALIBRATION_TABLE)
-      : null;
-    if (table) {
-      await table.insertRow({
-        model_version: res.model_version,
-        train_start: res.train_start,
-        train_end: res.train_end,
-        test_start: res.test_start,
-        test_end: res.test_end,
-        forecast_horizon_days: res.forecast_horizon_days,
-        mae: res.mae,
-        rmse: res.rmse,
-        mape: res.mape,
-        total_predictions: res.total_predictions,
-        status: res.status,
-        notes: res.notes || null,
-        created_at: new Date().toISOString(),
-      });
-    }
-  } catch (err) {
-    // swallow persistence errors but log if logger available
-  }
   return res;
 }
 
