@@ -154,4 +154,34 @@
  *         description: Calibration report
  */
 
+/**
+ * @swagger
+ * /forecast/training/csv:
+ *   get:
+ *     tags:
+ *       - Forecasting
+ *     summary: Export the training table as CSV
+ *     description: Returns the contents of `biz_district_crime_forecast_training_data` as a CSV file attachment.
+ *     parameters:
+ *       - in: query
+ *         name: train_start
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional start date filter (inclusive)
+ *       - in: query
+ *         name: train_end
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional end date filter (inclusive)
+ *     responses:
+ *       200:
+ *         description: CSV file attachment
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+
 module.exports = {};

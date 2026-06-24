@@ -79,6 +79,76 @@ async function trainModel(req, options = {}) {
   return training.trainModel(req, options);
 }
 
+async function exportTrainingCsv(req) {
+  const q = req && req.query ? req.query : {};
+  const safeStart = q.train_start || q.start || null;
+  const safeEnd = q.train_end || q.end || null;
+  const cols = [
+    "district_id",
+    "police_station_id",
+    "crime_category_id",
+    "crime_registered_date",
+    "day_of_week",
+    "week_of_year",
+    "crime_month",
+    "crime_quarter",
+    "crime_year",
+    "lag_1",
+    "lag_7",
+    "lag_30",
+    "rolling_avg_7",
+    "rolling_avg_30",
+    "crime_count",
+  ];
+
+  const datastore = req.catalyst ? req.catalyst.datastore() : null;
+  if (!datastore) throw new Error("Catalyst datastore not available");
+  const table = datastore.table(constants.TRAINING_TABLE);
+
+  const rows = [];
+  let nextToken = undefined;
+  do {
+    const paged = await table.getPagedRows({ nextToken, maxRows: 300 });
+    const pageRows = (paged && (paged.data || paged.rows)) || [];
+    for (const r of pageRows) {
+      const rec = r[constants.TRAINING_TABLE] || r;
+      // normalize date value to YYYY-MM-DD
+      let recDate =
+        rec.crime_registered_date ||
+        rec.Crime_registered_date ||
+        rec.crimeRegisteredDate ||
+        null;
+      if (recDate && recDate instanceof Date)
+        recDate = recDate.toISOString().slice(0, 10);
+      else if (recDate) recDate = (recDate + "").slice(0, 10);
+
+      // apply optional date filters
+      if (safeStart && recDate < safeStart) continue;
+      if (safeEnd && recDate > safeEnd) continue;
+
+      const out = {};
+      for (const c of cols)
+        out[c] = rec[c] !== undefined ? rec[c] : rec[c.toUpperCase()] || "";
+      rows.push(out);
+    }
+    nextToken = paged ? paged.next_token || paged.nextToken : undefined;
+  } while (nextToken);
+
+  function csvEscape(v) {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (s.includes(",") || s.includes('"') || s.includes("\n"))
+      return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  }
+
+  const header = cols.join(",");
+  const lines = [header];
+  for (const r of rows) lines.push(cols.map((c) => csvEscape(r[c])).join(","));
+  const csv = lines.join("\n");
+  return { csv, filename: `training_${Date.now()}.csv`, rows: rows.length };
+}
+
 // polling logic moved to forecast.training module
 
 module.exports = {
@@ -87,6 +157,7 @@ module.exports = {
   generateForecast,
   getForecasts,
   getCalibrationReport,
+  exportTrainingCsv,
 };
 // Export trainModel as well
 module.exports.trainModel = trainModel;

@@ -5,6 +5,7 @@ const router = express.Router();
 const controller = require("./forecast.controller");
 
 router.post("/build-training-data", controller.buildTrainingData);
+router.get("/training/csv", controller.exportTrainingCsv);
 router.post("/calibrate", controller.calibrateModel);
 router.post("/generate", controller.generateForecast);
 router.post("/train", controller.trainModel);

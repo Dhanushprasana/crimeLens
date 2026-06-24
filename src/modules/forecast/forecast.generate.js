@@ -8,21 +8,43 @@ async function generateForecast(
   req,
   { model_version, forecast_start, forecast_end, batchSize = 5000 },
 ) {
+  logger.info("generateForecast: start", {
+    model_version,
+    forecast_start,
+    forecast_end,
+    batchSize,
+  });
+
   const zcql = req.catalyst.zcql();
 
-  const rows = await zcql.executeZCQLQuery(`
-    SELECT DISTINCT
-      district_id,
-      police_station_id,
-      crime_category_id
-    FROM ${constants.TRAINING_TABLE}
-  `);
+  let rows = [];
+  try {
+    rows = await zcql.executeZCQLQuery(`
+      SELECT DISTINCT
+        district_id,
+        police_station_id,
+        crime_category_id
+      FROM ${constants.TRAINING_TABLE}
+    `);
+    logger.info("generateForecast: fetched training rows", {
+      trainingRows: Array.isArray(rows) ? rows.length : 0,
+    });
+  } catch (err) {
+    logger.error("generateForecast: failed to fetch training rows", {
+      error: err && err.message ? err.message : String(err),
+    });
+    throw err;
+  }
 
   const predictionRows = [];
 
   const start = new Date(forecast_start);
   const end = new Date(forecast_end);
-
+  logger.info("generateForecast: preparing prediction rows", {
+    dateRange: `${start.toISOString().slice(0, 10)} - ${end
+      .toISOString()
+      .slice(0, 10)}`,
+  });
   for (const row of rows) {
     const data = row[constants.TRAINING_TABLE] || row;
 
@@ -36,12 +58,21 @@ async function generateForecast(
       });
     }
   }
+  logger.info("generateForecast: predictionRows prepared", {
+    predictionRows: predictionRows.length,
+  });
 
   let predictions;
   try {
+    logger.info("generateForecast: calling prediction service", {
+      batchSize,
+    });
     predictions = await prediction.predict(req, {
       predictionRows,
       batchSize,
+    });
+    logger.info("generateForecast: prediction service returned", {
+      predictionCount: Array.isArray(predictions) ? predictions.length : 0,
     });
   } catch (err) {
     logger.error("Forecast prediction failed", {
@@ -84,6 +115,10 @@ async function generateForecast(
 
   // Batch insert in chunks for performance, fallback to per-row inserts
   if (table && rowsToInsert.length) {
+    logger.info("generateForecast: inserting forecast rows", {
+      targetTable: constants.FORECAST_TABLE,
+      rowsToInsert: rowsToInsert.length,
+    });
     const CHUNK_SIZE = 200;
     for (let i = 0; i < rowsToInsert.length; i += CHUNK_SIZE) {
       const chunk = rowsToInsert.slice(i, i + CHUNK_SIZE);
