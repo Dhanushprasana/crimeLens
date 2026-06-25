@@ -65,8 +65,4 @@ module.exports = {
   getForecasts,
   getCalibrationReport,
 };
-// 'use strict';
 
-// const service = require('./forecast.service');
-
-// module.exports = {}

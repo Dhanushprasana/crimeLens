@@ -1,4 +1,85 @@
 /**
+ * @swagger
+ * tags:
+ *   - name: SeedData
+ *     description: Endpoints for seeding application data from sample files
+ */
+
+/**
+ * @swagger
+ * /seed/crime-incident/bootstrap:
+ *   post:
+ *     tags:
+ *       - SeedData
+ *     summary: Bootstrap crime incidents from a data file (optional fileName)
+ *     description: |
+ *       Starts a background job to insert crime incident records from a JSON file located in
+ *       `src/modules/seed-data/data/crimie/`. If `fileName` is provided in the request body,
+ *       the service will use that file (basename only). Returns 202 with a `jobId` and `statusUrl`.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: Filename under `src/modules/seed-data/data/crimie/` to import (basename only)
+ *     responses:
+ *       202:
+ *         description: Job accepted and running in background; returns jobId and statusUrl
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 jobId:
+ *                   type: string
+ *                 statusUrl:
+ *                   type: string
+ */
+
+/**
+ * @swagger
+ * /seed/crime-incident/bootstrap/status/{jobId}:
+ *   get:
+ *     tags:
+ *       - SeedData
+ *     summary: Get status for a running or completed bootstrap job
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Job status object
+ *       404:
+ *         description: Job not found
+ */
+
+/**
+ * @swagger
+ * /seed/crime-incident/generate:
+ *   post:
+ *     tags:
+ *       - SeedData
+ *     summary: Generate a single synthetic crime incident and insert into DB
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Created crime incident
+ */
+
+module.exports = {};
+/**
  * @openapi
  * /seed/geojson/bootstrap:
  *   post:

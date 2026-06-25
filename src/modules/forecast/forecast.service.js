@@ -7,6 +7,7 @@ const prediction = require("./forecast.prediction");
 const logger = require("../../config/logger");
 
 const training = require("./forecast.training");
+const generator = require("./forecast.generate");
 
 async function buildTrainingDataset(req, options = {}) {
   // build features and write to constants.TRAINING_TABLE
@@ -17,65 +18,11 @@ async function buildTrainingDataset(req, options = {}) {
 async function calibrateModel(req, options = {}) {
   // orchestrate calibration using training table
   const res = await calibration.calibrate(req, options);
-  // persist res into constants.CALIBRATION_TABLE
-  try {
-    const table = req.catalyst
-      ? req.catalyst.datastore().table(constants.CALIBRATION_TABLE)
-      : null;
-    if (table) {
-      await table.insertRow({
-        model_version: res.model_version,
-        train_start: res.train_start,
-        train_end: res.train_end,
-        test_start: res.test_start,
-        test_end: res.test_end,
-        forecast_horizon_days: res.forecast_horizon_days,
-        mae: res.mae,
-        rmse: res.rmse,
-        mape: res.mape,
-        total_predictions: res.total_predictions,
-        status: res.status,
-        notes: res.notes || null,
-        created_at: new Date().toISOString(),
-      });
-    }
-  } catch (err) {
-    // swallow persistence errors but log if logger available
-  }
   return res;
 }
 
 async function generateForecast(req, options = {}) {
-  // prepare context and call AutoML to generate forecasts
-  const startDate = options.startDate || null;
-  const horizon = options.horizonDays || 30;
-  const preds = await prediction.predict(req, {
-    startDate,
-    horizonDays: horizon,
-  });
-  // persist preds into constants.FORECAST_TABLE with model_version and generated_at
-  const generated_at = new Date().toISOString();
-  try {
-    const table = req.catalyst
-      ? req.catalyst.datastore().table(constants.FORECAST_TABLE)
-      : null;
-    if (table && Array.isArray(preds)) {
-      for (const p of preds) {
-        await table.insertRow({
-          district_id: p.district_id || null,
-          police_station_id: p.police_station_id || null,
-          crime_category_id: p.crime_category_id || null,
-          forecast_date: p.forecast_date,
-          predicted_count: p.predicted_count,
-          model_version: "crime_forecast_v1",
-          generated_at,
-        });
-      }
-    }
-  } catch (err) {
-    // ignore persistence errors for now
-  }
-  return { model_version: "crime_forecast_v1", generated_at, forecasts: preds };
+  return generator.generateForecast(req, options);
 }
 
 async function getForecasts(req, query = {}) {

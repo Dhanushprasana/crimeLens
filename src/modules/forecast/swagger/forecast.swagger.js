@@ -72,7 +72,16 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [model_version, test_start, test_end]
  *             properties:
+ *               model_version:
+ *                 type: string
+ *               train_start:
+ *                 type: string
+ *                 format: date
+ *               train_end:
+ *                 type: string
+ *                 format: date
  *               test_start:
  *                 type: string
  *                 format: date

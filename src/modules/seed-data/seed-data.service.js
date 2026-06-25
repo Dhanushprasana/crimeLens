@@ -627,12 +627,12 @@ module.exports = {
 
   async bootstrapCrimeIncidents(req) {
     logger.info("bootstrapCrimeIncidents");
-    const filePath = path.join(
-      __dirname,
-      "data",
-      "crimie",
-      "crime_incident.json",
-    );
+    const requestedFile =
+      req && req.body && req.body.fileName ? String(req.body.fileName) : null;
+    const safeFileName = requestedFile
+      ? path.basename(requestedFile)
+      : "crime_incident.json";
+    const filePath = path.join(__dirname, "data", "crimie", safeFileName);
     const raw = await fs.readFile(filePath, "utf8");
     const entries = JSON.parse(raw || "[]");
 
@@ -643,12 +643,18 @@ module.exports = {
     // 1. Fetch default user
     let defaultUserId = null;
     try {
-      const userRows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_USER} LIMIT 1`);
+      const userRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID FROM ${env.TABLE_USER} LIMIT 1`,
+      );
       if (userRows && userRows.length) {
-        defaultUserId = userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID || null;
+        defaultUserId =
+          userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID || null;
       }
     } catch (err) {
-      logger.warn("Failed to fetch default user for bootstrap", err.message || err);
+      logger.warn(
+        "Failed to fetch default user for bootstrap",
+        err && err.message ? err.message : err,
+      );
     }
 
     if (!defaultUserId) {
@@ -660,26 +666,32 @@ module.exports = {
         const infoSaved = await infoTable.insertRow({
           user_first_name: "System",
           user_last_name: "User",
-          email: email
+          email: email,
         });
         const userSaved = await userTable.insertRow({
           user_info_id: infoSaved.ROWID,
-          is_archived: false
+          is_archived: false,
         });
         defaultUserId = userSaved.ROWID;
       } catch (err) {
-        logger.warn("Failed to create system user fallback", err.message || err);
+        logger.warn(
+          "Failed to create system user fallback",
+          err.message || err,
+        );
       }
     }
 
     // 2. Fetch and cache categories
     const categoriesMap = {};
     try {
-      const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+      const catRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`,
+      );
       for (const r of catRows) {
         const cat = r[env.TABLE_CRIME_CATEGORY] || r;
         if (cat && cat.crime_category_name) {
-          categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+          categoriesMap[cat.crime_category_name.trim().toLowerCase()] =
+            cat.ROWID;
         }
       }
     } catch (err) {
@@ -689,7 +701,9 @@ module.exports = {
     // 3. Fetch and cache stations
     const stationsMap = {};
     try {
-      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+      const stationRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`,
+      );
       for (const r of stationRows) {
         const st = r[env.TABLE_POLICE_STATION] || r;
         if (st && st.station_name) {
@@ -697,9 +711,15 @@ module.exports = {
         }
       }
       if (stationRows && stationRows.length) {
-        logger.info("Sample station row from DB: " + JSON.stringify(stationRows[0]));
-        logger.info("Cached stations count: " + Object.keys(stationsMap).length);
-        logger.info("Sample cached station key: " + Object.keys(stationsMap)[0]);
+        logger.info(
+          "Sample station row from DB: " + JSON.stringify(stationRows[0]),
+        );
+        logger.info(
+          "Cached stations count: " + Object.keys(stationsMap).length,
+        );
+        logger.info(
+          "Sample cached station key: " + Object.keys(stationsMap)[0],
+        );
       }
     } catch (err) {
       logger.warn("Failed to cache police stations:", err.message);
@@ -708,7 +728,9 @@ module.exports = {
     // 4. Fetch and cache districts
     const districtsMap = {};
     try {
-      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      const distRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`,
+      );
       for (const r of distRows) {
         const dist = r[env.TABLE_DISTRICT_GEODATA] || r;
         if (dist && dist.district_code) {
@@ -719,52 +741,168 @@ module.exports = {
       logger.warn("Failed to cache districts:", err.message);
     }
 
-    // 5. Lazy FIR cache
-    const firsCache = {};
-    const getFirId = async (firNumber) => {
-      if (!firNumber) return null;
-      const key = firNumber.trim().toLowerCase();
-      if (firsCache[key] !== undefined) return firsCache[key];
-      try {
-        const rows = await zcql.executeZCQLQuery(`SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`);
-        if (rows && rows.length) {
-          firsCache[key] = rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
-        } else {
-          firsCache[key] = null;
-        }
-      } catch (err) {
-        logger.warn(`Failed lookup for FIR ${firNumber}:`, err.message);
-        firsCache[key] = null;
+    // // 5. Lazy FIR cache
+    // const firsCache = {};
+    // const getFirId = async (firNumber) => {
+    //   if (!firNumber) return null;
+    //   const key = firNumber.trim().toLowerCase();
+    //   if (firsCache[key] !== undefined) {
+    //     logger.debug && logger.debug(`FIR cache hit for ${firNumber}`);
+    //     return firsCache[key];
+    //   }
+    //   try {
+    //     logger.debug && logger.debug(`Looking up FIR id for ${firNumber}`);
+    //     const rows = await zcql.executeZCQLQuery(
+    //       `SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`,
+    //     );
+    //     if (rows && rows.length) {
+    //       firsCache[key] =
+    //         rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
+    //       logger.debug &&
+    //         logger.debug(`Cached FIR id for ${firNumber}: ${firsCache[key]}`);
+    //     } else {
+    //       firsCache[key] = null;
+    //       logger.debug && logger.debug(`No FIR found for ${firNumber}`);
+    //     }
+    //   } catch (err) {
+    //     logger.warn(
+    //       `Failed lookup for FIR ${firNumber}:`,
+    //       err && err.message ? err.message : err,
+    //     );
+    //     firsCache[key] = null;
+    //   }
+    //   return firsCache[key];
+    // };
+
+    // Prefetch FIR ids for all FIR numbers present in the file to avoid per-row ZCQL calls
+    try {
+      const uniqueFirs = new Set();
+      for (const e of entries) {
+        if (e && e.fir_number) uniqueFirs.add((e.fir_number || "").trim());
       }
-      return firsCache[key];
-    };
+      const firList = Array.from(uniqueFirs).filter(Boolean);
+      if (firList.length) {
+        const CHUNK = 500;
+        logger.info(
+          `Prefetching ${firList.length} FIR ids in chunks of ${CHUNK}`,
+        );
+        for (let j = 0; j < firList.length; j += CHUNK) {
+          const slice = firList.slice(j, j + CHUNK);
+          const inList = slice
+            .map((fn) => `'${fn.replace(/'/g, "''")}'`)
+            .join(",");
+          try {
+            const rows = await zcql.executeZCQLQuery(
+              `SELECT ROWID, fir_number FROM ${env.TABLE_FIR} WHERE fir_number IN (${inList})`,
+            );
+            for (const r of rows || []) {
+              const rec = r[env.TABLE_FIR] || r;
+              if (rec && rec.fir_number) {
+                firsCache[(rec.fir_number || "").trim().toLowerCase()] =
+                  rec.ROWID || null;
+              }
+            }
+            logger.info(
+              `Prefetched FIR chunk ${j + 1}-${Math.min(j + CHUNK, firList.length)} of ${firList.length}`,
+            );
+          } catch (err) {
+            logger.warn(
+              `Failed to prefetch FIR chunk ${j + 1}-${Math.min(j + CHUNK, firList.length)}`,
+              err && err.message ? err.message : err,
+            );
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn(
+        "FIR prefetch failed",
+        err && err.message ? err.message : err,
+      );
+    }
 
     // Prerequisite validations
     if (Object.keys(districtsMap).length === 0) {
-      throw new Error("No districts found in the database. Please seed districts first using POST /seed/geojson/bootstrap");
+      throw new Error(
+        "No districts found in the database. Please seed districts first using POST /seed/geojson/bootstrap",
+      );
     }
     if (Object.keys(stationsMap).length === 0) {
-      throw new Error("No police stations found in the database. Please seed stations first using POST /seed/police-station/bootstrap");
+      throw new Error(
+        "No police stations found in the database. Please seed stations first using POST /seed/police-station/bootstrap",
+      );
     }
     if (Object.keys(categoriesMap).length === 0) {
-      throw new Error("No crime categories found in the database. Please seed categories first using POST /seed/crime-category/bootstrap");
+      throw new Error(
+        "No crime categories found in the database. Please seed categories first using POST /seed/crime-category/bootstrap",
+      );
     }
 
+    // Build raw rows for batch insert, resolving FIR ids and skipping existing crime_numbers
+    const incidentTable = req.catalyst
+      .datastore()
+      .table(env.TABLE_CRIME_INCIDENT);
+
+    // Fetch existing crime_numbers to avoid duplicates
+    const existingCrimeNumbers = new Set();
+    try {
+      const existingRows = await zcql.executeZCQLQuery(
+        `SELECT crime_number FROM ${env.TABLE_CRIME_INCIDENT}`,
+      );
+      for (const r of existingRows || []) {
+        const rec = r[env.TABLE_CRIME_INCIDENT] || r;
+        if (rec && rec.crime_number)
+          existingCrimeNumbers.add(
+            (rec.crime_number || "").trim().toLowerCase(),
+          );
+      }
+      logger.info(
+        `Found ${existingCrimeNumbers.size} existing crime_number records in DB`,
+      );
+    } catch (err) {
+      logger.warn(
+        "Failed to fetch existing crime numbers, continuing without de-duplication",
+        err && err.message ? err.message : err,
+      );
+    }
+
+    const rowsToInsert = [];
+    logger.info(`Preparing ${entries.length} source entries for insert`);
+    let prepared = 0;
+    let skippedExisting = 0;
     for (const e of entries) {
       try {
+        const crimeNumber = (e.crime_number || "").trim();
+        if (
+          crimeNumber &&
+          existingCrimeNumbers.has(crimeNumber.toLowerCase())
+        ) {
+          skipped++;
+          skippedExisting++;
+          if (skippedExisting % 1000 === 0)
+            logger.info(
+              `Skipped ${skippedExisting} existing crime_number entries so far`,
+            );
+          continue;
+        }
+
         const categoryName = (e.crime_category || "").trim().toLowerCase();
         const crime_category_id = categoriesMap[categoryName] || null;
 
         const stationName = (e.police_station || "").trim().toLowerCase();
         const police_station_id = stationsMap[stationName] || null;
 
-        const districtCode = (e.crime_happened_at_district_code || "").trim().toLowerCase().replace(/_/g, "-");
-        const crime_happended_at_district_id = districtsMap[districtCode] || null;
+        const districtCode = (e.crime_happened_at_district_code || "")
+          .trim()
+          .toLowerCase()
+          .replace(/_/g, "-");
+        const crime_happended_at_district_id =
+          districtsMap[districtCode] || null;
 
-        const fir_id = await getFirId(e.fir_number);
+        // const fir_id = await getFirId(e.fir_number);
+        const fir_id = null;
 
-        const dto = {
-          crime_number: e.crime_number || null,
+        const row = {
+          crime_number: crimeNumber || null,
           title: e.title || "Unknown Crime",
           description: e.description || null,
           crime_category_id,
@@ -774,40 +912,118 @@ module.exports = {
           crime_location_longitude: e.crime_location_longitude || null,
           status: e.status || "UNDER_INVESTIGATION",
           crime_occured_date_time: e.crime_occured_date_time || null,
-          incident_registered_date: e.crime_occured_date_time ? e.crime_occured_date_time.split(' ')[0] : null,
+          incident_registered_date: e.crime_occured_date_time
+            ? e.crime_occured_date_time.split(" ")[0]
+            : null,
           fir_id,
-          created_by: defaultUserId
+          created_by: defaultUserId,
         };
 
-        await crimeRepo.addCrime(dto, req);
-        created++;
+        rowsToInsert.push(row);
+        prepared++;
+        if (prepared % 1000 === 0)
+          logger.info(`Prepared ${prepared} rows for insert so far`);
       } catch (err) {
         skipped++;
         logger.warn(
-          `Failed to insert crime incident: ${e.crime_number}`,
+          `Failed to prepare crime incident for insert: ${e && e.crime_number ? e.crime_number : "unknown"}`,
           err && err.message ? err.message : err,
         );
       }
     }
+    logger.info(
+      `Prepared ${prepared} rows to insert; ${skippedExisting} skipped because already exist; ${skipped} total skipped during preparation`,
+    );
 
-    return { created, skipped };
+    // Insert in batches with retry for transient errors (e.g., invalid oauth token)
+    const BATCH_SIZE = 200;
+    let insertedCount = 0;
+    for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+      const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+      let attempt = 0;
+      const maxAttempts = 3;
+      logger.info(
+        `Starting batch insert for rows ${i + 1}-${i + chunk.length}`,
+      );
+      while (attempt < maxAttempts) {
+        try {
+          if (typeof incidentTable.insertRows === "function") {
+            await incidentTable.insertRows(chunk);
+          } else {
+            for (const r of chunk) await incidentTable.insertRow(r);
+          }
+          insertedCount += chunk.length;
+          logger.info(
+            `Inserted crime incidents batch ${i + 1}-${i + chunk.length} (total inserted ${insertedCount})`,
+          );
+          break;
+        } catch (err) {
+          attempt++;
+          const msg = err && err.message ? err.message : String(err);
+          logger.warn(
+            `Batch insert attempt ${attempt} failed for crime incidents ${i + 1}-${i + chunk.length}: ${msg}`,
+          );
+          // If oauth error, include actionable guidance in the logs
+          if (/invalid\s*oauth|token/i.test(msg)) {
+            logger.error(
+              "Detected OAuth token error during batch insert. Verify Catalyst auth and env/catalyst credentials.",
+            );
+          }
+          if (attempt < maxAttempts) {
+            const backoff = 500 * attempt;
+            await new Promise((res) => setTimeout(res, backoff));
+            logger.info(
+              `Retrying batch insert (attempt ${attempt + 1}/${maxAttempts})`,
+            );
+            continue;
+          }
+
+          // fallback: try individual inserts to isolate failing rows
+          logger.warn("Falling back to single-row insert for this batch");
+          for (const r of chunk) {
+            try {
+              await incidentTable.insertRow(r);
+              insertedCount++;
+            } catch (singleErr) {
+              skipped++;
+              logger.warn(
+                `Failed to insert crime incident ${r && r.crime_number ? r.crime_number : "unknown"}`,
+                singleErr && singleErr.message ? singleErr.message : singleErr,
+              );
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    logger.info(
+      `Crime incidents bootstrap completed. Inserted: ${insertedCount}, Skipped: ${skipped}`,
+    );
+    return { created: insertedCount, skipped };
   },
 
   async bootstrapIncidentCriminals(req) {
-    logger.info('bootstrapIncidentCriminals');
-    const filePath = path.join(__dirname, 'data', 'crimie', 'incident_criminal.json');
-    const raw = await fs.readFile(filePath, 'utf8');
-    const entries = JSON.parse(raw || '[]');
+    logger.info("bootstrapIncidentCriminals");
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "crimie",
+      "incident_criminal.json",
+    );
+
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
 
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
-    if (!zcql) throw new Error('Catalyst not available');
+    if (!zcql) throw new Error("Catalyst not available");
 
     // 1️⃣ Cache crime incidents (crime_number → ROWID)
     const crimeMap = {};
     const validCrimes = [];
     try {
       const crimeRows = await zcql.executeZCQLQuery(
-        `SELECT ROWID, crime_number FROM ${env.TABLE_CRIME_INCIDENT}`
+        `SELECT ROWID, crime_number FROM ${env.TABLE_CRIME_INCIDENT}`,
       );
       for (const r of crimeRows) {
         const rec = r[env.TABLE_CRIME_INCIDENT] || r;
@@ -817,7 +1033,7 @@ module.exports = {
         }
       }
     } catch (e) {
-      logger.warn('Failed to cache crime incidents', e);
+      logger.warn("Failed to cache crime incidents", e);
     }
 
     // 2️⃣ Cache criminals (criminal_number → ROWID)
@@ -825,7 +1041,7 @@ module.exports = {
     const validCriminals = [];
     try {
       const crimRows = await zcql.executeZCQLQuery(
-        `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL}`
+        `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL}`,
       );
       for (const r of crimRows) {
         const rec = r[env.TABLE_CRIMINAL] || r;
@@ -835,30 +1051,32 @@ module.exports = {
         }
       }
     } catch (e) {
-      logger.warn('Failed to cache criminals', e);
+      logger.warn("Failed to cache criminals", e);
     }
 
     // Replace invalid crimes and criminals with valid ones
     let fileUpdated = false;
     if (validCrimes.length > 0 && validCriminals.length > 0) {
       for (const e of entries) {
-        const crimeKey = (e.crime_number || '').trim().toLowerCase();
+        const crimeKey = (e.crime_number || "").trim().toLowerCase();
         if (!crimeMap[crimeKey]) {
-          const randCrime = validCrimes[Math.floor(Math.random() * validCrimes.length)];
+          const randCrime =
+            validCrimes[Math.floor(Math.random() * validCrimes.length)];
           e.crime_number = randCrime;
           fileUpdated = true;
         }
 
-        const crimKey = (e.criminal_number || '').trim().toLowerCase();
+        const crimKey = (e.criminal_number || "").trim().toLowerCase();
         if (!criminalMap[crimKey]) {
-          const randCriminal = validCriminals[Math.floor(Math.random() * validCriminals.length)];
+          const randCriminal =
+            validCriminals[Math.floor(Math.random() * validCriminals.length)];
           e.criminal_number = randCriminal;
           fileUpdated = true;
         }
       }
       if (fileUpdated) {
-        await fs.writeFile(filePath, JSON.stringify(entries, null, 2), 'utf8');
-        logger.info('Updated incident_criminal.json with valid db references.');
+        await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
+        logger.info("Updated incident_criminal.json with valid db references.");
       }
     }
 
@@ -869,7 +1087,7 @@ module.exports = {
       const limit = 100;
       while (true) {
         const rows = await zcql.executeZCQLQuery(
-          `SELECT incident_id, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} LIMIT ${limit} OFFSET ${offset}`
+          `SELECT incident_id, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} LIMIT ${limit} OFFSET ${offset}`,
         );
         if (!rows || rows.length === 0) break;
         for (const r of rows) {
@@ -881,9 +1099,11 @@ module.exports = {
         if (rows.length < limit) break;
         offset += limit;
       }
-      logger.info(`Loaded ${existingRelations.size} existing incident-criminal relationships.`);
+      logger.info(
+        `Loaded ${existingRelations.size} existing incident-criminal relationships.`,
+      );
     } catch (e) {
-      logger.warn('Failed to fetch existing relationships', e);
+      logger.warn("Failed to fetch existing relationships", e);
     }
 
     // 4️⃣ Identify relationships to insert
@@ -893,24 +1113,28 @@ module.exports = {
     const rowsToInsert = [];
 
     for (const e of entries) {
-      const crimeKey = (e.crime_number || '').trim().toLowerCase();
-      const crimKey = (e.criminal_number || '').trim().toLowerCase();
+      const crimeKey = (e.crime_number || "").trim().toLowerCase();
+      const crimKey = (e.criminal_number || "").trim().toLowerCase();
       const crimeId = crimeMap[crimeKey];
       const criminalId = criminalMap[crimKey];
 
       if (!crimeId || !criminalId) {
         skipped++;
-        let reason = 'Missing ';
-        if (!crimeId && !criminalId) reason += 'crime and criminal';
-        else if (!crimeId) reason += 'crime';
-        else reason += 'criminal';
-        logger.info(`Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: ${reason}`);
+        let reason = "Missing ";
+        if (!crimeId && !criminalId) reason += "crime and criminal";
+        else if (!crimeId) reason += "crime";
+        else reason += "criminal";
+        logger.info(
+          `Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: ${reason}`,
+        );
         continue;
       }
 
       if (existingRelations.has(`${crimeId}-${criminalId}`)) {
         skipped++;
-        logger.info(`Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: Duplicate`);
+        logger.info(
+          `Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: Duplicate`,
+        );
         continue;
       }
 
@@ -927,15 +1151,20 @@ module.exports = {
       try {
         await icTable.insertRows(chunk);
         created += chunk.length;
-        logger.info(`Inserted batch of ${chunk.length} relations (${i + chunk.length}/${rowsToInsert.length})`);
+        logger.info(
+          `Inserted batch of ${chunk.length} relations (${i + chunk.length}/${rowsToInsert.length})`,
+        );
       } catch (err) {
-        logger.warn(`Failed to insert batch of ${chunk.length} relations, falling back to single inserts...`, err.message || err);
+        logger.warn(
+          `Failed to insert batch of ${chunk.length} relations, falling back to single inserts...`,
+          err.message || err,
+        );
         for (const item of chunk) {
           try {
             await icTable.insertRow(item);
             created++;
           } catch (singleErr) {
-            logger.warn('Failed to insert single incident-criminal link', {
+            logger.warn("Failed to insert single incident-criminal link", {
               item,
               error: singleErr.message || singleErr,
             });
@@ -948,7 +1177,6 @@ module.exports = {
     return { created, skipped };
   },
 
-
   async generateCrime(req) {
     logger.info("generateCrime");
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
@@ -957,32 +1185,45 @@ module.exports = {
     const stationsMap = {};
     const districtsMap = {};
     try {
-      const catRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`);
+      const catRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, crime_category_name FROM ${env.TABLE_CRIME_CATEGORY}`,
+      );
       for (const r of catRows) {
         const cat = r[env.TABLE_CRIME_CATEGORY] || r;
         if (cat && cat.crime_category_name) {
-          categoriesMap[cat.crime_category_name.trim().toLowerCase()] = cat.ROWID;
+          categoriesMap[cat.crime_category_name.trim().toLowerCase()] =
+            cat.ROWID;
         }
       }
-    } catch (e) { logger.warn("fetch categories error", e); }
+    } catch (e) {
+      logger.warn("fetch categories error", e);
+    }
     try {
-      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+      const stationRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`,
+      );
       for (const r of stationRows) {
         const st = r[env.TABLE_POLICE_STATION] || r;
         if (st && st.station_name) {
           stationsMap[st.station_name.trim().toLowerCase()] = st.ROWID;
         }
       }
-    } catch (e) { logger.warn("fetch stations error", e); }
+    } catch (e) {
+      logger.warn("fetch stations error", e);
+    }
     try {
-      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      const distRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`,
+      );
       for (const r of distRows) {
         const d = r[env.TABLE_DISTRICT_GEODATA] || r;
         if (d && d.district_code) {
           districtsMap[d.district_code.trim().toLowerCase()] = d.ROWID;
         }
       }
-    } catch (e) { logger.warn("fetch districts error", e); }
+    } catch (e) {
+      logger.warn("fetch districts error", e);
+    }
 
     const categoryKeys = Object.keys(categoriesMap);
     const stationKeys = Object.keys(stationsMap);
@@ -990,9 +1231,12 @@ module.exports = {
     if (!categoryKeys.length || !stationKeys.length || !districtKeys.length) {
       throw new Error("Required reference data missing for generateCrime");
     }
-    const randomCategory = categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
-    const randomStation = stationKeys[Math.floor(Math.random() * stationKeys.length)];
-    const randomDistrict = districtKeys[Math.floor(Math.random() * districtKeys.length)];
+    const randomCategory =
+      categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
+    const randomStation =
+      stationKeys[Math.floor(Math.random() * stationKeys.length)];
+    const randomDistrict =
+      districtKeys[Math.floor(Math.random() * districtKeys.length)];
 
     const dto = {
       crime_number: `CASE-${Date.now()}`,
@@ -1004,7 +1248,10 @@ module.exports = {
       crime_location_latitude: null,
       crime_location_longitude: null,
       status: "UNDER_INVESTIGATION",
-      crime_occured_date_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+      crime_occured_date_time: new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " "),
       fir_id: null,
       created_by: "46044000000052002",
     };
@@ -1031,18 +1278,25 @@ module.exports = {
       do {
         const pagedResp = await incidentTable.getPagedRows({
           nextToken,
-          maxRows: 200
+          maxRows: 200,
         });
         if (pagedResp && pagedResp.data) {
           incidents.push(...pagedResp.data);
-          logger.info(`Fetched ${pagedResp.data.length} incidents, nextToken=${pagedResp.next_token}`);
+          logger.info(
+            `Fetched ${pagedResp.data.length} incidents, nextToken=${pagedResp.next_token}`,
+          );
         }
         nextToken = pagedResp ? pagedResp.next_token : undefined;
       } while (nextToken);
 
-      logger.info(`Fetched ${incidents.length} total incidents to group in memory`);
+      logger.info(
+        `Fetched ${incidents.length} total incidents to group in memory`,
+      );
     } catch (e) {
-      logger.warn("Failed to fetch all incidents via getPagedRows", e.message || e);
+      logger.warn(
+        "Failed to fetch all incidents via getPagedRows",
+        e.message || e,
+      );
       throw new Error("Failed to fetch incidents: " + (e.message || e));
     }
 
@@ -1054,10 +1308,10 @@ module.exports = {
       const districtId = data.crime_happended_at_district_id;
       const policeStationId = data.police_station_id;
       const crimeCategoryId = data.crime_category_id;
-      
+
       // Strip time from timestamp to group by date only
-      let incidentRegisteredDate = data.incident_registered_date 
-        ? data.incident_registered_date.split(" ")[0].split("T")[0] 
+      let incidentRegisteredDate = data.incident_registered_date
+        ? data.incident_registered_date.split(" ")[0].split("T")[0]
         : new Date().toISOString().split("T")[0];
 
       if (districtId && policeStationId && crimeCategoryId) {
@@ -1068,7 +1322,7 @@ module.exports = {
             police_station_id: policeStationId,
             crime_category_id: crimeCategoryId,
             incident_registered_date: incidentRegisteredDate,
-            crime_count: 0
+            crime_count: 0,
           };
         }
         statsMap[key].crime_count += 1;
@@ -1076,9 +1330,13 @@ module.exports = {
     }
 
     const aggregatedRows = Object.values(statsMap);
-    logger.info(`Found ${aggregatedRows.length} grouped crime stat rows after in-memory aggregation`);
+    logger.info(
+      `Found ${aggregatedRows.length} grouped crime stat rows after in-memory aggregation`,
+    );
 
-    logger.info(`Processing ${aggregatedRows.length} aggregated rows for upsert`);
+    logger.info(
+      `Processing ${aggregatedRows.length} aggregated rows for upsert`,
+    );
     // Batch insert new stats rows to reduce API calls
     const toInsert = [];
     const BATCH_SIZE = 200;
@@ -1086,7 +1344,9 @@ module.exports = {
     let updated = 0;
 
     for (const stat of aggregatedRows) {
-      logger.debug(`Upserting stat: district=${stat.district_id}, station=${stat.police_station_id}, category=${stat.crime_category_id}, date=${stat.incident_registered_date}`);
+      logger.debug(
+        `Upserting stat: district=${stat.district_id}, station=${stat.police_station_id}, category=${stat.crime_category_id}, date=${stat.incident_registered_date}`,
+      );
       try {
         const checkQuery = `
         SELECT ROWID, crime_count
@@ -1098,9 +1358,13 @@ module.exports = {
         `;
         const existing = await zcql.executeZCQLQuery(checkQuery);
         if (existing && existing.length > 0) {
-          const statRow = existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
+          const statRow =
+            existing[0][env.TABLE_COMP_DISTRICT_CRIME_STATS] || existing[0];
           if (Number(statRow.crime_count) !== stat.crime_count) {
-            await statsTable.updateRow({ ROWID: statRow.ROWID, crime_count: stat.crime_count });
+            await statsTable.updateRow({
+              ROWID: statRow.ROWID,
+              crime_count: stat.crime_count,
+            });
             updated++;
           }
         } else {
@@ -1138,15 +1402,21 @@ module.exports = {
       }
     }
 
-    logger.info(`Crime stats calculation completed. Created: ${created}, Updated: ${updated}`);
+    logger.info(
+      `Crime stats calculation completed. Created: ${created}, Updated: ${updated}`,
+    );
 
     return { created, updated };
   },
 
   async dumpData(req) {
     const zcql = req.catalyst.zcql();
-    const stations = await zcql.executeZCQLQuery(`SELECT station_name, district_id FROM ${env.TABLE_POLICE_STATION}`);
-    const districts = await zcql.executeZCQLQuery(`SELECT ROWID, district_code, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
+    const stations = await zcql.executeZCQLQuery(
+      `SELECT station_name, district_id FROM ${env.TABLE_POLICE_STATION}`,
+    );
+    const districts = await zcql.executeZCQLQuery(
+      `SELECT ROWID, district_code, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`,
+    );
     return { stations, districts };
   },
 
@@ -1180,8 +1450,10 @@ module.exports = {
     for (const tbl of tables) {
       if (!tbl) continue;
       try {
-        const res = await zcql.executeZCQLQuery(`SELECT COUNT(ROWID) FROM ${tbl}`);
-        const firstRow = res && res[0] ? (res[0][tbl] || res[0]) : null;
+        const res = await zcql.executeZCQLQuery(
+          `SELECT COUNT(ROWID) FROM ${tbl}`,
+        );
+        const firstRow = res && res[0] ? res[0][tbl] || res[0] : null;
         let cnt = 0;
         if (firstRow) {
           cnt = firstRow["COUNT(ROWID)"] || Object.values(firstRow)[0] || 0;
@@ -1193,5 +1465,5 @@ module.exports = {
       }
     }
     return counts;
-  }
+  },
 };
