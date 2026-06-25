@@ -8,7 +8,7 @@ yarn-error.log
 .env.local
 .env.*.local
 
-./modules/forecast/forecast-data1
+src/modules/forecast/forecast-data
 
 # IDE and editor files
 .vscode/
