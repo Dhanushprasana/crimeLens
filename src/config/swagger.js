@@ -26,6 +26,7 @@ const options = {
       { name: "FIRs", description: "FIR endpoints" },
       { name: "Criminals", description: "Criminal records" },
       { name: "Geo Data", description: "Geospatial/district data" },
+      { name: "Profiling", description: "Criminal profiling and network analysis" },
     ],
     servers: [
       {
