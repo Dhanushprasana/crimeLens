@@ -16,6 +16,7 @@ const crimeRoute = require("../modules/business/crime/crime.route");
 const firRoute = require("../modules/business/fir/fir.route");
 const authRoute = require("../modules/auth/auth.route");
 const seedDataRoute = require("../modules/seed-data/seed-data.route");
+const criminalProfilingRoute = require("../modules/business/criminal-profiling/criminal-profiling.route");
 const dashboardRoute = require("../modules/business/dashboard/dashboard.route");
 const forecastRoute = require("../modules/forecast/forecast.route");
 
@@ -32,6 +33,7 @@ router.use("/crimes", crimeRoute);
 router.use("/firs", firRoute);
 router.use("/auth", authRoute);
 router.use("/seed", seedDataRoute);
+router.use("/criminal-profiling", criminalProfilingRoute);
 router.use("/dashboard", dashboardRoute);
 router.use("/forecast", forecastRoute);
 
