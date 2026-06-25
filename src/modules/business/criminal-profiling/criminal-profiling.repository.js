@@ -171,6 +171,20 @@ module.exports = {
     );
   },
 
+  async getCriminalAliases(criminalId, req) {
+    const sql = `
+      SELECT *
+      FROM ${env.TABLE_CRIMINAL_ALIAS}
+      WHERE criminal_id = '${criminalId}'
+    `;
+
+    const result = await executeQuery(req, sql);
+
+    return result.map(
+      row => row[env.TABLE_CRIMINAL_ALIAS]
+    );
+  },
+
   async getRiskFactors(profileId, req) {
     const sql = `
       SELECT *
@@ -214,6 +228,19 @@ module.exports = {
     }
 
     return saved;
+  },
+
+  async getAllCrimeCategories(req) {
+    const sql = `
+      SELECT ROWID, crime_category_name
+      FROM ${env.TABLE_CRIME_CATEGORY}
+    `;
+
+    const result = await executeQuery(req, sql);
+
+    return result.map(
+      row => row[env.TABLE_CRIME_CATEGORY]
+    );
   },
 
   async createProfile(data, req) {

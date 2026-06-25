@@ -76,6 +76,15 @@ module.exports = {
         req
       );
 
+    // Fetch crime categories to resolve names
+    const allCategories = await repository.getAllCrimeCategories(req);
+    const categoryMap = {};
+    (allCategories || []).forEach(cat => {
+      if (cat && cat.ROWID && cat.crime_category_name) {
+        categoryMap[cat.ROWID] = cat.crime_category_name;
+      }
+    });
+
     // Step 4: Intelligence Metrics
     const crimeFrequency =
       incidentDetails.length;
@@ -114,7 +123,8 @@ module.exports = {
     incidentDetails.forEach(i => {
       const category =
         i.crime_category_name ||
-        i.crime_category;
+        i.crime_category ||
+        categoryMap[i.crime_category_id];
 
       if (!category) return;
 
@@ -509,10 +519,200 @@ module.exports = {
   async getProfile(criminalId, req) {
     logger.info(`getProfile ${criminalId}`);
 
-    return repository.getProfileByCriminalId(
+    const profile = await repository.getProfileByCriminalId(
       criminalId,
       req
     );
+
+    if (!profile) {
+      return null;
+    }
+
+    // 1. Get criminal details (name, gender, nationality, criminal_number, age)
+    let criminalName = null;
+    let gender = null;
+    let nationality = null;
+    let criminalNumber = null;
+    let age = null;
+    try {
+      const criminal = await repository.getCriminal(criminalId, req);
+      if (criminal) {
+        criminalName = criminal.full_name || criminal.name || null;
+        gender = criminal.gender || null;
+        nationality = criminal.nationality || null;
+        criminalNumber = criminal.criminal_number || null;
+        
+        if (criminal.date_of_birth) {
+          const dob = new Date(criminal.date_of_birth);
+          if (!isNaN(dob.getTime())) {
+            const diffMs = Date.now() - dob.getTime();
+            age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn(`Failed to fetch criminal ${criminalId} for getProfile`, { error: err.message });
+    }
+
+    // 1b. Get criminal aliases from TABLE_CRIMINAL_ALIAS
+    let aliases = [];
+    try {
+      const aliasRows = await repository.getCriminalAliases(criminalId, req);
+      aliases = (aliasRows || []).map(row => row.alias_name || row.alias || row.name || row).filter(Boolean);
+    } catch (err) {
+      logger.warn(`Failed to fetch aliases for criminal ${criminalId}`, { error: err.message });
+    }
+
+    // 2. Get primary district name
+    let districtName = null;
+    if (profile.primary_district) {
+      try {
+        const district = await repository.getDistrictById(profile.primary_district, req);
+        districtName = district ? district.district_name : null;
+      } catch (err) {
+        logger.warn(`Failed to fetch district ${profile.primary_district} for getProfile`, { error: err.message });
+      }
+    }
+
+    // 3. Get associated incidents & details
+    let incidentDetails = [];
+    try {
+      const incidents = await repository.getCriminalIncidents(criminalId, req);
+      const incidentIds = incidents.map(i => i.incident_id);
+      const rawIncidents = await repository.getIncidentDetails(incidentIds, req);
+      
+      const allCategories = await repository.getAllCrimeCategories(req);
+      const categoryMap = {};
+      (allCategories || []).forEach(cat => {
+        if (cat && cat.ROWID && cat.crime_category_name) {
+          categoryMap[cat.ROWID] = cat.crime_category_name;
+        }
+      });
+
+      incidentDetails = rawIncidents.map(inc => ({
+        ...inc,
+        crime_category_name: inc.crime_category_name || inc.crime_category || categoryMap[inc.crime_category_id] || null
+      }));
+    } catch (err) {
+      logger.warn(`Failed to fetch incident details for criminal ${criminalId}`, { error: err.message });
+    }
+
+    // 4. Resolve unique district names the criminal is associated with
+    const associatedDistrictIds = [...new Set(
+      incidentDetails
+        .map(i => i.crime_happended_at_district_id)
+        .filter(Boolean)
+    )];
+
+    const associatedDistrictNames = [];
+    for (const dId of associatedDistrictIds) {
+      try {
+        const dist = await repository.getDistrictById(dId, req);
+        if (dist && dist.district_name) {
+          associatedDistrictNames.push(dist.district_name);
+        }
+      } catch (err) {
+        logger.warn(`Failed to resolve district name for ${dId}`, { error: err.message });
+      }
+    }
+
+    // 4b. Get intelligence metrics to reconstruct the risk factors considered
+    let phones = [];
+    let vehicles = [];
+    let behavioralFlags = [];
+    let associates = [];
+    try {
+      phones = await repository.getPhoneNumbers(criminalId, req);
+      vehicles = await repository.getVehicles(criminalId, req);
+      behavioralFlags = await repository.getBehavioralFlags(criminalId, req);
+      
+      const incidents = await repository.getCriminalIncidents(criminalId, req);
+      const incidentIds = incidents.map(i => i.incident_id);
+      associates = await repository.getAssociatedCriminals(incidentIds, criminalId, req);
+    } catch (err) {
+      logger.warn(`Failed to fetch intelligence metrics for risk score considerations`, { error: err.message });
+    }
+
+    const crimeFrequency = incidentDetails.length;
+    const associateCount = associates.length;
+    const phoneCount = phones.length;
+    const vehicleCount = vehicles.length;
+
+    // Calculate sub-scores considered
+    let repeatOffenderScore = 0;
+    if (crimeFrequency > 20) {
+      repeatOffenderScore = 40;
+    } else if (crimeFrequency >= 11) {
+      repeatOffenderScore = 30;
+    } else if (crimeFrequency >= 6) {
+      repeatOffenderScore = 20;
+    } else if (crimeFrequency >= 3) {
+      repeatOffenderScore = 10;
+    }
+
+    const associateScore = Math.min(associateCount * 2, 30);
+    const vehicleScore = Math.min(vehicleCount * 2, 20);
+    const phoneScore = Math.min(phoneCount, 10);
+
+    let behavioralScore = 0;
+    (behavioralFlags || []).forEach(flag => {
+      const flagType = flag.flag_type;
+      const weight = BEHAVIORAL_WEIGHTS[flagType] || 0;
+      behavioralScore += weight;
+    });
+
+    // Severity Score
+    const categoryFrequency = {};
+    incidentDetails.forEach(i => {
+      const category = i.crime_category_name || i.crime_category;
+      if (!category) return;
+      categoryFrequency[category] = (categoryFrequency[category] || 0) + 1;
+    });
+
+    let severityScore = 0;
+    const categoryEntries = Object.entries(categoryFrequency);
+    if (categoryEntries.length > 0) {
+      const totalWeight = categoryEntries.reduce(
+        (sum, [cat, count]) => {
+          const weight = SEVERITY_WEIGHTS[cat] || 0;
+          return sum + (weight * count);
+        },
+        0
+      );
+      severityScore = Math.round(totalWeight / crimeFrequency);
+    }
+
+    // 5. Get risk factors explaining the risk score
+    let riskFactors = [];
+    try {
+      riskFactors = await repository.getRiskFactors(profile.ROWID, req);
+    } catch (err) {
+      logger.warn(`Failed to fetch risk factors for profile ${profile.ROWID}`, { error: err.message });
+    }
+
+    // Return extended profile payload
+    return {
+      ...profile,
+      criminal_name: criminalName,
+      gender: gender,
+      nationality: nationality,
+      criminal_number: criminalNumber,
+      age: age,
+      aliases: aliases,
+      district_name: districtName,
+      districts: associatedDistrictNames,
+      crime_incidents: incidentDetails,
+      risk_factors: riskFactors,
+      // Risk score breakdown showing what is considered
+      risk_score_breakdown: {
+        repeat_offender_score: repeatOffenderScore,
+        severity_score: severityScore,
+        behavioral_score: behavioralScore,
+        associate_score: associateScore,
+        vehicle_score: vehicleScore,
+        phone_score: phoneScore
+      }
+    };
   },
 
   async getRiskFactors(criminalId, req) {
