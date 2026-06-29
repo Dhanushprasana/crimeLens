@@ -23,8 +23,17 @@ async function getForecasts(req, res, next) {
     next(err);
   }
 }
+async function detectAnomalies(req, res, next) {
+  try {
+    const result = await service.detectAnomalies(req, req.body || {});
+    return res.status(200).json({ success: true, result });
+  } catch (err) {
+    next(err);
+  }
+}
 
 module.exports = {
   generateForecast,
   getForecasts,
+  detectAnomalies,
 };

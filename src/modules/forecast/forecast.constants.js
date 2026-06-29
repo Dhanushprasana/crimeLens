@@ -6,4 +6,5 @@ module.exports = {
   FORECAST_TABLE: "biz_district_crime_forecast_result",
   CALIBRATION_TABLE: "biz_district_forecast_calibration",
   MODEL_REGISTRY_TABLE: "biz_ml_model_registry",
+  ANOMALY_TABLE: "biz_crime_forecast_anomalies",
 };

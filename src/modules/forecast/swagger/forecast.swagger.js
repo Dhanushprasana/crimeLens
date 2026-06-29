@@ -182,6 +182,34 @@
  *           text/csv:
  *             schema:
  *               type: string
+ * 
+ * /forecast/anomaly-detection:
+ *   post:
+ *     tags:
+ *       - Forecasting
+ *     summary: Compare forecasts vs actuals to detect anomalies
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *               district_id:
+ *                 type: string
+ *               police_station_id:
+ *                 type: string
+ *               crime_category_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Anomalies detected and recorded
  */
 
 module.exports = {};
