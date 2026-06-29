@@ -32,8 +32,18 @@ async function detectAnomalies(req, res, next) {
   }
 }
 
+async function getAnomalies(req, res, next) {
+  try {
+    const result = await service.getAnomalies(req, req.query || {});
+    return res.status(200).json({ success: true, result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   generateForecast,
   getForecasts,
   detectAnomalies,
+  getAnomalies,
 };

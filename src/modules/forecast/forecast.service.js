@@ -166,9 +166,29 @@ async function detectAnomalies(req, filters = {}) {
   return { anomaliesFound: anomalies.length };
 }
 
+async function getAnomalies(req, query = {}) {
+  const zcql = req.catalyst ? req.catalyst.zcql() : null;
+  if (!zcql) throw new Error("Catalyst SDK not available");
+
+  const where = [];
+  if (query.start_date) where.push(`anomaly_date >= '${(query.start_date + "").replace(/'/g, "''")}'`);
+  if (query.end_date) where.push(`anomaly_date <= '${(query.end_date + "").replace(/'/g, "''")}'`);
+  if (query.district_id) where.push(`district_id = '${(query.district_id + "").replace(/'/g, "''")}'`);
+  if (query.police_station_id) where.push(`police_station_id = '${(query.police_station_id + "").replace(/'/g, "''")}'`);
+  if (query.crime_category_id) where.push(`crime_category_id = '${(query.crime_category_id + "").replace(/'/g, "''")}'`);
+  if (query.severity) where.push(`severity = '${(query.severity + "").replace(/'/g, "''")}'`);
+
+  const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const sql = `SELECT * FROM ${constants.ANOMALY_TABLE} ${whereClause} ORDER BY anomaly_date DESC LIMIT 200`;
+  
+  const rows = await zcql.executeZCQLQuery(sql);
+  return rows ? rows.map(r => r[constants.ANOMALY_TABLE]) : [];
+}
+
 module.exports = {
   generateForecast,
   getForecasts,
   detectAnomalies,
+  getAnomalies,
 };
 

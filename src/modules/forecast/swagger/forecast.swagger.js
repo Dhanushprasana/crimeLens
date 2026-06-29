@@ -210,6 +210,41 @@
  *     responses:
  *       200:
  *         description: Anomalies detected and recorded
+ *   get:
+ *     tags:
+ *       - Forecasting
+ *     summary: Retrieve anomalies with filters
+ *     parameters:
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: district_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: police_station_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: crime_category_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: severity
+ *         schema:
+ *           type: string
+ *           enum: [ANOMALY, HIGH, CRITICAL]
+ *     responses:
+ *       200:
+ *         description: List of anomalies
  */
 
 module.exports = {};
