@@ -49,6 +49,41 @@ module.exports = {
     return { id: saved.ROWID };
   },
 
+  async addCrimesBulk(dtos, req) {
+    if (!Array.isArray(dtos) || dtos.length === 0) {
+      throw new Error('dtos must be a non-empty array');
+    }
+    
+    const table = getTable(req, env.TABLE_CRIME_INCIDENT);
+    
+    const rowsToInsert = dtos.map(dto => ({
+      crime_number: dto.crime_number || null,
+      title: dto.title,
+      description: dto.description || null,
+      crime_category_id: dto.crime_category_id || null,
+      police_station_id: dto.police_station_id || null,
+      crime_happended_at_district_id: dto.crime_happended_at_district_id || null,
+      crime_location_latitude: dto.crime_location_latitude || null,
+      crime_location_longitude: dto.crime_location_longitude || null,
+      status: dto.status || 'UNDER_INVESTIGATION',
+      crime_occured_date_time: dto.crime_occured_date_time || null,
+      incident_registered_date: dto.incident_registered_date || null,
+      fir_id: dto.fir_id || null,
+      created_by: dto.created_by || null
+    }));
+
+    const BATCH_SIZE = 200;
+    const insertedIds = [];
+    
+    for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+      const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+      const savedChunk = await table.insertRows(chunk);
+      insertedIds.push(...savedChunk.map(r => r.ROWID));
+    }
+
+    return { message: `${insertedIds.length} crimes inserted successfully`, ids: insertedIds };
+  },
+
   async getAllCrimes(query, req) {
     const sql = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT}`;
     const res = await executeQuery(req, sql);

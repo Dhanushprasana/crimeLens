@@ -33,6 +33,27 @@
  *     responses:
  *       200:
  *         description: List of crimes
+ * 
+ * /crimes/bulk:
+ *   post:
+ *     summary: Bulk create crime incidents
+ *     tags: [Crimes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Bulk crimes created
  *
  * /crimes/getOneCrime/{id}:
  *   get:
