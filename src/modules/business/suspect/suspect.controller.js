@@ -1,6 +1,6 @@
 'use strict';
 
-const service = require('./criminal.service');
+const service = require('./suspect.service');
 const sendResponse = require('../../../common/response');
 
 module.exports = {
