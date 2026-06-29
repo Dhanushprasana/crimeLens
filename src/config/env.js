@@ -26,7 +26,8 @@ const env = {
   TABLE_DISTRICT_GEODATA: "biz_district_geodata",
   // Default role assigned to newly created officers
   DEFAULT_OFFICER_ROLE: process.env.DEFAULT_OFFICER_ROLE || "OFFICER",
-  // Crime / FIR / Criminal tables
+  // Crime / FIR / Suspect / Criminal tables
+  TABLE_SUSPECT: "biz_suspect",
   TABLE_CRIMINAL: "biz_criminal",
   TABLE_CRIME_INCIDENT: "biz_crime_incident",
   TABLE_FIR: "biz_FIR",
