@@ -125,3 +125,47 @@
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /storage/bootstrap/{type}:
+ *   post:
+ *     summary: Bootstrap images from local storage-data directory into Stratus
+ *     tags: [Storage]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [fingerprint, cctv, footprints, tools]
+ *         description: The type of data to bootstrap (maps to a folder inside storage-data)
+ *     responses:
+ *       200:
+ *         description: Images bootstrapped successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       fileName:
+ *                         type: string
+ *                       objectPath:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+

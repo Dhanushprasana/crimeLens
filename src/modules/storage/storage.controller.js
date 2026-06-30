@@ -75,6 +75,24 @@ class StorageController {
       next(error);
     }
   }
+
+  static async bootstrapImages(req, res, next) {
+    try {
+      const { type } = req.params;
+      
+      if (!type) {
+        return res.status(400).json({ error: "type parameter is required" });
+      }
+
+      const results = await StorageService.bootstrapImages(req, type);
+      res.status(200).json({
+        message: `Images from ${type} bootstrapped successfully`,
+        results,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = StorageController;

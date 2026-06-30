@@ -24,4 +24,7 @@ router.get("/object/:entityType/:entityId/:filename", StorageController.download
 // Delete API
 router.delete("/object/:entityType/:entityId/:filename", StorageController.deleteFile);
 
+// Bootstrap API
+router.post("/bootstrap/:type", StorageController.bootstrapImages);
+
 module.exports = router;
