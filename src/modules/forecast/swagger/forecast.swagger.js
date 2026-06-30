@@ -154,4 +154,62 @@
  *         description: Calibration report
  */
 
+/**
+ * @swagger
+ * /forecast/training/csv:
+ *   get:
+ *     tags:
+ *       - Forecasting
+ *     summary: Export the training table as CSV
+ *     description: Returns the contents of `biz_district_crime_forecast_training_data` as a CSV file attachment.
+ *     parameters:
+ *       - in: query
+ *         name: train_start
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional start date filter (inclusive)
+ *       - in: query
+ *         name: train_end
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Optional end date filter (inclusive)
+ *     responses:
+ *       200:
+ *         description: CSV file attachment
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ * 
+ * /forecast/anomaly-detection:
+ *   post:
+ *     tags:
+ *       - Forecasting
+ *     summary: Compare forecasts vs actuals to detect anomalies
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *               district_id:
+ *                 type: string
+ *               police_station_id:
+ *                 type: string
+ *               crime_category_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Anomalies detected and recorded
+ */
+
 module.exports = {};

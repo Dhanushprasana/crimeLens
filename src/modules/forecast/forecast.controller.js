@@ -1,34 +1,10 @@
 "use strict";
 
 const service = require("./forecast.service");
+const fs = require("fs");
+const path = require("path");
+const logger = require("../../config/logger");
 
-async function buildTrainingData(req, res, next) {
-  try {
-    const result = await service.buildTrainingDataset(req, req.body || {});
-    return res.status(200).json({ success: true, result });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function calibrateModel(req, res, next) {
-  try {
-    const result = await service.calibrateModel(req, req.body || {});
-    return res.status(200).json({ success: true, result });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function trainModel(req, res, next) {
-  try {
-    const payload = req.body || {};
-    const result = await service.trainModel(req, payload);
-    return res.status(200).json({ success: true, result });
-  } catch (err) {
-    next(err);
-  }
-}
 
 async function generateForecast(req, res, next) {
   try {
@@ -47,10 +23,9 @@ async function getForecasts(req, res, next) {
     next(err);
   }
 }
-
-async function getCalibrationReport(req, res, next) {
+async function detectAnomalies(req, res, next) {
   try {
-    const result = await service.getCalibrationReport(req, req.query || {});
+    const result = await service.detectAnomalies(req, req.body || {});
     return res.status(200).json({ success: true, result });
   } catch (err) {
     next(err);
@@ -58,11 +33,7 @@ async function getCalibrationReport(req, res, next) {
 }
 
 module.exports = {
-  buildTrainingData,
-  calibrateModel,
-  trainModel,
   generateForecast,
   getForecasts,
-  getCalibrationReport,
+  detectAnomalies,
 };
-

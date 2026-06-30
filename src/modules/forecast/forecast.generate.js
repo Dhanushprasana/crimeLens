@@ -1,128 +1,139 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const constants = require("./forecast.constants");
 const prediction = require("./forecast.prediction");
 const logger = require("../../config/logger");
+const combinations = require("./forecast-data/forecast-combinations.json");
+
+function getForecastDates(days) {
+  const dates = [];
+  const today = new Date();
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function weekOfYear(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
 async function generateForecast(
   req,
-  { model_version, forecast_start, forecast_end, batchSize = 5000 },
+  { model_version = "V1", forecast_start, forecast_end, batchSize = 500 }
 ) {
-  const zcql = req.catalyst.zcql();
-
-  const rows = await zcql.executeZCQLQuery(`
-    SELECT DISTINCT
-      district_id,
-      police_station_id,
-      crime_category_id
-    FROM ${constants.TRAINING_TABLE}
-  `);
+  logger.info("generateForecast: start", {
+    model_version,
+    batchSize,
+  });
 
   const predictionRows = [];
+  const dates = getForecastDates(30);
 
-  const start = new Date(forecast_start);
-  const end = new Date(forecast_end);
-
-  for (const row of rows) {
-    const data = row[constants.TRAINING_TABLE] || row;
-
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+  logger.info("generateForecast: preparing prediction rows");
+  for (const combo of combinations) {
+    for (const d of dates) {
       predictionRows.push({
-        district_id: data.district_id,
-        police_station_id: data.police_station_id,
-        crime_category_id: data.crime_category_id,
-
+        district_name: combo.district_name,
+        police_station_name: combo.police_station_name,
+        crime_category_name: combo.crime_category_name,
         crime_registered_date: d.toISOString().slice(0, 10),
+        day_of_week: d.getDay(),
+        week_of_year: weekOfYear(d),
+        crime_month: d.getMonth() + 1,
+        crime_quarter: Math.floor(d.getMonth() / 3) + 1,
+        crime_year: d.getFullYear(),
+        district_id: combo.district_id,
+        police_station_id: combo.police_station_id,
+        crime_category_id: combo.crime_category_id,
       });
     }
   }
 
-  let predictions;
-  try {
-    predictions = await prediction.predict(req, {
-      predictionRows,
-      batchSize,
-    });
-  } catch (err) {
-    logger.error("Forecast prediction failed", {
-      error: err && err.message ? err.message : err,
-    });
-    throw err;
-  }
-
-  const table = req.catalyst.datastore().table(constants.FORECAST_TABLE);
-
-  // Map predictions to datastore rows with defensive field mapping
-  const rowsToInsert = (predictions || []).map((pred) => {
-    const forecast_date =
-      pred.forecast_date ||
-      pred.crime_registered_date ||
-      pred.date ||
-      pred.forecastDate ||
-      null;
-    const predicted_count =
-      pred.predicted_count ??
-      pred.prediction ??
-      pred.score ??
-      pred.value ??
-      null;
-
-    return {
-      district_id: pred.district_id,
-      police_station_id: pred.police_station_id,
-      crime_category_id: pred.crime_category_id,
-
-      forecast_date,
-
-      predicted_count,
-
-      model_version,
-
-      generated_at: new Date().toISOString(),
-    };
+  logger.info("generateForecast: predictionRows prepared", {
+    predictionRows: predictionRows.length,
   });
 
-  // Batch insert in chunks for performance, fallback to per-row inserts
-  if (table && rowsToInsert.length) {
-    const CHUNK_SIZE = 200;
-    for (let i = 0; i < rowsToInsert.length; i += CHUNK_SIZE) {
-      const chunk = rowsToInsert.slice(i, i + CHUNK_SIZE);
+  const BATCH_SIZE = batchSize || 500;
+  const allResultRows = [];
+
+  for (let i = 0; i < predictionRows.length; i += BATCH_SIZE) {
+    const batch = predictionRows.slice(i, i + BATCH_SIZE);
+    logger.info(`generateForecast: processing batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
+      batchSize: batch.length,
+    });
+
+    let predictions;
+    try {
+      predictions = await prediction.predict(req, {
+        predictionRows: batch,
+        batchSize: BATCH_SIZE
+      });
+    } catch (err) {
+      logger.error("Forecast prediction failed for batch", {
+        error: err && err.message ? err.message : err,
+      });
+      throw err;
+    }
+
+    const resultRows = [];
+    for (let j = 0; j < batch.length; j++) {
+      // Handle the output structure based on QuickML format
+      let p = null;
+      if (predictions && predictions[j]) {
+        p = predictions[j].predicted_count ?? predictions[j].prediction ?? predictions[j].score ?? predictions[j].value ?? null;
+      }
+
+      resultRows.push({
+        district_id: batch[j].district_id,
+        police_station_id: batch[j].police_station_id,
+        crime_category_id: batch[j].crime_category_id,
+        forecast_date: batch[j].crime_registered_date,
+        predicted_count: p,
+        model_version: model_version,
+        generated_at: new Date().toISOString(),
+      });
+    }
+
+    allResultRows.push(...resultRows);
+
+    /*
+    const table = req.catalyst.datastore().table(constants.FORECAST_TABLE);
+    if (table && resultRows.length) {
       try {
         if (typeof table.insertRows === "function") {
-          await table.insertRows(chunk);
-          logger.info(
-            `Inserted forecast batch ${i + 1}-${i + chunk.length} of ${rowsToInsert.length}`,
-          );
+          await table.insertRows(resultRows);
         } else {
-          for (const r of chunk) await table.insertRow(r);
-          logger.info(
-            `Inserted forecast batch (row-by-row) ${i + 1}-${i + chunk.length} of ${rowsToInsert.length}`,
-          );
+          for (const r of resultRows) await table.insertRow(r);
         }
+        logger.info(`Inserted forecast batch of size ${resultRows.length}`);
       } catch (err) {
-        logger.warn(
-          "Batch insert failed for forecast, falling back to single inserts",
-          {
-            error: err && err.message ? err.message : err,
-          },
-        );
-        for (const r of chunk) {
-          try {
-            await table.insertRow(r);
-          } catch (singleErr) {
-            logger.warn("Failed to insert forecast row", {
-              row: r,
-              error:
-                singleErr && singleErr.message ? singleErr.message : singleErr,
-            });
-          }
-        }
+        logger.error("Batch insert failed for forecast", { error: err.message });
       }
     }
+    */
   }
 
+  // Store the predictions in a json file for now
+  const outputFilePath = path.join(__dirname, "forecast-predictions.json");
+  fs.writeFileSync(outputFilePath, JSON.stringify(allResultRows, null, 2), "utf8");
+
+  logger.info("generateForecast: completed", {
+    generated: allResultRows.length,
+    outputFile: outputFilePath
+  });
+
   return {
-    generated: rowsToInsert.length,
+    generated: allResultRows.length,
+    message: `Predictions saved to ${outputFilePath}`
   };
 }
 
