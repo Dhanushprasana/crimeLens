@@ -49,10 +49,127 @@ module.exports = {
     return { id: saved.ROWID };
   },
 
-  async getAllCrimes(query, req) {
-    const sql = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT}`;
-    const res = await executeQuery(req, sql);
-    return res.map(r => r[env.TABLE_CRIME_INCIDENT]);
+  async getAllCrimes(params, req) {
+    const TABLE = env.TABLE_CRIME_INCIDENT;
+
+    // --- Allowed sort columns (whitelist to prevent SQL injection) ---
+    const ALLOWED_SORT = new Set([
+      'crime_occured_date_time',
+      'createdtime',
+      'crime_number',
+      'status'
+    ]);
+    const sortBy    = ALLOWED_SORT.has(params.sortBy) ? params.sortBy : 'crime_occured_date_time';
+    const sortOrder = params.sortOrder === 'ASC' ? 'ASC' : 'DESC';
+
+    // --- Build WHERE conditions ---
+    const conditions = [];
+
+    if (params.search) {
+      // Escape single quotes in the search term
+      const safe = params.search.replace(/'/g, "''");
+      conditions.push(
+        `(crime_number LIKE '%${safe}%' OR title LIKE '%${safe}%' OR description LIKE '%${safe}%')`
+      );
+    }
+
+    if (params.districtId) {
+      conditions.push(`crime_happended_at_district_id = '${params.districtId}'`);
+    }
+
+    if (params.stationId) {
+      conditions.push(`police_station_id = '${params.stationId}'`);
+    }
+
+    if (params.categoryId) {
+      conditions.push(`crime_category_id = '${params.categoryId}'`);
+    }
+
+    if (params.status) {
+      const safeStatus = params.status.replace(/'/g, "''");
+      conditions.push(`status = '${safeStatus}'`);
+    }
+
+    // Exact single date: matches any time on that calendar day
+    if (params.date) {
+      conditions.push(`crime_occured_date_time >= '${params.date} 00:00:00' AND crime_occured_date_time <= '${params.date} 23:59:59'`);
+    } else {
+      // Date range (from / to are independent of each other)
+      if (params.from) {
+        conditions.push(`crime_occured_date_time >= '${params.from} 00:00:00'`);
+      }
+      if (params.to) {
+        conditions.push(`crime_occured_date_time <= '${params.to} 23:59:59'`);
+      }
+    }
+
+    const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+
+    // --- Projected SELECT columns (description excluded — heavy text not needed for list view) ---
+    const selectedColumns = [
+      'ROWID',
+      'crime_number',
+      'title',
+      'crime_category_id',
+      'police_station_id',
+      'crime_happended_at_district_id',
+      'crime_location_latitude',
+      'crime_location_longitude',
+      'status',
+      'crime_occured_date_time',
+      'incident_registered_date',
+      'fir_id',
+      'created_by',
+      'createdtime',
+      'modifiedtime'
+    ].join(', ');
+
+    const offset = (params.page - 1) * params.pageSize;
+
+    // --- COUNT query ---
+    // ZCQL does NOT support COUNT(*). Must use a real column name.
+    // ROWID is always present on every row, so COUNT(ROWID) gives the total row count.
+    const countSql = `SELECT COUNT(ROWID) FROM ${TABLE}${whereClause}`;
+
+    // --- Data query ---
+    // ZCQL pagination syntax: LIMIT <pageSize> OFFSET <offset>  (confirmed in this repo)
+    const dataSql =
+      `SELECT ${selectedColumns} FROM ${TABLE}${whereClause}` +
+      ` ORDER BY ${sortBy} ${sortOrder}` +
+      ` LIMIT ${params.pageSize} OFFSET ${offset}`;
+
+    // Run both queries in parallel
+    const [countRes, dataRes] = await Promise.all([
+      executeQuery(req, countSql),
+      executeQuery(req, dataSql)
+    ]);
+
+    // --- Parse COUNT result ---
+    // ZCQL returns: [{ "<TableName>": { "COUNT(ROWID)": "42" } }]
+    // Fallback to Object.values()[0] in case the key shape differs across ZCQL parser versions.
+    const firstCount = countRes[0] ? (countRes[0][TABLE] || countRes[0]) : {};
+    const totalRecords = parseInt(
+      firstCount['COUNT(ROWID)'] ||
+      Object.values(firstCount)[0] ||
+      0,
+      10
+    );
+
+    const data = dataRes.map(r => r[TABLE] || r);
+
+    // --- Build pagination metadata ---
+    const totalPages = totalRecords > 0 ? Math.ceil(totalRecords / params.pageSize) : 0;
+    return {
+      data,
+      pagination: {
+        page:          params.page,
+        pageSize:      params.pageSize,
+        totalRecords,
+        totalPages,
+        hasNext:       params.page < totalPages,
+        hasPrevious:   params.page > 1
+      }
+    };
   },
 
   async getOneCrime(id, req) {

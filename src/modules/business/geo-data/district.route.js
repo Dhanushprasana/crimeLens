@@ -5,8 +5,10 @@ const router = express.Router();
 const controller = require("./district.controller");
 
 router.post("/", controller.addDistrict);
+router.get("/", controller.getAllDistrict);
 router.get("/getAll", controller.getAllDistrict);
 router.get("/getOneDistrict/:id", controller.getOneDistrict);
+router.get("/:id", controller.getOneDistrict);
 router.delete("/:id", controller.deleteDistrict);
 
 // GeoJSON endpoints

@@ -70,6 +70,63 @@ module.exports = {
     return { id: saved.ROWID };
   },
 
+  async getAllDistrict(query, req) {
+    const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA}`;
+    const res = await executeQuery(req, sql);
+    return res.map((r) => {
+      const item = r[env.TABLE_DISTRICT_GEODATA];
+      let geometry = null;
+      if (item.boundary) {
+        try {
+          geometry = typeof item.boundary === "string" ? JSON.parse(item.boundary) : item.boundary;
+        } catch (e) {
+          logger.warn("failed to parse boundary JSON", e);
+        }
+      }
+      return {
+        id: item.ROWID,
+        name: item.district_name,
+        code: item.district_code,
+        state: "Karnataka",
+        geometry: geometry,
+        center_lat: item.center_lat,
+        center_lng: item.center_lng,
+        coordinate_count: item.coordinate_count,
+      };
+    });
+  },
+
+  async getOneDistrict(id, req) {
+    const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA} WHERE ROWID = '${id}'`;
+    const res = await executeQuery(req, sql);
+    if (!res || res.length === 0) throw new Error("District not found");
+    const item = res[0][env.TABLE_DISTRICT_GEODATA];
+    let geometry = null;
+    if (item.boundary) {
+      try {
+        geometry = typeof item.boundary === "string" ? JSON.parse(item.boundary) : item.boundary;
+      } catch (e) {
+        logger.warn("failed to parse boundary JSON", e);
+      }
+    }
+    return {
+      id: item.ROWID,
+      name: item.district_name,
+      code: item.district_code,
+      state: "Karnataka",
+      geometry: geometry,
+      center_lat: item.center_lat,
+      center_lng: item.center_lng,
+      coordinate_count: item.coordinate_count,
+    };
+  },
+
+  async deleteDistrict(id, req) {
+    const table = getTable(req, env.TABLE_DISTRICT_GEODATA);
+    await table.deleteRow(id);
+    return { message: "District deleted" };
+  },
+
   async getAllDistrictGeoJson(query, req) {
     const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA}`;
     const res = await executeQuery(req, sql);
