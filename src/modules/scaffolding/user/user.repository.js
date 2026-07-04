@@ -138,30 +138,44 @@ module.exports = {
   async getAllUsers(query, req) {
     const { page, limit, status } = query;
 
-    let sql = `SELECT * FROM ${env.TABLE_USER || "sys_user"}`;
-    const conditions = [];
+    // ZCQL enforces a hard cap of 300 rows per query.
+    // We use a safe batch size of 200 and loop until no more rows are returned.
+    const ZCQL_BATCH_SIZE = 200;
 
+    const baseConditions = [];
     if (status !== "GET_ALL") {
-      conditions.push(`is_archived = false`);
+      baseConditions.push(`is_archived = false`);
     }
 
-    if (conditions.length > 0) {
-      sql += ` WHERE ${conditions.join(" AND ")}`;
+    const baseTable = env.TABLE_USER || "sys_user";
+    const whereClause =
+      baseConditions.length > 0
+        ? ` WHERE ${baseConditions.join(" AND ")}`
+        : "";
+
+    // Fetch ALL rows in batches to bypass the ZCQL 300-row cap
+    const allUsersResult = [];
+    let batchOffset = 0;
+    while (true) {
+      const batchSql = `SELECT * FROM ${baseTable}${whereClause} LIMIT ${ZCQL_BATCH_SIZE} OFFSET ${batchOffset}`;
+      const batchResult = await executeQuery(req, batchSql);
+      if (!batchResult || batchResult.length === 0) break;
+      allUsersResult.push(...batchResult);
+      if (batchResult.length < ZCQL_BATCH_SIZE) break; // Last page
+      batchOffset += ZCQL_BATCH_SIZE;
     }
 
-    const allUsersResult = await executeQuery(req, sql);
     const total = allUsersResult.length;
 
-    // Apply pagination if provided
+    // Apply pagination in JavaScript — never pass a large LIMIT to ZCQL
     const parsedPage = parseInt(page, 10) || 1;
     const parsedLimit = parseInt(limit, 10) || 0;
     const offset = (parsedPage - 1) * parsedLimit;
 
-    let usersSubset = allUsersResult;
-    if (parsedLimit > 0) {
-      sql += ` LIMIT ${parsedLimit} OFFSET ${offset}`;
-      usersSubset = await executeQuery(req, sql);
-    }
+    const usersSubset =
+      parsedLimit > 0
+        ? allUsersResult.slice(offset, offset + parsedLimit)
+        : allUsersResult;
 
     const result = [];
     for (const row of usersSubset) {

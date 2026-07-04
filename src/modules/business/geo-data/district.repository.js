@@ -70,6 +70,13 @@ module.exports = {
     return { id: saved.ROWID };
   },
 
+
+  async deleteDistrict(id, req) {
+    const table = getTable(req, env.TABLE_DISTRICT_GEODATA);
+    await table.deleteRow(id);
+    return { message: "District deleted" };
+  },
+
   async getAllDistrictGeoJson(query, req) {
     const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA}`;
     const res = await executeQuery(req, sql);
