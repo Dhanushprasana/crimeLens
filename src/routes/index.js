@@ -37,6 +37,7 @@ router.use("/seed", seedDataRoute);
 router.use("/criminal-profiling", criminalProfilingRoute);
 router.use("/dashboard", dashboardRoute);
 router.use("/forecast", forecastRoute);
+router.use("/storage", require("../modules/storage/storage.routes"));
 router.use("/suspects", suspectRoute);  
 
 module.exports = router;
