@@ -4,89 +4,90 @@ const constants = require("./storage.constants");
 const logger = require("../../config/logger");
 
 class StorageService {
-  /**
-   * Uploads a file to Catalyst Stratus (or Filestore)
-   */
-  static async uploadFile(req, file, entityType, entityId) {
+  static _buildObjectPath(entityType, entityId, filename) {
     if (!constants.ALLOWED_ENTITY_TYPES.includes(entityType)) {
       throw new Error(`Invalid entityType: ${entityType}`);
     }
+    const prefix = constants.PREFIX_MAP[entityType];
+    const cleanFileName = filename.replace(/[^a-zA-Z0-9.\-_]/g, "");
+    return `${prefix}/${entityId}/${cleanFileName}`;
+  }
+
+  /**
+   * Uploads a file to Catalyst Stratus
+   */
+  static async uploadFile(req, file, entityType, entityId) {
     if (!entityId) {
       throw new Error("entityId is required");
     }
 
     const catalystApp = req.catalyst;
     const bucketName = constants.BUCKET_NAME;
-    const prefix = constants.PREFIX_MAP[entityType];
-
-    // Clean original filename
-    const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "");
-    
-    // Construct the object path
-    const objectPath = `${prefix}/${entityId}/${cleanFileName}`;
+    const objectPath = this._buildObjectPath(entityType, entityId, file.originalname);
 
     try {
-      // Assuming standard Catalyst filestore SDK usage. 
-      // If Catalyst Stratus has a specific SDK (e.g. catalystApp.stratus()), 
-      // you may need to update this to match the exact SDK structure.
-      const filestore = catalystApp.filestore();
-      const folder = filestore.folder(bucketName);
+      const bucket = catalystApp.stratus().bucket(bucketName);
 
-      const uploadConfig = {
-        code: file.buffer,
-        name: objectPath
+      const uploadOptions = {
+        contentType: file.mimetype || 'application/octet-stream',
+        overwrite: true
       };
 
-      await folder.uploadFile(uploadConfig);
+      await bucket.putObject(objectPath, file.buffer, uploadOptions);
 
-      logger.info("File uploaded successfully to Storage", {
+      logger.info("File uploaded successfully to Stratus Storage", {
         path: objectPath,
         bucket: bucketName,
       });
 
       return objectPath;
     } catch (error) {
-      logger.error("Failed to upload file to Storage", { error: error.message });
+      logger.error("Failed to upload file to Stratus Storage", { error: error.message });
       throw new Error("Failed to upload file: " + error.message);
     }
   }
 
   /**
-   * Downloads a file from Catalyst Storage
+   * Downloads a file from Catalyst Stratus
    */
-  static async downloadFile(req, objectPath) {
+  static async downloadFile(req, entityType, entityId, filename) {
     const catalystApp = req.catalyst;
     const bucketName = constants.BUCKET_NAME;
+    const objectPath = this._buildObjectPath(entityType, entityId, filename);
 
     try {
-      const filestore = catalystApp.filestore();
-      const folder = filestore.folder(bucketName);
+      const bucket = catalystApp.stratus().bucket(bucketName);
       
-      const fileData = await folder.downloadFile(objectPath);
+      const stream = await bucket.getObject(objectPath);
       
-      return fileData; // Buffer
+      // Convert Readable stream to Buffer
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      return Buffer.concat(chunks);
     } catch (error) {
-      logger.error("Failed to download file from Storage", { path: objectPath, error: error.message });
+      logger.error("Failed to download file from Stratus Storage", { path: objectPath, error: error.message });
       throw new Error("Failed to download file: " + error.message);
     }
   }
 
   /**
-   * Deletes a file from Catalyst Storage
+   * Deletes a file from Catalyst Stratus
    */
-  static async deleteFile(req, objectPath) {
+  static async deleteFile(req, entityType, entityId, filename) {
     const catalystApp = req.catalyst;
     const bucketName = constants.BUCKET_NAME;
+    const objectPath = this._buildObjectPath(entityType, entityId, filename);
 
     try {
-      const filestore = catalystApp.filestore();
-      const folder = filestore.folder(bucketName);
+      const bucket = catalystApp.stratus().bucket(bucketName);
       
-      await folder.deleteFile(objectPath);
+      await bucket.deleteObject(objectPath);
       
-      logger.info("File deleted successfully from Storage", { path: objectPath });
+      logger.info("File deleted successfully from Stratus Storage", { path: objectPath });
     } catch (error) {
-      logger.error("Failed to delete file from Storage", { path: objectPath, error: error.message });
+      logger.error("Failed to delete file from Stratus Storage", { path: objectPath, error: error.message });
       throw new Error("Failed to delete file: " + error.message);
     }
   }
@@ -137,7 +138,8 @@ class StorageService {
             type,
             entityId
           );
-          results.push({ fileName, objectPath, status: "success" });
+          const publicUrl = `${constants.STRATUS_BASE_URL}/${objectPath}`;
+          results.push({ fileName, objectPath, publicUrl, status: "success" });
         } catch (error) {
           results.push({ fileName, error: error.message, status: "failed" });
         }

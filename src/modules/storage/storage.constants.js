@@ -1,6 +1,7 @@
 "use strict";
 
 module.exports = {
+  STRATUS_BASE_URL: "https://crimelens-storage-development.zohostratus.in",
   BUCKET_NAME: "crimelens-storage",
   ALLOWED_ENTITY_TYPES: [
     "criminal",
