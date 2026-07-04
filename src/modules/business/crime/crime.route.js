@@ -5,6 +5,7 @@ const router = express.Router();
 const controller = require('./crime.controller');
 
 router.post('/', controller.addCrime);
+router.post('/bulk', controller.addCrimesBulk);
 router.get('/', controller.getAllCrimes);
 router.get('/getOneCrime/:id', controller.getOneCrime);
 router.put('/:id', controller.updateCrime);

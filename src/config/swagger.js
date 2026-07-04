@@ -51,6 +51,7 @@ const options = {
     "./src/modules/scaffolding/**/swagger/*.js",
     "./src/modules/business/**/swagger/*.js",
     "./src/modules/seed-data/swagger/*.js",
+    "./src/modules/storage/swagger/*.js",
   ],
 };
 
