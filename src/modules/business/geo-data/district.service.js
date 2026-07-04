@@ -11,11 +11,11 @@ module.exports = {
   },
   async getAllDistrict(query, req) {
     logger.info("getAllDistrict");
-    return repository.getAllDistrict(query, req);
+    return repository.getAllDistrictGeoJson(query, req);
   },
   async getOneDistrict(id, req) {
     logger.info(`getOneDistrict ${id}`);
-    return repository.getOneDistrict(id, req);
+    return repository.getOneDistrictGeoJson(id, req);
   },
   async deleteDistrict(id, req) {
     logger.info(`deleteDistrict ${id}`);
