@@ -81,6 +81,29 @@ module.exports = {
     let created = 0;
     let skipped = 0;
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    const table = req.catalyst
+      ? req.catalyst.datastore().table(env.TABLE_POLICE_STATION)
+      : null;
+
+    // Prefetch all districts into a map to avoid N queries
+    const districtMap = new Map();
+    if (zcql) {
+      try {
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`,
+        );
+        for (const row of rows) {
+          const d = row[env.TABLE_DISTRICT_GEODATA];
+          if (d && d.district_name && d.ROWID) {
+            districtMap.set(d.district_name.toLowerCase(), d.ROWID);
+          }
+        }
+      } catch (err) {
+        logger.warn("failed to bulk load districts", err && err.message ? err.message : String(err));
+      }
+    }
+
+    const rowsToInsert = [];
 
     for (const feat of features) {
       const props = feat.properties || {};
@@ -104,7 +127,7 @@ module.exports = {
         props.KGISPSCode || props.station_code || props.code || null;
       const address = props.address || props.ADDRESS || null;
 
-      // resolve district id from biz_district_detail by districtName property
+      // resolve district id from pre-fetched map
       let district_id = null;
       const districtName =
         props.districtName ||
@@ -112,55 +135,41 @@ module.exports = {
         props.DISTRICT_NAME ||
         props.district_name ||
         null;
-      if (districtName && zcql) {
-        try {
-          const safeName = districtName.replace(/'/g, "''");
-          const rows = await zcql.executeZCQLQuery(
-            `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_name = '${safeName}' LIMIT 1`,
-          );
-          if (rows && rows.length) {
-            district_id =
-              rows[0].ROWID ||
-              rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID ||
-              null;
-            logger.info("district lookup by name", {
-              districtName,
-              district_id,
-            });
-          }
-        } catch (err) {
-          logger.warn(
-            "district lookup failed",
-            err && err.message ? err.message : err,
-          );
+        
+      if (districtName) {
+        const key = districtName.toLowerCase();
+        if (districtMap.has(key)) {
+          district_id = districtMap.get(key);
+        } else {
+          logger.warn("district lookup failed for station", {
+            stationName: name,
+            districtName,
+          });
         }
       }
 
-      try {
-        await stationRepo.addPoliceStation(
-          {
-            district_id,
-            station_name: name,
-            station_code,
-            latitude,
-            longitude,
-            address,
-            station_type_id: null,
-          },
-          req,
-        );
-        created++;
-      } catch (err) {
-        logger.warn("failed to insert station", {
-          station: name,
-          error:
-            err && err.stack
-              ? err.stack
-              : err && err.message
-                ? err.message
-                : err,
-        });
-        skipped++;
+      rowsToInsert.push({
+        district_id,
+        station_name: name,
+        station_code,
+        latitude,
+        longitude,
+        address,
+        station_type_id: null,
+      });
+    }
+
+    if (rowsToInsert.length > 0 && table) {
+      const BATCH_SIZE = 200;
+      for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+        try {
+          await table.insertRows(chunk);
+          created += chunk.length;
+        } catch (err) {
+          logger.warn("failed to bulk insert stations", err && err.message ? err.message : String(err));
+          skipped += chunk.length;
+        }
       }
     }
 
@@ -207,6 +216,7 @@ module.exports = {
         await table.insertRow({
           crime_category_name: name,
           description: e.description || null,
+          crime_category_number: e.crime_category_number || null,
         });
         created++;
       } catch (err) {

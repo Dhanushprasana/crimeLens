@@ -10,11 +10,82 @@ async function executeQuery(req, query) {
 
 function getTable(req, name) { if (!req.catalyst) throw new Error('Catalyst SDK not initialized'); return req.catalyst.datastore().table(name); }
 
+async function generateCrimeAndCaseNumbers(dto, req) {
+  let categoryCode = '1';
+  if (dto.crime_category_id) {
+    try {
+      const safeId = String(dto.crime_category_id).replace(/'/g, "''");
+      const catQuery = `SELECT crime_category_number FROM ${env.TABLE_CRIME_CATEGORY} WHERE ROWID = '${safeId}'`;
+      const catRes = await executeQuery(req, catQuery);
+      if (catRes && catRes.length > 0) {
+        const code = catRes[0][env.TABLE_CRIME_CATEGORY].crime_category_number;
+        if (code) {
+          categoryCode = String(code);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching category code:', err.message);
+    }
+  }
+
+  const distStr = String(dto.crime_happended_at_district_id || '0000');
+  const distId4 = distStr.length >= 4 ? distStr.slice(-4) : distStr.padStart(4, '0');
+
+  const psStr = String(dto.police_station_id || '0000');
+  const psId4 = psStr.length >= 4 ? psStr.slice(-4) : psStr.padStart(4, '0');
+
+  let year = new Date().getFullYear().toString();
+  if (dto.incident_registered_date) {
+    const d = new Date(dto.incident_registered_date);
+    if (!isNaN(d.getTime())) {
+      year = d.getFullYear().toString();
+    }
+  }
+
+  const prefix = `${categoryCode}${distId4}${psId4}${year}`;
+
+  let maxSerial = 0;
+  if (dto.police_station_id) {
+    const safePs = String(dto.police_station_id).replace(/'/g, "''");
+    const query = `SELECT crime_number FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${safePs}' AND crime_number LIKE '${prefix}%'`;
+    try {
+      const existing = await executeQuery(req, query);
+      for (const row of existing) {
+        const cn = row[env.TABLE_CRIME_INCIDENT].crime_number;
+        if (cn && cn.startsWith(prefix) && cn.length === 18) {
+          const serial = parseInt(cn.slice(-5), 10);
+          if (!isNaN(serial) && serial > maxSerial) {
+            maxSerial = serial;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching max serial for crime_number:', err.message);
+    }
+  }
+
+  const nextSerialStr = (maxSerial + 1).toString().padStart(5, '0');
+  return {
+    crime_number: `${prefix}${nextSerialStr}`,
+    case_number: `${year}${nextSerialStr}`
+  };
+}
+
 module.exports = {
   async addCrime(dto, req) {
+    // Auto-generate numbers if not provided
+    let cNum = dto.crime_number || null;
+    let caseNum = dto.case_number || null;
+    if (!cNum || !caseNum) {
+      const generated = await generateCrimeAndCaseNumbers(dto, req);
+      cNum = cNum || generated.crime_number;
+      caseNum = caseNum || generated.case_number;
+    }
+
     const table = getTable(req, env.TABLE_CRIME_INCIDENT);
     const row = {
-      crime_number: dto.crime_number || null,
+      crime_number: cNum,
+      case_number: caseNum,
       title: dto.title,
       description: dto.description || null,
       crime_category_id: dto.crime_category_id || null,
@@ -121,7 +192,8 @@ module.exports = {
       'fir_id',
       'created_by',
       'createdtime',
-      'modifiedtime'
+      'modifiedtime',
+      'case_number'
     ].join(', ');
 
     const offset = (params.page - 1) * params.pageSize;
@@ -178,21 +250,33 @@ module.exports = {
     
     const table = getTable(req, env.TABLE_CRIME_INCIDENT);
     
-    const rowsToInsert = dtos.map(dto => ({
-      crime_number: dto.crime_number || null,
+    const rowsToInsert = [];
+    for (const dto of dtos) {
+      let cNum = dto.crime_number || null;
+      let caseNum = dto.case_number || null;
+      if (!cNum || !caseNum) {
+        const generated = await generateCrimeAndCaseNumbers(dto, req);
+        cNum = cNum || generated.crime_number;
+        caseNum = caseNum || generated.case_number;
+      }
+      
+      rowsToInsert.push({
+        crime_number: cNum,
+        case_number: caseNum,
       title: dto.title,
       description: dto.description || null,
       crime_category_id: dto.crime_category_id || null,
       police_station_id: dto.police_station_id || null,
       crime_happended_at_district_id: dto.crime_happended_at_district_id || null,
-      crime_location_latitude: dto.crime_location_latitude || null,
-      crime_location_longitude: dto.crime_location_longitude || null,
-      status: dto.status || 'UNDER_INVESTIGATION',
-      crime_occured_date_time: dto.crime_occured_date_time || null,
-      incident_registered_date: dto.incident_registered_date || null,
-      fir_id: dto.fir_id || null,
-      created_by: dto.created_by || null
-    }));
+        crime_location_latitude: dto.crime_location_latitude || null,
+        crime_location_longitude: dto.crime_location_longitude || null,
+        status: dto.status || 'UNDER_INVESTIGATION',
+        crime_occured_date_time: dto.crime_occured_date_time || null,
+        incident_registered_date: dto.incident_registered_date || null,
+        fir_id: dto.fir_id || null,
+        created_by: dto.created_by || null
+      });
+    }
 
     const BATCH_SIZE = 200;
     const insertedIds = [];
