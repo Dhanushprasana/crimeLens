@@ -54,7 +54,7 @@
 
 /**
  * @swagger
- * /storage/object/{entityType}/{entityId}/{filename}:
+ * /storage/object/{folder}/{filename}:
  *   get:
  *     summary: Download a file from Stratus storage
  *     tags: [Storage]
@@ -62,17 +62,11 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: entityType
+ *         name: folder
  *         required: true
  *         schema:
  *           type: string
- *         description: The prefix or entity type (e.g. criminal-photos)
- *       - in: path
- *         name: entityId
- *         required: true
- *         schema:
- *           type: string
- *         description: The unique identifier for the entity
+ *         description: The storage folder (e.g. face, others)
  *       - in: path
  *         name: filename
  *         required: true
@@ -95,7 +89,7 @@
 
 /**
  * @swagger
- * /storage/object/{entityType}/{entityId}/{filename}:
+ * /storage/object/{folder}/{filename}:
  *   delete:
  *     summary: Delete a file from Stratus storage
  *     tags: [Storage]
@@ -103,12 +97,7 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: entityType
- *         required: true
- *         schema:
- *           type: string
- *       - in: path
- *         name: entityId
+ *         name: folder
  *         required: true
  *         schema:
  *           type: string
@@ -140,7 +129,7 @@
  *         required: true
  *         schema:
  *           type: string
- *           enum: [fingerprint, cctv, footprints, tools]
+ *           enum: [face, fingerprint, footprints, others]
  *         description: The type of data to bootstrap (maps to a folder inside storage-data)
  *     responses:
  *       200:

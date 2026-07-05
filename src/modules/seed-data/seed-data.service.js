@@ -264,58 +264,40 @@ module.exports = {
       createdAuth = 0;
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
 
+    // Pre-fetch maps to avoid multiple db calls
+    const rankMap = new Map();
+    const stationMap = new Map();
+    if (zcql) {
+      try {
+        const rankRows = await zcql.executeZCQLQuery(`SELECT ROWID, rank_name FROM ${env.TABLE_POLICE_RANK}`);
+        for (const row of rankRows) {
+          const r = row[env.TABLE_POLICE_RANK];
+          if (r && r.rank_name && r.ROWID) rankMap.set(r.rank_name.toLowerCase(), r.ROWID);
+        }
+        const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+        for (const row of stationRows) {
+          const s = row[env.TABLE_POLICE_STATION];
+          if (s && s.station_name && s.ROWID) stationMap.set(s.station_name.toLowerCase(), s.ROWID);
+        }
+      } catch (err) {
+        logger.warn("failed to bulk load maps for officer bootstrap", err && err.message ? err.message : String(err));
+      }
+    }
+
     for (const e of entries) {
       try {
-        // Lookup rank_id by rank_name
+        // Resolve rank_id from map
         let rank_id = e.rank_id || null;
-        const rankName = (e.rank_name || "").trim();
-        if (!rank_id && rankName && zcql) {
-          try {
-            const rankRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_POLICE_RANK} WHERE rank_name = '${rankName.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (rankRows && rankRows.length) {
-              rank_id =
-                rankRows[0].ROWID ||
-                rankRows[0][env.TABLE_POLICE_RANK]?.ROWID ||
-                null;
-              logger.debug("rank lookup", {
-                rankName,
-                rank_id,
-              });
-            }
-          } catch (err) {
-            logger.warn(
-              "rank lookup failed",
-              err && err.message ? err.message : err,
-            );
-          }
+        const rankName = (e.rank_name || "").trim().toLowerCase();
+        if (!rank_id && rankName && rankMap.has(rankName)) {
+          rank_id = rankMap.get(rankName);
         }
 
-        // Lookup station_id by station_name
+        // Resolve station_id from map
         let station_id = e.station_id || null;
-        const stationName = (e.station_name || "").trim();
-        if (!station_id && stationName && zcql) {
-          try {
-            const stationRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_POLICE_STATION} WHERE station_name = '${stationName.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (stationRows && stationRows.length) {
-              station_id =
-                stationRows[0].ROWID ||
-                stationRows[0][env.TABLE_POLICE_STATION]?.ROWID ||
-                null;
-              logger.debug("station lookup", {
-                stationName,
-                station_id,
-              });
-            }
-          } catch (err) {
-            logger.warn(
-              "station lookup failed",
-              err && err.message ? err.message : err,
-            );
-          }
+        const stationName = (e.station_name || "").trim().toLowerCase();
+        if (!station_id && stationName && stationMap.has(stationName)) {
+          station_id = stationMap.get(stationName);
         }
 
         const dto = {
@@ -331,155 +313,56 @@ module.exports = {
           operational_status: e.operational_status || "ACTIVE",
           contact_number: e.contact_number || e.phone || null,
         };
-        // try create officer, if duplicate badge exists createOfficer will throw
-        await policeRepo.createOfficer(dto, req);
-        created++;
 
-        // Create or link sys_user record for the officer
-        // Get email from police_officer_info if available, otherwise use provided or generate
-        const officerId =
-          e.user_id && e.user_id.match(/\d+/)
+        const officerId = e.user_id && e.user_id.match(/\d+/)
             ? parseInt(e.user_id.match(/\d+/)[0], 10)
             : null;
+
         const officerEmail =
           (officerId && emailMap[officerId]) ||
           dto.email ||
           `${dto.badge_number}@police.local`.toLowerCase();
-        if (officerEmail && zcql) {
+          
+        dto.email = officerEmail;
+
+        // createOfficer handles sys_user, sys_user_info, and role assignment
+        const createdOff = await policeRepo.createOfficer(dto, req);
+        created++;
+        
+        const userId = createdOff.user_id;
+
+        // Create Catalyst auth user with default password
+        if (userId && dto.email && zcql) {
           try {
-            // Check if user already exists
-            const userInfoRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${officerEmail.replace(/'/g, "''")}' LIMIT 1`,
+            const fullName = (officerId && fullNameMap[officerId]) || dto.name || "";
+            const createdAuthRes = await catalystAuth.createUser(
+              req,
+              dto.email,
+              "Police@123",
+              fullName || undefined,
             );
-
-            let userId = null;
-            let userInfoId = null;
-
-            if (userInfoRows && userInfoRows.length) {
-              // User exists, get their IDs
-              userInfoId =
-                userInfoRows[0].ROWID ||
-                userInfoRows[0][env.TABLE_USER_INFO]?.ROWID;
-              const userRows = await zcql.executeZCQLQuery(
-                `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = '${userInfoId}' LIMIT 1`,
-              );
-              if (userRows && userRows.length) {
-                userId =
-                  userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID;
-              }
-            } else {
-              // Create new sys_user_info record
-              const userInfoTable = req.catalyst
-                .datastore()
-                .table(env.TABLE_USER_INFO);
-
-              // Use full_name from police_officer_info, fallback to dto.name
-              const fullName =
-                (officerId && fullNameMap[officerId]) || dto.name || "";
-              const nameParts = fullName.split(" ");
-              const userFirstName = nameParts[0] || "";
-              const userLastName = nameParts.slice(1).join(" ") || "";
-
-              const userInfoSaved = await userInfoTable.insertRow({
-                email: officerEmail,
-                user_first_name: userFirstName,
-                user_last_name: userLastName,
-                phone: e.contact_number || null,
-              });
-              userInfoId = userInfoSaved.ROWID;
-
-              // Create new sys_user record
+            const catalystUserId =
+              createdAuthRes?.user_details?.user_id ||
+              createdAuthRes?.user_details?.zuid ||
+              createdAuthRes?.user_id ||
+              null;
+              
+            if (catalystUserId) {
               const userTable = req.catalyst.datastore().table(env.TABLE_USER);
-              const userSaved = await userTable.insertRow({
-                user_info_id: userInfoId,
-                is_archived: false,
+              await userTable.updateRow({
+                ROWID: userId,
+                catalyst_user_id: catalystUserId,
               });
-              userId = userSaved.ROWID;
-              logger.info("created sys_user for officer", {
+              createdAuth++;
+              logger.info("created catalyst auth for officer", {
                 badge: dto.badge_number,
-                email: officerEmail,
-                userId,
-              });
-            }
-
-            // Assign default OFFICER role if not already assigned
-            if (userId) {
-              try {
-                // Find OFFICER role
-                const roleRows = await zcql.executeZCQLQuery(
-                  `SELECT ROWID FROM ${env.TABLE_ROLE} WHERE role_name = '${env.DEFAULT_OFFICER_ROLE}' LIMIT 1`,
-                );
-                if (roleRows && roleRows.length) {
-                  const roleId =
-                    roleRows[0].ROWID || roleRows[0][env.TABLE_ROLE]?.ROWID;
-
-                  // Check if role already assigned
-                  const existingRoleRows = await zcql.executeZCQLQuery(
-                    `SELECT ROWID FROM ${env.TABLE_USER_ROLE} WHERE user_id = '${userId}' AND role_id = '${roleId}' LIMIT 1`,
-                  );
-
-                  if (!existingRoleRows || existingRoleRows.length === 0) {
-                    const userRoleTable = req.catalyst
-                      .datastore()
-                      .table(env.TABLE_USER_ROLE);
-                    await userRoleTable.insertRow({
-                      user_id: userId,
-                      role_id: roleId,
-                    });
-                    logger.info("assigned default role to officer", {
-                      badge: dto.badge_number,
-                      role: env.DEFAULT_OFFICER_ROLE,
-                    });
-                  }
-                }
-              } catch (err) {
-                logger.warn("failed to assign role to officer", {
-                  badge: dto.badge_number,
-                  error: err && err.message ? err.message : String(err),
-                });
-              }
-            }
-
-            // Create Catalyst auth user with default password
-            try {
-              const fullName =
-                (officerId && fullNameMap[officerId]) || dto.name || "";
-              const createdAuthRes = await catalystAuth.createUser(
-                req,
-                officerEmail,
-                "Police@123",
-                fullName || undefined,
-              );
-              const catalystUserId =
-                createdAuthRes?.user_details?.user_id ||
-                createdAuthRes?.user_details?.zuid ||
-                createdAuthRes?.user_id ||
-                null;
-              if (catalystUserId && userId) {
-                const userTable = req.catalyst
-                  .datastore()
-                  .table(env.TABLE_USER);
-                await userTable.updateRow({
-                  ROWID: userId,
-                  catalyst_user_id: catalystUserId,
-                });
-                createdAuth++;
-                logger.info("created catalyst auth for officer", {
-                  badge: dto.badge_number,
-                  email: officerEmail,
-                });
-              }
-            } catch (err) {
-              logger.warn("failed to create catalyst auth for officer", {
-                badge: dto.badge_number,
-                email: officerEmail,
-                error: err && err.message ? err.message : String(err),
+                email: dto.email,
               });
             }
           } catch (err) {
-            logger.warn("failed to create sys_user for officer", {
+            logger.warn("failed to create catalyst auth for officer", {
               badge: dto.badge_number,
-              email: officerEmail,
+              email: dto.email,
               error: err && err.message ? err.message : String(err),
             });
           }
@@ -512,51 +395,69 @@ module.exports = {
     let created = 0,
       skipped = 0;
     const zcql = req.catalyst.zcql();
-    for (const e of entries) {
+    const table = req.catalyst.datastore().table(env.TABLE_CRIMINAL);
+
+    // Pre-fetch districts map
+    const districtMap = new Map();
+    if (zcql) {
       try {
-        // map district code (KA-10) to geo table district_code (KA-10)
-        let district_id = null;
-        const code = (
-          e.district_code_of_criminal ||
-          e.district_code ||
-          ""
-        ).replace(/_/g, "-");
-        if (code) {
-          try {
-            const rows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_code = '${code.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (rows && rows.length)
-              district_id =
-                rows[0].ROWID || rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID;
-          } catch (err) {
-            logger.warn(
-              "district lookup failed",
-              err && err.message ? err.message : err,
-            );
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`,
+        );
+        for (const row of rows) {
+          const d = row[env.TABLE_DISTRICT_GEODATA];
+          if (d && d.district_code && d.ROWID) {
+            districtMap.set(d.district_code.replace(/_/g, "-"), d.ROWID);
           }
         }
-        const dto = {
-          criminal_number: e.criminal_number || null,
-          full_name: e.full_name || e.name || null,
-          gender: e.gender || null,
-          date_of_birth: e.date_of_birth || null,
-          nationality: e.nationality || null,
-          photo_url: e.photo_url || null,
-          status: e.status || "ACTIVE",
-          address: e.address || null,
-          district_id_of_criminal: district_id,
-        };
-        await criminalRepo.addCriminal(dto, req);
-        created++;
       } catch (err) {
-        skipped++;
-        logger.warn(
-          "failed to insert criminal",
-          err && err.message ? err.message : err,
-        );
+        logger.warn("failed to bulk load districts for criminal bootstrap", err && err.message ? err.message : String(err));
       }
     }
+
+    const rowsToInsert = [];
+
+    for (const e of entries) {
+      let district_id = null;
+      const code = (
+        e.district_code_of_criminal ||
+        e.district_code ||
+        ""
+      ).replace(/_/g, "-");
+
+      if (code && districtMap.has(code)) {
+        district_id = districtMap.get(code);
+      } else if (code) {
+        logger.warn("district lookup failed for criminal", { code });
+      }
+
+      rowsToInsert.push({
+        criminal_number: e.criminal_number || null,
+        full_name: e.full_name || e.name || null,
+        gender: e.gender || null,
+        date_of_birth: e.date_of_birth || null,
+        nationality: e.nationality || null,
+        photo_url: e.photo_url || null,
+        status: e.status || "ACTIVE",
+        address: e.address || null,
+        district_id_of_criminal: district_id,
+      });
+    }
+
+    if (rowsToInsert.length > 0 && table) {
+      const BATCH_SIZE = 200;
+      for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+        try {
+          await table.insertRows(chunk);
+          created += chunk.length;
+        } catch (err) {
+          logger.warn("failed to bulk insert criminals", err && err.message ? err.message : String(err));
+          skipped += chunk.length;
+        }
+      }
+    }
+
     return { created, skipped };
   },
 

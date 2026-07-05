@@ -12,17 +12,21 @@ module.exports = {
     "cctv",
     "footprints",
     "tools",
+    "face",
+    "others"
   ],
   PREFIX_MAP: {
-    criminal: "criminal-photos",
-    police: "police-photos",
-    "crime-evidence": "crime-evidence",
-    "crime-spot": "crime-spots",
-    "forensic-report": "forensic-reports",
-    "fingerprint": "crime-evidence/fingerprint",
-    "cctv": "crime-evidence/cctv",
-    "footprints": "crime-evidence/footprints",
-    "tools": "crime-evidence/tools",
+    criminal: "face",
+    police: "face",
+    fingerprint: "fingerprint",
+    footprints: "footprints",
+    "crime-evidence": "others",
+    "crime-spot": "others",
+    "forensic-report": "others",
+    cctv: "others",
+    tools: "others",
+    face: "face",
+    others: "others"
   },
 };
 
