@@ -6,6 +6,7 @@ const logger = require("../../config/logger");
 async function predict(
   req,
   {
+    model_version,
     startDate,
     horizonDays = 30,
     contextRows = [],
@@ -15,15 +16,22 @@ async function predict(
 ) {
   // Try to use Catalyst QuickML if available on req.catalyst
   // Use QuickML client and surface errors (no graceful fallback)
-  const quickml = req.catalyst
-    ? req.catalyst.quickml || req.catalyst.quickML
-    : null;
-  const client = quickml && typeof quickml === "function" ? quickml() : quickml;
+  const client = req.catalyst && typeof req.catalyst.quickML === "function" 
+    ? req.catalyst.quickML() 
+    : (req.catalyst && req.catalyst.quickml ? req.catalyst.quickml() : null);
   if (!client) {
     const msg = "QuickML client not available on req.catalyst";
     logger.error(msg);
     throw new Error(msg);
   }
+
+  console.log("=== QUICKML DEBUG INFO ===");
+  console.log("req.catalyst keys:", req.catalyst ? Object.keys(req.catalyst) : "undefined");
+  console.log("client:", client);
+  console.log("client keys:", Object.keys(client));
+  console.log("typeof client.predict:", typeof client.predict);
+  console.log("client.projectId:", client.projectId);
+  console.log("==========================");
 
   const tryMethods = [
     "predict",
@@ -42,52 +50,58 @@ async function predict(
     for (let i = 0; i < predictionRows.length; i += batchSize) {
       const batch = predictionRows.slice(i, i + batchSize);
       let batchPreds = null;
-      for (const m of tryMethods) {
-        if (typeof client[m] === "function") {
-          try {
-            // Try common payload shapes
-            const tryPayloads = [
-              { rows: batch, table: constants.TRAINING_TABLE },
-              { data: batch, table: constants.TRAINING_TABLE },
-              batch,
-            ];
-            for (const payload of tryPayloads) {
-              try {
-                const r = await client[m](payload);
-                if (Array.isArray(r)) {
-                  batchPreds = r;
-                  break;
-                }
-                if (r && Array.isArray(r.predictions)) {
-                  batchPreds = r.predictions;
-                  break;
-                }
-                if (r && Array.isArray(r.rows)) {
-                  batchPreds = r.rows;
-                  break;
-                }
-              } catch (err) {
-                // try next payload shape
-                lastErr = err;
-              }
-            }
-            if (batchPreds) break;
-          } catch (err) {
-            lastErr = err;
-            logger.error(`QuickML.${m} failed (batch)`, {
-              error: err && err.message ? err.message : err,
-            });
+      let lastErr = null;
+      
+      const tryPayloads = [
+        { rows: batch },
+        { data: batch },
+        { input_data: batch }
+      ];
+      
+      for (const payload of tryPayloads) {
+        try {
+          const r = await client.predict(model_version, payload);
+          if (Array.isArray(r)) {
+            batchPreds = r;
+            break;
           }
+          if (r && Array.isArray(r.predictions)) {
+            batchPreds = r.predictions;
+            break;
+          }
+          if (r && Array.isArray(r.rows)) {
+            batchPreds = r.rows;
+            break;
+          }
+          if (r && Array.isArray(r.data)) {
+            batchPreds = r.data;
+            break;
+          }
+          // If we got a successful response but unknown format, assume it was successful
+          if (r) {
+            batchPreds = r;
+            break;
+          }
+        } catch (err) {
+          logger.error(`QuickML predict failed for payload`, { payloadShape: Object.keys(payload), error: err.message || err });
+          lastErr = err;
         }
       }
+      
       if (!batchPreds) {
         const failMsg = lastErr
           ? `QuickML batch predict failed: ${lastErr.message || lastErr}`
-          : "No QuickML batch predict method found";
+          : "QuickML batch predict failed on all payload shapes";
         logger.error(failMsg);
         throw new Error(failMsg);
       }
-      out.push(...batchPreds);
+      
+      // Flatten predictions if they were wrapped
+      if (Array.isArray(batchPreds)) {
+        out.push(...batchPreds);
+      } else {
+        out.push(batchPreds);
+      }
     }
     return out;
   }

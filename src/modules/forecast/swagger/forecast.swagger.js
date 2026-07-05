@@ -107,11 +107,12 @@
  *           schema:
  *             type: object
  *             properties:
- *               startDate:
+ *               forecast_start:
  *                 type: string
  *                 format: date
- *               horizonDays:
- *                 type: integer
+ *               forecast_end:
+ *                 type: string
+ *                 format: date
  *     responses:
  *       200:
  *         description: Forecasts generated
