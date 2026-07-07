@@ -12,11 +12,11 @@ router.post("/police-station/bootstrap", controller.bootstrapPoliceStations); //
 router.post("/crime-category/bootstrap", controller.bootstrapCrimeCategory); // 
 
 router.post("/police-officer/bootstrap", controller.bootstrapPoliceOfficer); //
-router.post("/criminal/bootstrap", controller.bootstrapCriminal);
+router.post("/criminal/bootstrap", controller.bootstrapCriminal); //
 
 // router.post("/suspect/bootstrap",controller.bootstrapSuspect);
 
-router.post("/fir/bootstrap", controller.bootstrapFirs);
+router.post("/fir/bootstrap", controller.bootstrapFirs);  //
 router.post("/crime-incident/bootstrap", controller.bootstrapCrimeIncidents);
 
 router.post("/incident-criminal/bootstrap", controller.bootstrapIncidentCriminals);

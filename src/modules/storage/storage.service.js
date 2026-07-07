@@ -151,6 +151,56 @@ class StorageService {
     }
   }
 
+  static async listBucketObjectKeys(req, prefix = "") {
+    const catalystApp = req.catalyst;
+    if (!catalystApp || typeof catalystApp.stratus !== "function") {
+      throw new Error("Catalyst Stratus API not available on req.catalyst");
+    }
+
+    const stratus = catalystApp.stratus();
+    const bucket = stratus.bucket(constants.BUCKET_NAME);
+    if (!bucket || typeof bucket.listPagedObjects !== "function") {
+      const msg =
+        "Stratus bucket does not expose listPagedObjects(). Check Catalyst SDK version.";
+      logger.error("Unexpected stratus API", {
+        msg,
+        bucketName: constants.BUCKET_NAME,
+        prefix,
+      });
+      throw new Error(msg);
+    }
+
+    const keys = [];
+    let continuationToken;
+    do {
+      const result = await bucket.listPagedObjects({
+        prefix,
+        maxKeys: 1000,
+        continuationToken,
+        folderListing: "false",
+      });
+      const contents = Array.isArray(result?.contents) ? result.contents : [];
+      for (const item of contents) {
+        if (typeof item === "string") {
+          keys.push(item);
+        } else if (item && typeof item.keyDetails === "string") {
+          keys.push(item.keyDetails);
+        } else if (
+          item &&
+          item.keyDetails &&
+          typeof item.keyDetails.key === "string"
+        ) {
+          keys.push(item.keyDetails.key);
+        } else if (item && typeof item.key === "string") {
+          keys.push(item.key);
+        }
+      }
+      continuationToken = result?.next_continuation_token;
+    } while (continuationToken);
+
+    return keys;
+  }
+
   /**
    * Bootstraps images from the local storage-data directory to Catalyst Storage
    */

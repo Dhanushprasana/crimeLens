@@ -12,6 +12,8 @@ const firRepo = require("../business/fir/fir.repository");
 const userRepo = require("../scaffolding/user/user.repository");
 const catalystAuth = require("../../catalyst/auth/auth");
 const env = require("../../config/env");
+const StorageService = require("../storage/storage.service");
+const storageConstants = require("../storage/storage.constants");
 
 module.exports = {
   async bootstrapDistrictGeoJson(req) {
@@ -99,7 +101,10 @@ module.exports = {
           }
         }
       } catch (err) {
-        logger.warn("failed to bulk load districts", err && err.message ? err.message : String(err));
+        logger.warn(
+          "failed to bulk load districts",
+          err && err.message ? err.message : String(err),
+        );
       }
     }
 
@@ -135,7 +140,7 @@ module.exports = {
         props.DISTRICT_NAME ||
         props.district_name ||
         null;
-        
+
       if (districtName) {
         const key = districtName.toLowerCase();
         if (districtMap.has(key)) {
@@ -167,7 +172,10 @@ module.exports = {
           await table.insertRows(chunk);
           created += chunk.length;
         } catch (err) {
-          logger.warn("failed to bulk insert stations", err && err.message ? err.message : String(err));
+          logger.warn(
+            "failed to bulk insert stations",
+            err && err.message ? err.message : String(err),
+          );
           skipped += chunk.length;
         }
       }
@@ -269,18 +277,27 @@ module.exports = {
     const stationMap = new Map();
     if (zcql) {
       try {
-        const rankRows = await zcql.executeZCQLQuery(`SELECT ROWID, rank_name FROM ${env.TABLE_POLICE_RANK}`);
+        const rankRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, rank_name FROM ${env.TABLE_POLICE_RANK}`,
+        );
         for (const row of rankRows) {
           const r = row[env.TABLE_POLICE_RANK];
-          if (r && r.rank_name && r.ROWID) rankMap.set(r.rank_name.toLowerCase(), r.ROWID);
+          if (r && r.rank_name && r.ROWID)
+            rankMap.set(r.rank_name.toLowerCase(), r.ROWID);
         }
-        const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`);
+        const stationRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`,
+        );
         for (const row of stationRows) {
           const s = row[env.TABLE_POLICE_STATION];
-          if (s && s.station_name && s.ROWID) stationMap.set(s.station_name.toLowerCase(), s.ROWID);
+          if (s && s.station_name && s.ROWID)
+            stationMap.set(s.station_name.toLowerCase(), s.ROWID);
         }
       } catch (err) {
-        logger.warn("failed to bulk load maps for officer bootstrap", err && err.message ? err.message : String(err));
+        logger.warn(
+          "failed to bulk load maps for officer bootstrap",
+          err && err.message ? err.message : String(err),
+        );
       }
     }
 
@@ -314,7 +331,8 @@ module.exports = {
           contact_number: e.contact_number || e.phone || null,
         };
 
-        const officerId = e.user_id && e.user_id.match(/\d+/)
+        const officerId =
+          e.user_id && e.user_id.match(/\d+/)
             ? parseInt(e.user_id.match(/\d+/)[0], 10)
             : null;
 
@@ -322,19 +340,20 @@ module.exports = {
           (officerId && emailMap[officerId]) ||
           dto.email ||
           `${dto.badge_number}@police.local`.toLowerCase();
-          
+
         dto.email = officerEmail;
 
         // createOfficer handles sys_user, sys_user_info, and role assignment
         const createdOff = await policeRepo.createOfficer(dto, req);
         created++;
-        
+
         const userId = createdOff.user_id;
 
         // Create Catalyst auth user with default password
         if (userId && dto.email && zcql) {
           try {
-            const fullName = (officerId && fullNameMap[officerId]) || dto.name || "";
+            const fullName =
+              (officerId && fullNameMap[officerId]) || dto.name || "";
             const createdAuthRes = await catalystAuth.createUser(
               req,
               dto.email,
@@ -346,7 +365,7 @@ module.exports = {
               createdAuthRes?.user_details?.zuid ||
               createdAuthRes?.user_id ||
               null;
-              
+
             if (catalystUserId) {
               const userTable = req.catalyst.datastore().table(env.TABLE_USER);
               await userTable.updateRow({
@@ -411,11 +430,47 @@ module.exports = {
           }
         }
       } catch (err) {
-        logger.warn("failed to bulk load districts for criminal bootstrap", err && err.message ? err.message : String(err));
+        logger.warn(
+          "failed to bulk load districts for criminal bootstrap",
+          err && err.message ? err.message : String(err),
+        );
       }
     }
 
+    let faceImagePaths = [];
+    try {
+      const allFaceObjects = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP.face}/`,
+      );
+      faceImagePaths = allFaceObjects
+        .filter((key) => /\.(jpe?g|png|tiff?)$/i.test(key))
+        .sort((a, b) => a.localeCompare(b));
+
+      if (faceImagePaths.length === 0) {
+        logger.warn(
+          "No face images found in storage bucket for criminal bootstrap",
+        );
+      }
+    } catch (err) {
+      logger.warn(
+        "Failed to fetch face images from storage for criminal bootstrap",
+        {
+          error: err && err.message ? err.message : String(err),
+        },
+      );
+      faceImagePaths = [];
+    }
+
+    if (faceImagePaths.length && faceImagePaths.length < entries.length) {
+      logger.warn("Insufficient face images for criminal bootstrap", {
+        availableFaceImages: faceImagePaths.length,
+        criminalsToInsert: entries.length,
+      });
+    }
+
     const rowsToInsert = [];
+    let faceIndex = 0;
 
     for (const e of entries) {
       let district_id = null;
@@ -431,13 +486,18 @@ module.exports = {
         logger.warn("district lookup failed for criminal", { code });
       }
 
+      const assignedPhotoUrl = faceImagePaths[faceIndex] || e.photo_url || null;
+      if (faceIndex < faceImagePaths.length) {
+        faceIndex += 1;
+      }
+
       rowsToInsert.push({
         criminal_number: e.criminal_number || null,
         full_name: e.full_name || e.name || null,
         gender: e.gender || null,
         date_of_birth: e.date_of_birth || null,
         nationality: e.nationality || null,
-        photo_url: e.photo_url || null,
+        photo_url: assignedPhotoUrl,
         status: e.status || "ACTIVE",
         address: e.address || null,
         district_id_of_criminal: district_id,
@@ -452,8 +512,32 @@ module.exports = {
           await table.insertRows(chunk);
           created += chunk.length;
         } catch (err) {
-          logger.warn("failed to bulk insert criminals", err && err.message ? err.message : String(err));
-          skipped += chunk.length;
+          const errorMessage = err && err.message ? err.message : String(err);
+          logger.warn("failed to bulk insert criminals", {
+            batchStart: i + 1,
+            batchSize: chunk.length,
+            error: errorMessage,
+            errorObject: err,
+          });
+
+          for (let j = 0; j < chunk.length; j += 1) {
+            const row = chunk[j];
+            try {
+              await table.insertRow(row);
+              created += 1;
+            } catch (singleErr) {
+              skipped += 1;
+              logger.warn("failed to insert single criminal row", {
+                rowIndex: i + j + 1,
+                row,
+                error:
+                  singleErr && singleErr.message
+                    ? singleErr.message
+                    : String(singleErr),
+                errorObject: singleErr,
+              });
+            }
+          }
         }
       }
     }
