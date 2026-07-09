@@ -13,7 +13,9 @@ const app = express();
 // CORS configuration to support credentials (cookies/auth headers)
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://127.0.0.1:5173'
+  'http://127.0.0.1:5173',
+  'https://crimelens-upxftzmq.onslate.in',
+  'https://crime-lens.onslate.in',
 ];
 if (process.env.CALLBACK_URL) {
   allowedOrigins.push(process.env.CALLBACK_URL);
