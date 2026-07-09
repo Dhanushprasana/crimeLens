@@ -1389,7 +1389,9 @@ module.exports = {
       }
 
       // prepare to assign evidence files (round-robin through othersPaths)
-      logger.info(`Available evidence files for assignment: ${othersPaths.length}`);
+      logger.info(
+        `Available evidence files for assignment: ${othersPaths.length}`,
+      );
     }
 
     // 3️⃣ Fetch existing relationships in memory to avoid duplicate checking in the loop
@@ -1532,7 +1534,9 @@ module.exports = {
       const evidenceList = Array.isArray(global.__seedEvidenceToInsert)
         ? global.__seedEvidenceToInsert
         : [];
-      logger.info(`Attempting to insert ${evidenceList.length} evidence records`);
+      logger.info(
+        `Attempting to insert ${evidenceList.length} evidence records`,
+      );
       if (evidenceList.length > 0) {
         const evidenceTable = req.catalyst
           .datastore()
@@ -1544,7 +1548,9 @@ module.exports = {
           const chunk = evidenceList.slice(s, s + BATCH);
           try {
             await evidenceTable.insertRows(chunk);
-            logger.info(`Inserted batch of ${chunk.length} evidence rows (${s + chunk.length}/${evidenceList.length})`);
+            logger.info(
+              `Inserted batch of ${chunk.length} evidence rows (${s + chunk.length}/${evidenceList.length})`,
+            );
             evidenceCreated += chunk.length;
           } catch (err) {
             logger.warn(
@@ -1553,7 +1559,9 @@ module.exports = {
             );
             for (const ev of chunk) {
               try {
-                logger.info(`Attempting to insert evidence row: ${JSON.stringify(ev)}`);
+                logger.info(
+                  `Attempting to insert evidence row: ${JSON.stringify(ev)}`,
+                );
                 await evidenceTable.insertRow(ev);
                 evidenceCreated++;
               } catch (singleErr) {
@@ -1568,7 +1576,9 @@ module.exports = {
             }
           }
         }
-        logger.info(`Evidence insertion complete. Created: ${evidenceCreated}, Skipped: ${evidenceSkipped}`);
+        logger.info(
+          `Evidence insertion complete. Created: ${evidenceCreated}, Skipped: ${evidenceSkipped}`,
+        );
       }
     } catch (err) {
       logger.warn(
