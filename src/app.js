@@ -43,11 +43,35 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Explicitly handle OPTIONS preflight for all routes BEFORE other middleware.
-// This is required on platforms like Catalyst AppSail where the reverse proxy
-// may not forward preflight responses correctly.
-app.options('/*splat', cors(corsOptions));
+// Manual CORS middleware — sets headers directly on the response object.
+// This is necessary because Catalyst AppSail's reverse proxy may intercept
+// OPTIONS preflight requests before they reach Express, stripping CORS headers.
+// By writing headers manually and terminating OPTIONS here, we ensure the
+// browser always receives a valid preflight response.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isAllowed = origin && allowedOrigins.some(allowed => {
+    return origin === allowed || origin.startsWith(allowed);
+  });
 
+  if (isAllowed || process.env.NODE_ENV !== 'production') {
+    // Echo back the exact origin — required when credentials: true
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,X-Requested-With');
+
+  // Terminate preflight immediately — don't let it reach other middleware
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+app.options('/*splat', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Body parsers
