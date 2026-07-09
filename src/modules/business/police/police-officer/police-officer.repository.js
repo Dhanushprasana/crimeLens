@@ -82,7 +82,7 @@ module.exports = {
     };
     const savedOfficer = await officerTable.insertRow(officerRow);
 
-    return { id: savedOfficer.ROWID, badge_number: badge };
+    return { id: savedOfficer.ROWID, badge_number: badge, user_id: userId };
   },
 
   async getAllOfficers(query, req) {

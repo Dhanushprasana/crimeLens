@@ -12,6 +12,8 @@ const firRepo = require("../business/fir/fir.repository");
 const userRepo = require("../scaffolding/user/user.repository");
 const catalystAuth = require("../../catalyst/auth/auth");
 const env = require("../../config/env");
+const StorageService = require("../storage/storage.service");
+const storageConstants = require("../storage/storage.constants");
 
 module.exports = {
   async bootstrapDistrictGeoJson(req) {
@@ -81,6 +83,32 @@ module.exports = {
     let created = 0;
     let skipped = 0;
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    const table = req.catalyst
+      ? req.catalyst.datastore().table(env.TABLE_POLICE_STATION)
+      : null;
+
+    // Prefetch all districts into a map to avoid N queries
+    const districtMap = new Map();
+    if (zcql) {
+      try {
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`,
+        );
+        for (const row of rows) {
+          const d = row[env.TABLE_DISTRICT_GEODATA];
+          if (d && d.district_name && d.ROWID) {
+            districtMap.set(d.district_name.toLowerCase(), d.ROWID);
+          }
+        }
+      } catch (err) {
+        logger.warn(
+          "failed to bulk load districts",
+          err && err.message ? err.message : String(err),
+        );
+      }
+    }
+
+    const rowsToInsert = [];
 
     for (const feat of features) {
       const props = feat.properties || {};
@@ -104,7 +132,7 @@ module.exports = {
         props.KGISPSCode || props.station_code || props.code || null;
       const address = props.address || props.ADDRESS || null;
 
-      // resolve district id from biz_district_detail by districtName property
+      // resolve district id from pre-fetched map
       let district_id = null;
       const districtName =
         props.districtName ||
@@ -112,55 +140,44 @@ module.exports = {
         props.DISTRICT_NAME ||
         props.district_name ||
         null;
-      if (districtName && zcql) {
-        try {
-          const safeName = districtName.replace(/'/g, "''");
-          const rows = await zcql.executeZCQLQuery(
-            `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_name = '${safeName}' LIMIT 1`,
-          );
-          if (rows && rows.length) {
-            district_id =
-              rows[0].ROWID ||
-              rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID ||
-              null;
-            logger.info("district lookup by name", {
-              districtName,
-              district_id,
-            });
-          }
-        } catch (err) {
-          logger.warn(
-            "district lookup failed",
-            err && err.message ? err.message : err,
-          );
+
+      if (districtName) {
+        const key = districtName.toLowerCase();
+        if (districtMap.has(key)) {
+          district_id = districtMap.get(key);
+        } else {
+          logger.warn("district lookup failed for station", {
+            stationName: name,
+            districtName,
+          });
         }
       }
 
-      try {
-        await stationRepo.addPoliceStation(
-          {
-            district_id,
-            station_name: name,
-            station_code,
-            latitude,
-            longitude,
-            address,
-            station_type_id: null,
-          },
-          req,
-        );
-        created++;
-      } catch (err) {
-        logger.warn("failed to insert station", {
-          station: name,
-          error:
-            err && err.stack
-              ? err.stack
-              : err && err.message
-                ? err.message
-                : err,
-        });
-        skipped++;
+      rowsToInsert.push({
+        district_id,
+        station_name: name,
+        station_code,
+        latitude,
+        longitude,
+        address,
+        station_type_id: null,
+      });
+    }
+
+    if (rowsToInsert.length > 0 && table) {
+      const BATCH_SIZE = 200;
+      for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+        try {
+          await table.insertRows(chunk);
+          created += chunk.length;
+        } catch (err) {
+          logger.warn(
+            "failed to bulk insert stations",
+            err && err.message ? err.message : String(err),
+          );
+          skipped += chunk.length;
+        }
       }
     }
 
@@ -207,6 +224,7 @@ module.exports = {
         await table.insertRow({
           crime_category_name: name,
           description: e.description || null,
+          crime_category_number: e.crime_category_number || null,
         });
         created++;
       } catch (err) {
@@ -254,58 +272,49 @@ module.exports = {
       createdAuth = 0;
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
 
+    // Pre-fetch maps to avoid multiple db calls
+    const rankMap = new Map();
+    const stationMap = new Map();
+    if (zcql) {
+      try {
+        const rankRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, rank_name FROM ${env.TABLE_POLICE_RANK}`,
+        );
+        for (const row of rankRows) {
+          const r = row[env.TABLE_POLICE_RANK];
+          if (r && r.rank_name && r.ROWID)
+            rankMap.set(r.rank_name.toLowerCase(), r.ROWID);
+        }
+        const stationRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`,
+        );
+        for (const row of stationRows) {
+          const s = row[env.TABLE_POLICE_STATION];
+          if (s && s.station_name && s.ROWID)
+            stationMap.set(s.station_name.toLowerCase(), s.ROWID);
+        }
+      } catch (err) {
+        logger.warn(
+          "failed to bulk load maps for officer bootstrap",
+          err && err.message ? err.message : String(err),
+        );
+      }
+    }
+
     for (const e of entries) {
       try {
-        // Lookup rank_id by rank_name
+        // Resolve rank_id from map
         let rank_id = e.rank_id || null;
-        const rankName = (e.rank_name || "").trim();
-        if (!rank_id && rankName && zcql) {
-          try {
-            const rankRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_POLICE_RANK} WHERE rank_name = '${rankName.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (rankRows && rankRows.length) {
-              rank_id =
-                rankRows[0].ROWID ||
-                rankRows[0][env.TABLE_POLICE_RANK]?.ROWID ||
-                null;
-              logger.debug("rank lookup", {
-                rankName,
-                rank_id,
-              });
-            }
-          } catch (err) {
-            logger.warn(
-              "rank lookup failed",
-              err && err.message ? err.message : err,
-            );
-          }
+        const rankName = (e.rank_name || "").trim().toLowerCase();
+        if (!rank_id && rankName && rankMap.has(rankName)) {
+          rank_id = rankMap.get(rankName);
         }
 
-        // Lookup station_id by station_name
+        // Resolve station_id from map
         let station_id = e.station_id || null;
-        const stationName = (e.station_name || "").trim();
-        if (!station_id && stationName && zcql) {
-          try {
-            const stationRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_POLICE_STATION} WHERE station_name = '${stationName.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (stationRows && stationRows.length) {
-              station_id =
-                stationRows[0].ROWID ||
-                stationRows[0][env.TABLE_POLICE_STATION]?.ROWID ||
-                null;
-              logger.debug("station lookup", {
-                stationName,
-                station_id,
-              });
-            }
-          } catch (err) {
-            logger.warn(
-              "station lookup failed",
-              err && err.message ? err.message : err,
-            );
-          }
+        const stationName = (e.station_name || "").trim().toLowerCase();
+        if (!station_id && stationName && stationMap.has(stationName)) {
+          station_id = stationMap.get(stationName);
         }
 
         const dto = {
@@ -321,155 +330,58 @@ module.exports = {
           operational_status: e.operational_status || "ACTIVE",
           contact_number: e.contact_number || e.phone || null,
         };
-        // try create officer, if duplicate badge exists createOfficer will throw
-        await policeRepo.createOfficer(dto, req);
-        created++;
 
-        // Create or link sys_user record for the officer
-        // Get email from police_officer_info if available, otherwise use provided or generate
         const officerId =
           e.user_id && e.user_id.match(/\d+/)
             ? parseInt(e.user_id.match(/\d+/)[0], 10)
             : null;
+
         const officerEmail =
           (officerId && emailMap[officerId]) ||
           dto.email ||
           `${dto.badge_number}@police.local`.toLowerCase();
-        if (officerEmail && zcql) {
+
+        dto.email = officerEmail;
+
+        // createOfficer handles sys_user, sys_user_info, and role assignment
+        const createdOff = await policeRepo.createOfficer(dto, req);
+        created++;
+
+        const userId = createdOff.user_id;
+
+        // Create Catalyst auth user with default password
+        if (userId && dto.email && zcql) {
           try {
-            // Check if user already exists
-            const userInfoRows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${officerEmail.replace(/'/g, "''")}' LIMIT 1`,
+            const fullName =
+              (officerId && fullNameMap[officerId]) || dto.name || "";
+            const createdAuthRes = await catalystAuth.createUser(
+              req,
+              dto.email,
+              "Police@123",
+              fullName || undefined,
             );
+            const catalystUserId =
+              createdAuthRes?.user_details?.user_id ||
+              createdAuthRes?.user_details?.zuid ||
+              createdAuthRes?.user_id ||
+              null;
 
-            let userId = null;
-            let userInfoId = null;
-
-            if (userInfoRows && userInfoRows.length) {
-              // User exists, get their IDs
-              userInfoId =
-                userInfoRows[0].ROWID ||
-                userInfoRows[0][env.TABLE_USER_INFO]?.ROWID;
-              const userRows = await zcql.executeZCQLQuery(
-                `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = '${userInfoId}' LIMIT 1`,
-              );
-              if (userRows && userRows.length) {
-                userId =
-                  userRows[0].ROWID || userRows[0][env.TABLE_USER]?.ROWID;
-              }
-            } else {
-              // Create new sys_user_info record
-              const userInfoTable = req.catalyst
-                .datastore()
-                .table(env.TABLE_USER_INFO);
-
-              // Use full_name from police_officer_info, fallback to dto.name
-              const fullName =
-                (officerId && fullNameMap[officerId]) || dto.name || "";
-              const nameParts = fullName.split(" ");
-              const userFirstName = nameParts[0] || "";
-              const userLastName = nameParts.slice(1).join(" ") || "";
-
-              const userInfoSaved = await userInfoTable.insertRow({
-                email: officerEmail,
-                user_first_name: userFirstName,
-                user_last_name: userLastName,
-                phone: e.contact_number || null,
-              });
-              userInfoId = userInfoSaved.ROWID;
-
-              // Create new sys_user record
+            if (catalystUserId) {
               const userTable = req.catalyst.datastore().table(env.TABLE_USER);
-              const userSaved = await userTable.insertRow({
-                user_info_id: userInfoId,
-                is_archived: false,
+              await userTable.updateRow({
+                ROWID: userId,
+                catalyst_user_id: catalystUserId,
               });
-              userId = userSaved.ROWID;
-              logger.info("created sys_user for officer", {
+              createdAuth++;
+              logger.info("created catalyst auth for officer", {
                 badge: dto.badge_number,
-                email: officerEmail,
-                userId,
-              });
-            }
-
-            // Assign default OFFICER role if not already assigned
-            if (userId) {
-              try {
-                // Find OFFICER role
-                const roleRows = await zcql.executeZCQLQuery(
-                  `SELECT ROWID FROM ${env.TABLE_ROLE} WHERE role_name = '${env.DEFAULT_OFFICER_ROLE}' LIMIT 1`,
-                );
-                if (roleRows && roleRows.length) {
-                  const roleId =
-                    roleRows[0].ROWID || roleRows[0][env.TABLE_ROLE]?.ROWID;
-
-                  // Check if role already assigned
-                  const existingRoleRows = await zcql.executeZCQLQuery(
-                    `SELECT ROWID FROM ${env.TABLE_USER_ROLE} WHERE user_id = '${userId}' AND role_id = '${roleId}' LIMIT 1`,
-                  );
-
-                  if (!existingRoleRows || existingRoleRows.length === 0) {
-                    const userRoleTable = req.catalyst
-                      .datastore()
-                      .table(env.TABLE_USER_ROLE);
-                    await userRoleTable.insertRow({
-                      user_id: userId,
-                      role_id: roleId,
-                    });
-                    logger.info("assigned default role to officer", {
-                      badge: dto.badge_number,
-                      role: env.DEFAULT_OFFICER_ROLE,
-                    });
-                  }
-                }
-              } catch (err) {
-                logger.warn("failed to assign role to officer", {
-                  badge: dto.badge_number,
-                  error: err && err.message ? err.message : String(err),
-                });
-              }
-            }
-
-            // Create Catalyst auth user with default password
-            try {
-              const fullName =
-                (officerId && fullNameMap[officerId]) || dto.name || "";
-              const createdAuthRes = await catalystAuth.createUser(
-                req,
-                officerEmail,
-                "Police@123",
-                fullName || undefined,
-              );
-              const catalystUserId =
-                createdAuthRes?.user_details?.user_id ||
-                createdAuthRes?.user_details?.zuid ||
-                createdAuthRes?.user_id ||
-                null;
-              if (catalystUserId && userId) {
-                const userTable = req.catalyst
-                  .datastore()
-                  .table(env.TABLE_USER);
-                await userTable.updateRow({
-                  ROWID: userId,
-                  catalyst_user_id: catalystUserId,
-                });
-                createdAuth++;
-                logger.info("created catalyst auth for officer", {
-                  badge: dto.badge_number,
-                  email: officerEmail,
-                });
-              }
-            } catch (err) {
-              logger.warn("failed to create catalyst auth for officer", {
-                badge: dto.badge_number,
-                email: officerEmail,
-                error: err && err.message ? err.message : String(err),
+                email: dto.email,
               });
             }
           } catch (err) {
-            logger.warn("failed to create sys_user for officer", {
+            logger.warn("failed to create catalyst auth for officer", {
               badge: dto.badge_number,
-              email: officerEmail,
+              email: dto.email,
               error: err && err.message ? err.message : String(err),
             });
           }
@@ -502,51 +414,450 @@ module.exports = {
     let created = 0,
       skipped = 0;
     const zcql = req.catalyst.zcql();
-    for (const e of entries) {
+    const table = req.catalyst.datastore().table(env.TABLE_CRIMINAL);
+    const biometricsTable = req.catalyst
+      .datastore()
+      .table(env.TABLE_CRIMINAL_BIOMETRICS);
+
+    // Pre-fetch districts map
+    const districtMap = new Map();
+    if (zcql) {
       try {
-        // map district code (KA-10) to geo table district_code (KA-10)
-        let district_id = null;
-        const code = (
-          e.district_code_of_criminal ||
-          e.district_code ||
-          ""
-        ).replace(/_/g, "-");
-        if (code) {
-          try {
-            const rows = await zcql.executeZCQLQuery(
-              `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_code = '${code.replace(/'/g, "''")}' LIMIT 1`,
-            );
-            if (rows && rows.length)
-              district_id =
-                rows[0].ROWID || rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID;
-          } catch (err) {
-            logger.warn(
-              "district lookup failed",
-              err && err.message ? err.message : err,
-            );
+        const rows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, district_code FROM ${env.TABLE_DISTRICT_GEODATA}`,
+        );
+        for (const row of rows) {
+          const d = row[env.TABLE_DISTRICT_GEODATA];
+          if (d && d.district_code && d.ROWID) {
+            districtMap.set(d.district_code.replace(/_/g, "-"), d.ROWID);
           }
         }
-        const dto = {
-          criminal_number: e.criminal_number || null,
-          full_name: e.full_name || e.name || null,
-          gender: e.gender || null,
-          date_of_birth: e.date_of_birth || null,
-          nationality: e.nationality || null,
-          photo_url: e.photo_url || null,
-          status: e.status || "ACTIVE",
-          address: e.address || null,
-          district_id_of_criminal: district_id,
-        };
-        await criminalRepo.addCriminal(dto, req);
-        created++;
       } catch (err) {
-        skipped++;
         logger.warn(
-          "failed to insert criminal",
+          "failed to bulk load districts for criminal bootstrap",
+          err && err.message ? err.message : String(err),
+        );
+      }
+    }
+
+    let faceImagePaths = [];
+    try {
+      const allFaceObjects = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP.face}/`,
+      );
+      faceImagePaths = allFaceObjects
+        .filter((key) => /\.(jpe?g|png|tiff?)$/i.test(key))
+        .sort((a, b) => a.localeCompare(b));
+
+      if (faceImagePaths.length === 0) {
+        logger.warn(
+          "No face images found in storage bucket for criminal bootstrap",
+        );
+      }
+    } catch (err) {
+      logger.warn(
+        "Failed to fetch face images from storage for criminal bootstrap",
+        {
+          error: err && err.message ? err.message : String(err),
+        },
+      );
+      faceImagePaths = [];
+    }
+
+    if (faceImagePaths.length && faceImagePaths.length < entries.length) {
+      logger.warn("Insufficient face images for criminal bootstrap", {
+        availableFaceImages: faceImagePaths.length,
+        criminalsToInsert: entries.length,
+      });
+    }
+
+    // Also fetch fingerprint and footprints
+    let fingerprintPaths = [];
+    let footprintPaths = [];
+    try {
+      const allFp = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP.fingerprint}/`,
+      );
+      fingerprintPaths = allFp
+        .filter((key) => /\.(jpe?g|png|tiff?)$/i.test(key))
+        .sort((a, b) => a.localeCompare(b));
+    } catch (err) {
+      logger.warn("Failed to fetch fingerprint images from storage", {
+        error: err && err.message ? err.message : String(err),
+      });
+      fingerprintPaths = [];
+    }
+
+    try {
+      const allFp2 = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP.footprints}/`,
+      );
+      footprintPaths = allFp2
+        .filter((key) => /\.(jpe?g|png|tiff?)$/i.test(key))
+        .sort((a, b) => a.localeCompare(b));
+    } catch (err) {
+      logger.warn("Failed to fetch footprint images from storage", {
+        error: err && err.message ? err.message : String(err),
+      });
+      footprintPaths = [];
+    }
+
+    // Group fingerprint images by inferred group id from filename (e.g. "1_1_1" in filename)
+    const fingerprintGroupMap = new Map();
+    for (const key of fingerprintPaths) {
+      const base = key.split("/").pop() || key;
+      const m = base.match(/(\d+(?:_\d+)+)/);
+      const gid = m ? m[1] : base; // fallback to full basename if no numeric group
+      if (!fingerprintGroupMap.has(gid)) fingerprintGroupMap.set(gid, []);
+      fingerprintGroupMap.get(gid).push(key);
+    }
+    const fingerprintGroups = Array.from(fingerprintGroupMap.entries()).map(
+      ([k, v]) => ({ id: k, files: v }),
+    );
+
+    const rowsToInsert = [];
+    const biometricsToInsert = [];
+    const criminalMap = {}; // Track inserted criminals: criminal_number -> ROWID
+    let faceIndex = 0;
+    let fpGroupIndex = 0;
+    let footprintIndex = 0;
+    let fileUpdatesMade = false;
+
+    for (const e of entries) {
+      let district_id = null;
+      const code = (
+        e.district_code_of_criminal ||
+        e.district_code ||
+        ""
+      ).replace(/_/g, "-");
+
+      if (code && districtMap.has(code)) {
+        district_id = districtMap.get(code);
+      } else if (code) {
+        logger.warn("district lookup failed for criminal", { code });
+      }
+
+      const assignedPhotoUrl = faceImagePaths[faceIndex] || e.photo_url || null;
+      if (faceIndex < faceImagePaths.length) {
+        faceIndex += 1;
+      }
+
+      // fingerprint group assign
+      let assignedFingerprint = null;
+      if (
+        fingerprintGroups &&
+        fingerprintGroups.length > 0 &&
+        fpGroupIndex < fingerprintGroups.length
+      ) {
+        assignedFingerprint = fingerprintGroups[fpGroupIndex].files.slice();
+        fpGroupIndex += 1;
+      }
+
+      // footprint assign (single per criminal)
+      const assignedFootprint =
+        footprintPaths[footprintIndex] || e.footprint_url || null;
+      if (footprintIndex < footprintPaths.length) footprintIndex += 1;
+
+      const criminalNumber = e.criminal_number || null;
+
+      rowsToInsert.push({
+        criminal_number: criminalNumber,
+        full_name: e.full_name || e.name || null,
+        gender: e.gender || null,
+        date_of_birth: e.date_of_birth || null,
+        nationality: e.nationality || null,
+        status: e.status || "ACTIVE",
+        address: e.address || null,
+        district_id_of_criminal: district_id,
+      });
+
+      // Store biometrics data separately (will be linked after criminal is created)
+      biometricsToInsert.push({
+        criminal_number: criminalNumber,
+        photo_url: assignedPhotoUrl,
+        fingerprint_url: assignedFingerprint
+          ? JSON.stringify(assignedFingerprint)
+          : e.fingerprint_url || null,
+        footprint_url: assignedFootprint,
+      });
+
+      // Update source JSON entries
+      try {
+        if (assignedPhotoUrl && !e.face_url) {
+          e.face_url = assignedPhotoUrl;
+          fileUpdatesMade = true;
+        }
+        if (assignedFingerprint && !e.fingerprint_url) {
+          e.fingerprint_url = assignedFingerprint;
+          fileUpdatesMade = true;
+        }
+        if (assignedFootprint && !e.footprint_url) {
+          e.footprint_url = assignedFootprint;
+          fileUpdatesMade = true;
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+
+    // 1. Insert criminals and track successfully inserted ones
+    if (rowsToInsert.length > 0 && table) {
+      const BATCH_SIZE = 200;
+      const insertedCriminalNumbers = [];
+      for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+        try {
+          const result = await table.insertRows(chunk);
+          created += chunk.length;
+          // Track inserted criminal numbers
+          for (const row of chunk) {
+            if (row.criminal_number) {
+              insertedCriminalNumbers.push(row.criminal_number);
+            }
+          }
+        } catch (err) {
+          const errorMessage = err && err.message ? err.message : String(err);
+          logger.warn("failed to bulk insert criminals", {
+            batchStart: i + 1,
+            batchSize: chunk.length,
+            error: errorMessage,
+            errorObject: err,
+          });
+
+          for (let j = 0; j < chunk.length; j += 1) {
+            const row = chunk[j];
+            try {
+              await table.insertRow(row);
+              created += 1;
+              if (row.criminal_number) {
+                insertedCriminalNumbers.push(row.criminal_number);
+              }
+            } catch (singleErr) {
+              skipped += 1;
+              logger.warn("failed to insert single criminal row", {
+                rowIndex: i + j + 1,
+                row,
+                error:
+                  singleErr && singleErr.message
+                    ? singleErr.message
+                    : String(singleErr),
+                errorObject: singleErr,
+              });
+            }
+          }
+        }
+      }
+
+      // 2. Fetch created criminals and link biometrics (only for successfully inserted criminals)
+      if (
+        insertedCriminalNumbers.length > 0 &&
+        biometricsToInsert.length > 0 &&
+        biometricsTable &&
+        zcql
+      ) {
+        try {
+          logger.info(
+            `Starting biometrics linking. Inserted criminal count: ${insertedCriminalNumbers.length}`,
+          );
+
+          // Fetch only the inserted criminal IDs - use smaller chunks to avoid query size limits
+          const criminalNumberChunks = [];
+          const CHUNK_SIZE = 100; // Fetch in smaller chunks to avoid hitting query limits
+          for (let c = 0; c < insertedCriminalNumbers.length; c += CHUNK_SIZE) {
+            criminalNumberChunks.push(
+              insertedCriminalNumbers.slice(c, c + CHUNK_SIZE),
+            );
+          }
+
+          logger.info(
+            `Splitting ${insertedCriminalNumbers.length} criminals into ${criminalNumberChunks.length} query chunks of max ${CHUNK_SIZE}`,
+          );
+
+          let totalFetched = 0;
+          for (
+            let chunkIdx = 0;
+            chunkIdx < criminalNumberChunks.length;
+            chunkIdx++
+          ) {
+            const cnChunk = criminalNumberChunks[chunkIdx];
+            const placeholders = cnChunk
+              .map((cn) => `'${cn.replace(/'/g, "''")}'`)
+              .join(",");
+
+            logger.debug(
+              `Chunk ${chunkIdx + 1}/${criminalNumberChunks.length}: Querying for ${cnChunk.length} criminals`,
+            );
+
+            try {
+              const criminalRows = await zcql.executeZCQLQuery(
+                `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL} WHERE criminal_number IN (${placeholders})`,
+              );
+
+              logger.info(
+                `Chunk ${chunkIdx + 1}: Query returned ${criminalRows.length} records (expected ${cnChunk.length})`,
+              );
+
+              if (criminalRows.length === 0) {
+                logger.warn(
+                  `Chunk ${chunkIdx + 1}: Query returned 0 results for criminal numbers starting with ${cnChunk[0]}`,
+                );
+              }
+
+              totalFetched += criminalRows.length;
+              for (const r of criminalRows) {
+                const rec = r[env.TABLE_CRIMINAL] || r;
+                if (rec && rec.criminal_number && rec.ROWID) {
+                  criminalMap[rec.criminal_number] = rec.ROWID;
+                }
+              }
+            } catch (queryErr) {
+              logger.error(
+                `Chunk ${chunkIdx + 1}: Query failed. Error: ${queryErr.message}`,
+              );
+            }
+          }
+
+          logger.info(
+            `Total criminals fetched from DB: ${totalFetched}. Mapped: ${Object.keys(criminalMap).length} out of ${insertedCriminalNumbers.length}`,
+          );
+
+          if (Object.keys(criminalMap).length === 0) {
+            logger.error(
+              "CRITICAL: No criminals were found! Checking database state...",
+            );
+            try {
+              const allCount = await zcql.executeZCQLQuery(
+                `SELECT COUNT(ROWID) as cnt FROM ${env.TABLE_CRIMINAL}`,
+              );
+              logger.error(`Total in DB: ${JSON.stringify(allCount)}`);
+
+              const samples = await zcql.executeZCQLQuery(
+                `SELECT criminal_number FROM ${env.TABLE_CRIMINAL} LIMIT 3`,
+              );
+              logger.error(`Sample DB records: ${JSON.stringify(samples)}`);
+            } catch (e) {
+              logger.error(`DB check failed: ${e.message}`);
+            }
+          }
+
+          // Prepare biometrics rows with criminal_id (only for successfully inserted criminals)
+          const biometricsRowsToInsert = [];
+          let unmappedBiometrics = 0;
+
+          for (const bio of biometricsToInsert) {
+            const criminalId = criminalMap[bio.criminal_number];
+            if (criminalId) {
+              biometricsRowsToInsert.push({
+                criminal_id: criminalId,
+                photo_url: bio.photo_url,
+                fingerprint_url: bio.fingerprint_url,
+                footprint_url: bio.footprint_url,
+              });
+            } else {
+              unmappedBiometrics++;
+              logger.debug(
+                `Skipping biometrics for unmapped criminal: ${bio.criminal_number}`,
+              );
+            }
+          }
+
+          logger.info(
+            `Prepared ${biometricsRowsToInsert.length} biometrics records for insert. Unmapped: ${unmappedBiometrics}`,
+          );
+
+          // Insert biometrics in batches
+          if (biometricsRowsToInsert.length > 0) {
+            const BATCH_SIZE = 200;
+            let biometricsCreated = 0;
+            let biometricsSkipped = 0;
+
+            for (
+              let i = 0;
+              i < biometricsRowsToInsert.length;
+              i += BATCH_SIZE
+            ) {
+              const chunk = biometricsRowsToInsert.slice(i, i + BATCH_SIZE);
+              try {
+                logger.debug(
+                  `Attempting batch insert for biometrics ${i + 1}-${i + chunk.length}. Sample row: ${JSON.stringify(chunk[0])}`,
+                );
+
+                await biometricsTable.insertRows(chunk);
+                biometricsCreated += chunk.length;
+
+                logger.info(
+                  `Inserted ${chunk.length} criminal biometrics (${i + chunk.length}/${biometricsRowsToInsert.length})`,
+                );
+              } catch (err) {
+                logger.warn(
+                  `Failed to bulk insert biometrics batch ${i + 1}-${i + chunk.length}, falling back to single inserts...`,
+                  {
+                    error: err.message || err,
+                    errorCode: err.code,
+                    statusCode: err.statusCode,
+                  },
+                );
+
+                for (const bio of chunk) {
+                  try {
+                    logger.debug(
+                      `Attempting single insert for criminal_id: ${bio.criminal_id}`,
+                    );
+
+                    await biometricsTable.insertRow(bio);
+                    biometricsCreated++;
+                  } catch (singleErr) {
+                    biometricsSkipped++;
+                    logger.error("Failed to insert single biometric row", {
+                      bio,
+                      criminal_id: bio.criminal_id,
+                      error: singleErr.message || singleErr,
+                      errorCode: singleErr.code,
+                      statusCode: singleErr.statusCode,
+                      fullError: singleErr,
+                    });
+                  }
+                }
+              }
+            }
+
+            logger.info(
+              `Biometrics insertion complete. Created: ${biometricsCreated}, Skipped: ${biometricsSkipped}`,
+            );
+          } else {
+            logger.warn(
+              `No biometrics rows to insert after mapping. All ${biometricsToInsert.length} biometrics failed to map to criminals`,
+            );
+          }
+        } catch (err) {
+          logger.error("Failed to insert criminal biometrics", {
+            error: err && err.message ? err.message : err,
+            errorCode: err.code,
+            statusCode: err.statusCode,
+            stack: err.stack,
+          });
+        }
+      }
+    }
+
+    // Persist the updated criminal.json with assigned urls if we modified entries
+    if (fileUpdatesMade) {
+      try {
+        await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
+        logger.info(
+          "Updated criminal.json with assigned face/fingerprint/footprint urls.",
+        );
+      } catch (err) {
+        logger.warn(
+          "Failed to write updated criminal.json",
           err && err.message ? err.message : err,
         );
       }
     }
+
     return { created, skipped };
   },
 
@@ -741,38 +1052,17 @@ module.exports = {
       logger.warn("Failed to cache districts:", err.message);
     }
 
-    // // 5. Lazy FIR cache
-    // const firsCache = {};
-    // const getFirId = async (firNumber) => {
-    //   if (!firNumber) return null;
-    //   const key = firNumber.trim().toLowerCase();
-    //   if (firsCache[key] !== undefined) {
-    //     logger.debug && logger.debug(`FIR cache hit for ${firNumber}`);
-    //     return firsCache[key];
-    //   }
-    //   try {
-    //     logger.debug && logger.debug(`Looking up FIR id for ${firNumber}`);
-    //     const rows = await zcql.executeZCQLQuery(
-    //       `SELECT ROWID FROM ${env.TABLE_FIR} WHERE fir_number = '${firNumber.replace(/'/g, "''")}' LIMIT 1`,
-    //     );
-    //     if (rows && rows.length) {
-    //       firsCache[key] =
-    //         rows[0].ROWID || rows[0][env.TABLE_FIR]?.ROWID || null;
-    //       logger.debug &&
-    //         logger.debug(`Cached FIR id for ${firNumber}: ${firsCache[key]}`);
-    //     } else {
-    //       firsCache[key] = null;
-    //       logger.debug && logger.debug(`No FIR found for ${firNumber}`);
-    //     }
-    //   } catch (err) {
-    //     logger.warn(
-    //       `Failed lookup for FIR ${firNumber}:`,
-    //       err && err.message ? err.message : err,
-    //     );
-    //     firsCache[key] = null;
-    //   }
-    //   return firsCache[key];
-    // };
+    // 5. Lazy FIR cache
+    const firsCache = {};
+    const getFirId = async (firNumber) => {
+      if (!firNumber) return null;
+      const key = firNumber.trim().toLowerCase();
+      if (firsCache[key] !== undefined) {
+        logger.debug && logger.debug(`FIR cache hit for ${firNumber}`);
+        return firsCache[key];
+      }
+      return null;
+    };
 
     // Prefetch FIR ids for all FIR numbers present in the file to avoid per-row ZCQL calls
     try {
@@ -871,7 +1161,7 @@ module.exports = {
     let skippedExisting = 0;
     for (const e of entries) {
       try {
-        const crimeNumber = (e.crime_number || "").trim();
+        const crimeNumber = (e.crimeNo || e.crime_number || "").trim();
         if (
           crimeNumber &&
           existingCrimeNumbers.has(crimeNumber.toLowerCase())
@@ -898,11 +1188,11 @@ module.exports = {
         const crime_happended_at_district_id =
           districtsMap[districtCode] || null;
 
-        // const fir_id = await getFirId(e.fir_number);
-        const fir_id = null;
+        const fir_id = await getFirId(e.fir_number);
 
         const row = {
-          crime_number: crimeNumber || null,
+          crime_number: (e.crimeNo || e.crime_number || "").trim() || null,
+          case_number: (e.caseNo || e.case_number || "").trim() || null,
           title: e.title || "Unknown Crime",
           description: e.description || null,
           crime_category_id,
@@ -1054,8 +1344,27 @@ module.exports = {
       logger.warn("Failed to cache criminals", e);
     }
 
+    // 2.5️⃣ Fetch 'others' files for evidence assignment
+    let othersPaths = [];
+    try {
+      const allOthers = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP["crime-evidence"]}/`,
+      );
+      othersPaths = allOthers
+        .filter((k) => /\.(jpe?g|png|tiff?|pdf|mp4)$/i.test(k))
+        .sort((a, b) => a.localeCompare(b));
+    } catch (err) {
+      logger.warn(
+        "Failed to fetch 'others' files for evidence assignment",
+        err && err.message ? err.message : err,
+      );
+      othersPaths = [];
+    }
+
     // Replace invalid crimes and criminals with valid ones
     let fileUpdated = false;
+    let othersIndex = 0; // Declare here to use in main loop
     if (validCrimes.length > 0 && validCriminals.length > 0) {
       for (const e of entries) {
         const crimeKey = (e.crime_number || "").trim().toLowerCase();
@@ -1078,6 +1387,9 @@ module.exports = {
         await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
         logger.info("Updated incident_criminal.json with valid db references.");
       }
+
+      // prepare to assign evidence files (round-robin through othersPaths)
+      logger.info(`Available evidence files for assignment: ${othersPaths.length}`);
     }
 
     // 3️⃣ Fetch existing relationships in memory to avoid duplicate checking in the loop
@@ -1129,6 +1441,20 @@ module.exports = {
         );
         continue;
       }
+      // assign evidence_url to this mapping if available
+      let assignedEvidence = null;
+      try {
+        if (e.evidence_url) {
+          assignedEvidence = e.evidence_url;
+        } else if (othersPaths.length > 0) {
+          assignedEvidence = othersPaths[othersIndex];
+          othersIndex = (othersIndex + 1) % othersPaths.length;
+          e.evidence_url = assignedEvidence;
+          fileUpdated = true;
+        }
+      } catch (err) {
+        assignedEvidence = null;
+      }
 
       if (existingRelations.has(`${crimeId}-${criminalId}`)) {
         skipped++;
@@ -1142,6 +1468,33 @@ module.exports = {
         incident_id: crimeId,
         criminal_id: criminalId,
       });
+
+      if (assignedEvidence) {
+        // record evidence to insert after relationships are created
+        try {
+          const evidenceNumber = assignedEvidence
+            .split("/")
+            .filter(Boolean)
+            .pop();
+
+          const ev = {
+            incident_id: crimeId,
+            uploaded_by: null,
+            file_url: assignedEvidence,
+            description: null,
+            evidence_number: evidenceNumber || `EVID-${crimeId}`,
+          };
+          // push to evidence insert list (create if needed)
+          if (!Array.isArray(global.__seedEvidenceToInsert))
+            global.__seedEvidenceToInsert = [];
+          global.__seedEvidenceToInsert.push(ev);
+        } catch (err) {
+          logger.warn(
+            "Failed to queue evidence insert",
+            err && err.message ? err.message : err,
+          );
+        }
+      }
     }
 
     // 5️⃣ Insert relationships in batches of 100
@@ -1172,6 +1525,79 @@ module.exports = {
           }
         }
       }
+    }
+
+    // Insert queued evidence rows (if any)
+    try {
+      const evidenceList = Array.isArray(global.__seedEvidenceToInsert)
+        ? global.__seedEvidenceToInsert
+        : [];
+      logger.info(`Attempting to insert ${evidenceList.length} evidence records`);
+      if (evidenceList.length > 0) {
+        const evidenceTable = req.catalyst
+          .datastore()
+          .table(env.TABLE_CRIME_EVIDENCE);
+        const BATCH = 200;
+        let evidenceCreated = 0;
+        let evidenceSkipped = 0;
+        for (let s = 0; s < evidenceList.length; s += BATCH) {
+          const chunk = evidenceList.slice(s, s + BATCH);
+          try {
+            await evidenceTable.insertRows(chunk);
+            logger.info(`Inserted batch of ${chunk.length} evidence rows (${s + chunk.length}/${evidenceList.length})`);
+            evidenceCreated += chunk.length;
+          } catch (err) {
+            logger.warn(
+              `Failed to batch insert evidence (${s}-${s + chunk.length}), falling back to single inserts`,
+              err && err.message ? err.message : err,
+            );
+            for (const ev of chunk) {
+              try {
+                logger.info(`Attempting to insert evidence row: ${JSON.stringify(ev)}`);
+                await evidenceTable.insertRow(ev);
+                evidenceCreated++;
+              } catch (singleErr) {
+                logger.warn(
+                  `Failed to insert single evidence row: ${JSON.stringify(ev)}`,
+                  singleErr && singleErr.message
+                    ? singleErr.message
+                    : singleErr,
+                );
+                evidenceSkipped++;
+              }
+            }
+          }
+        }
+        logger.info(`Evidence insertion complete. Created: ${evidenceCreated}, Skipped: ${evidenceSkipped}`);
+      }
+    } catch (err) {
+      logger.warn(
+        "Failed to insert seeded evidence",
+        err && err.message ? err.message : err,
+      );
+    }
+
+    // clear the temporary evidence queue
+    try {
+      if (Array.isArray(global.__seedEvidenceToInsert))
+        global.__seedEvidenceToInsert = [];
+    } catch (err) {
+      // ignore
+    }
+
+    // Persist incident_criminal.json if we updated evidence_url fields
+    try {
+      if (fileUpdated) {
+        await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
+        logger.info(
+          "Updated incident_criminal.json with assigned evidence_url fields.",
+        );
+      }
+    } catch (err) {
+      logger.warn(
+        "Failed to write updated incident_criminal.json",
+        err && err.message ? err.message : err,
+      );
     }
 
     return { created, skipped };

@@ -19,10 +19,10 @@ const upload = multer({
 router.post("/upload", upload.single("file"), StorageController.uploadFile);
 
 // Download API
-router.get("/object/:entityType/:entityId/:filename", StorageController.downloadFile);
+router.get("/object/:folder/:filename", StorageController.downloadFile);
 
 // Delete API
-router.delete("/object/:entityType/:entityId/:filename", StorageController.deleteFile);
+router.delete("/object/:folder/:filename", StorageController.deleteFile);
 
 // Bootstrap API
 router.post("/bootstrap/:type", StorageController.bootstrapImages);

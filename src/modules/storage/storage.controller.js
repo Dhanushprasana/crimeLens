@@ -33,14 +33,12 @@ class StorageController {
 
   static async downloadFile(req, res, next) {
     try {
-      const { entityType, entityId, filename } = req.params;
-      const objectPath = `${entityType}/${entityId}/${filename}`;
-      
-      if (!entityType || !entityId || !filename) {
+      const { folder, filename } = req.params;
+      if (!folder || !filename) {
         return res.status(400).json({ error: "Invalid object path parameters" });
       }
 
-      const fileBuffer = await StorageService.downloadFile(req, objectPath);
+      const fileBuffer = await StorageService.downloadFile(req, folder, filename);
       
       // Determine content type conceptually based on extension, defaulting to application/octet-stream
       const ext = filename.split('.').pop().toLowerCase();
@@ -59,14 +57,12 @@ class StorageController {
 
   static async deleteFile(req, res, next) {
     try {
-      const { entityType, entityId, filename } = req.params;
-      const objectPath = `${entityType}/${entityId}/${filename}`;
-
-      if (!entityType || !entityId || !filename) {
+      const { folder, filename } = req.params;
+      if (!folder || !filename) {
         return res.status(400).json({ error: "Invalid object path parameters" });
       }
 
-      await StorageService.deleteFile(req, objectPath);
+      await StorageService.deleteFile(req, folder, filename);
 
       res.status(200).json({
         message: "File deleted successfully",
