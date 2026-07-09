@@ -21,11 +21,11 @@ if (process.env.CALLBACK_URL) {
   allowedOrigins.push(process.env.CALLBACK_URL);
 }
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, postman)
     if (!origin) return callback(null, true);
-    
+
     const isAllowed = allowedOrigins.some(allowed => {
       return origin === allowed || origin.startsWith(allowed);
     });
@@ -38,8 +38,17 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+// Explicitly handle OPTIONS preflight for all routes BEFORE other middleware.
+// This is required on platforms like Catalyst AppSail where the reverse proxy
+// may not forward preflight responses correctly.
+app.options('/*splat', cors(corsOptions));
+
+app.use(cors(corsOptions));
 
 // Body parsers
 app.use(express.json());
