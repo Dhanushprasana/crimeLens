@@ -5,7 +5,7 @@ const path = require("path");
 const constants = require("./forecast.constants");
 const prediction = require("./forecast.prediction");
 const logger = require("../../config/logger");
-const combinations = require("./forecast-data/forecast-combinations.json");
+const combinations = require("./forecast-combinations.json");
 
 function getForecastDates(days) {
   const dates = [];

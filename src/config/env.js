@@ -29,6 +29,7 @@ const env = {
   // Crime / FIR / Suspect / Criminal tables
   TABLE_SUSPECT: "biz_suspect",
   TABLE_CRIMINAL: "biz_criminal",
+  TABLE_CRIMINAL_BIOMETRICS: "biz_criminal_biometrics",
   TABLE_CRIME_INCIDENT: "biz_crime_incident",
   TABLE_FIR: "biz_FIR",
   TABLE_CRIME_EVIDENCE: "biz_crime_evidence",
