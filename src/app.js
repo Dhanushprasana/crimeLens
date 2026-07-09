@@ -1,53 +1,58 @@
-'use strict';
+"use strict";
 
-const express = require('express');
-const cors = require('cors');
-const catalystClient = require('./catalyst/catalyst.client');
-const loggerMiddleware = require('./middleware/logger.middleware');
-const errorMiddleware = require('./middleware/error.middleware');
-const routes = require('./routes');
-const setupSwagger = require('./config/swagger');
+const express = require("express");
+const cors = require("cors");
+const catalystClient = require("./catalyst/catalyst.client");
+const loggerMiddleware = require("./middleware/logger.middleware");
+const errorMiddleware = require("./middleware/error.middleware");
+const routes = require("./routes");
+const setupSwagger = require("./config/swagger");
 
 const app = express();
 
 // CORS configuration to support credentials (cookies/auth headers)
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'https://crimelens-upxftzmq.onslate.in',
-  'https://crime-lens.onslate.in',
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://crimelens-upxftzmq.onslate.in",
+  "https://crime-lens.onslate.in",
 ];
+
 if (process.env.CALLBACK_URL) {
   allowedOrigins.push(process.env.CALLBACK_URL);
 }
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, postman)
+  origin(origin, callback) {
+    // Allow Postman/curl/server-to-server requests
     if (!origin) return callback(null, true);
 
-    const isAllowed = allowedOrigins.some(allowed => {
-      return origin === allowed || origin.startsWith(allowed);
-    });
-
-    if (isAllowed || process.env.NODE_ENV !== 'production') {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
     }
+
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "X-Requested-With",
+  ],
 };
 
-// Explicitly handle OPTIONS preflight for all routes BEFORE other middleware.
-// This is required on platforms like Catalyst AppSail where the reverse proxy
-// may not forward preflight responses correctly.
-app.options('/*splat', cors(corsOptions));
+// Handle preflight requests without using route patterns that path-to-regexp
+// may reject. Invoke the cors middleware directly for OPTIONS requests.
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return cors(corsOptions)(req, res, next);
+  }
+  return next();
+});
 
+// Handle actual requests
 app.use(cors(corsOptions));
 
 // Body parsers
@@ -64,7 +69,7 @@ setupSwagger(app);
 app.use(loggerMiddleware);
 
 // API routes
-app.use('/', routes);
+app.use("/", routes);
 
 // Error handler (must be last)
 app.use(errorMiddleware);
