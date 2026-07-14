@@ -8,6 +8,11 @@ const catalyst = require('zcatalyst-sdk-node');
  */
 module.exports = (req, res, next) => {
     try {
+        // Set org ID header if available (needed for QuickML API)
+        if (process.env.CATALYST_ORG && !req.headers['zanalytics-orgid']) {
+            req.headers['zanalytics-orgid'] = process.env.CATALYST_ORG;
+        }
+        
         req.catalyst = catalyst.initialize(req);
         next();
     } catch (err) {
