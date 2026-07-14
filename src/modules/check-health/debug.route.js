@@ -100,13 +100,13 @@ router.get("/test-token", async (req, res, next) => {
 
 /**
  * DEBUG ONLY: Inspect Catalyst QuickML service capabilities
- * 
+ *
  * This route inspects the native quickML service on the Catalyst SDK
  * to determine what methods are available for predictions.
- * 
+ *
  * Usage:
  *   GET /debug/quickml
- * 
+ *
  * Response:
  *   - Lists all methods available on quickML() service
  *   - Shows if predict() method exists
@@ -119,7 +119,7 @@ router.get("/quickml", async (req, res, next) => {
       return res.status(400).json({
         status: "error",
         message: "quickML is not available on req.catalyst",
-        hasQuickML: typeof req.catalyst?.quickML === "function"
+        hasQuickML: typeof req.catalyst?.quickML === "function",
       });
     }
 
@@ -130,12 +130,12 @@ router.get("/quickml", async (req, res, next) => {
       quickMLAvailable: !!quickml,
       methods: Object.keys(quickml),
       prototypeChain: Object.getOwnPropertyNames(
-        Object.getPrototypeOf(quickml)
+        Object.getPrototypeOf(quickml),
       ),
       hasPredict: typeof quickml.predict === "function",
       hasDeployments: typeof quickml.deployments === "function",
       hasModels: typeof quickml.models === "function",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     logger.info("[DEBUG] QuickML inspection result", result);
@@ -143,25 +143,25 @@ router.get("/quickml", async (req, res, next) => {
   } catch (err) {
     logger.error("[DEBUG] QuickML inspection failed", {
       error: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
     res.status(500).json({
       status: "error",
       message: "Failed to inspect quickML service",
-      error: err.message
+      error: err.message,
     });
   }
 });
 
 /**
  * DEBUG ONLY: Inspect the signature of quickML.predict() method
- * 
+ *
  * This route extracts the source code and metadata of the predict method
  * to determine its exact signature and how it should be called.
- * 
+ *
  * Usage:
  *   GET /debug/predict-signature
- * 
+ *
  * Output:
  *   - Logs full method source to console
  *   - Returns signature metadata
@@ -183,19 +183,19 @@ router.get("/predict-signature", async (req, res, next) => {
       type: typeof predictMethod,
       parameterCount: predictMethod.length,
       methodSource: predictMethod.toString(),
-      checkConsole: "Full method source logged to console above"
+      checkConsole: "Full method source logged to console above",
     };
 
     res.json(result);
   } catch (err) {
     logger.error("[DEBUG] Failed to inspect predict method", {
       error: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
     res.status(500).json({
       status: "error",
       message: "Failed to inspect predict method signature",
-      error: err.message
+      error: err.message,
     });
   }
 });

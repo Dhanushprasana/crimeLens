@@ -19,16 +19,18 @@ function getForecastDates(days) {
 }
 
 function weekOfYear(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 }
 
 async function generateForecast(
   req,
-  { model_version = "V1", forecast_start, forecast_end, batchSize = 500 }
+  { model_version = "V1", forecast_start, forecast_end, batchSize = 500 },
 ) {
   logger.info("generateForecast: start", {
     model_version,
@@ -67,19 +69,31 @@ async function generateForecast(
 
   for (let i = 0; i < predictionRows.length; i += BATCH_SIZE) {
     const batch = predictionRows.slice(i, i + BATCH_SIZE);
-    logger.info(`generateForecast: processing batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
-      batchSize: batch.length,
-    });
+    logger.info(
+      `generateForecast: processing batch ${Math.floor(i / BATCH_SIZE) + 1}`,
+      {
+        batchSize: batch.length,
+      },
+    );
 
     let predictions;
     try {
+      logger.info("About to call prediction.predict", {
+        batchSize: batch.length,
+        catalyst: !!req.catalyst,
+      });
       predictions = await prediction.predict(req, {
         predictionRows: batch,
-        batchSize: BATCH_SIZE
+        batchSize: BATCH_SIZE,
+      });
+      logger.info("Prediction completed", {
+        resultLength: predictions ? predictions.length : 0,
       });
     } catch (err) {
       logger.error("Forecast prediction failed for batch", {
         error: err && err.message ? err.message : err,
+        stack: err.stack,
+        batchNumber: Math.floor(i / BATCH_SIZE) + 1,
       });
       throw err;
     }
@@ -89,7 +103,12 @@ async function generateForecast(
       // Handle the output structure based on QuickML format
       let p = null;
       if (predictions && predictions[j]) {
-        p = predictions[j].predicted_count ?? predictions[j].prediction ?? predictions[j].score ?? predictions[j].value ?? null;
+        p =
+          predictions[j].predicted_count ??
+          predictions[j].prediction ??
+          predictions[j].score ??
+          predictions[j].value ??
+          null;
       }
 
       resultRows.push({
@@ -124,16 +143,20 @@ async function generateForecast(
 
   // Store the predictions in a json file for now
   const outputFilePath = path.join(__dirname, "forecast-predictions.json");
-  fs.writeFileSync(outputFilePath, JSON.stringify(allResultRows, null, 2), "utf8");
+  fs.writeFileSync(
+    outputFilePath,
+    JSON.stringify(allResultRows, null, 2),
+    "utf8",
+  );
 
   logger.info("generateForecast: completed", {
     generated: allResultRows.length,
-    outputFile: outputFilePath
+    outputFile: outputFilePath,
   });
 
   return {
     generated: allResultRows.length,
-    message: `Predictions saved to ${outputFilePath}`
+    message: `Predictions saved to ${outputFilePath}`,
   };
 }
 

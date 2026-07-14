@@ -25,10 +25,11 @@ Datastore insertRows() → Done
 The Catalyst SDK exposes:
 
 ```javascript
-await quickml.predict(endPointKey, inputData)
+await quickml.predict(endPointKey, inputData);
 ```
 
 **Parameters:**
+
 - `endPointKey` (string): Your QuickML endpoint key from `QUICKML_ENDPOINT_KEY` env
 - `inputData` (array): Array of prediction row objects
 
@@ -57,19 +58,21 @@ async function predict(req, { predictionRows } = {}) {
 
   try {
     const quickml = req.catalyst.quickML();
-    
+
     logger.info("QuickML predict called", { rowCount: predictionRows.length });
 
     // Native SDK method: predict(endPointKey, inputData)
     const predictions = await quickml.predict(endPointKey, predictionRows);
 
-    logger.info("QuickML predictions completed", { rowCount: predictionRows.length });
+    logger.info("QuickML predictions completed", {
+      rowCount: predictionRows.length,
+    });
 
     return predictions;
   } catch (err) {
     logger.error("QuickML prediction failed", {
       error: err.message,
-      rowCount: predictionRows.length
+      rowCount: predictionRows.length,
     });
     throw err;
   }
@@ -79,18 +82,20 @@ module.exports = { predict };
 ```
 
 ### 2. `src/modules/forecast/forecast.prediction.js` (UPDATED)
+
 **Before**: 150+ lines attempting to find QuickML methods on req.catalyst  
 **After**: ~30 lines delegating to quickml.client
 
 **New Implementation**:
+
 ```javascript
 async function predict(req, { predictionRows } = {}) {
   // Validation
   if (!Array.isArray(predictionRows) || predictionRows.length === 0) {
-    throw new Error('predictionRows is required and must be a non-empty array');
+    throw new Error("predictionRows is required and must be a non-empty array");
   }
   if (!req.catalyst) {
-    throw new Error('Catalyst SDK not initialized on request');
+    throw new Error("Catalyst SDK not initialized on request");
   }
 
   // Delegate to quickml client
@@ -99,22 +104,27 @@ async function predict(req, { predictionRows } = {}) {
 ```
 
 ### 3. `src/catalyst/sdk-verification.js` (NEW)
+
 **Purpose**: Debug helper to inspect Catalyst SDK capabilities
 
 **Usage**:
+
 ```javascript
-const { verify } = require('./sdk-verification');
+const { verify } = require("./sdk-verification");
 verify(req.catalyst);
 // Logs detailed output to console showing available methods
 ```
 
 ### 4. `src/modules/check-health/debug.route.js` (NEW)
+
 **Purpose**: Endpoints to verify SDK integration before production deployment
 
 **Endpoints**:
 
 #### `GET /debug/verify-sdk`
+
 Outputs detailed SDK capability information
+
 ```json
 {
   "status": "SDK verification started",
@@ -129,7 +139,9 @@ Outputs detailed SDK capability information
 ```
 
 #### `GET /debug/test-token`
+
 Attempts to retrieve a QuickML access token
+
 ```json
 {
   "status": "success",
@@ -160,15 +172,18 @@ CATALYST_APP_ROLE=your-app-role
 Before deploying to production, verify the Catalyst SDK integration:
 
 ### 1. Check SDK Capabilities
+
 ```bash
 curl http://localhost:3000/debug/verify-sdk
 ```
 
 Look for output indicating available token methods:
+
 - ✅ `connection().getConnector('quickml').getAccessToken()` (Preferred)
 - ✅ `credential().getAccessToken()` (Fallback)
 
 ### 2. Test Token Retrieval
+
 ```bash
 curl http://localhost:3000/debug/test-token
 ```
@@ -176,7 +191,9 @@ curl http://localhost:3000/debug/test-token
 Response should show successful token with length > 100 characters.
 
 ### 3. Test Full Prediction Flow
+
 Call forecast API with a small batch:
+
 ```bash
 curl -X POST http://localhost:3000/forecast/generate \
   -H "Content-Type: application/json" \
@@ -188,6 +205,7 @@ Check logs for successful predictions.
 ## How It Works
 
 ### Token Management Flow
+
 1. **Request arrives** → Catalyst middleware initializes SDK on `req.catalyst`
 2. **Prediction needed** → `forecast.prediction.predict()` called
 3. **Delegate to client** → Calls `quickml.predict(req.catalyst, rows)`
@@ -197,6 +215,7 @@ Check logs for successful predictions.
 7. **Return predictions** → Results sent back through the chain
 
 ### Token Refresh (Automatic)
+
 - The Catalyst SDK handles all token refresh logic
 - No need to manually check token expiry
 - No need to manage refresh tokens separately
@@ -206,6 +225,7 @@ Check logs for successful predictions.
 **SDK Version**: zcatalyst-sdk-node@3.4.0
 
 This implementation supports:
+
 - ✅ Automatic token generation
 - ✅ Batch prediction requests
 - ✅ Error logging and retry logic
@@ -216,18 +236,24 @@ This implementation supports:
 ## Troubleshooting
 
 ### Issue: "Unable to obtain QuickML access token"
-**Solution**: 
+
+**Solution**:
+
 1. Run `GET /debug/verify-sdk` to see available SDK methods
 2. Check SDK documentation for your version
 3. Verify `zcatalyst-sdk-node@3.4.0` is installed
 
 ### Issue: "QUICKML_ENDPOINT not configured"
-**Solution**: 
+
+**Solution**:
+
 1. Add `QUICKML_ENDPOINT` to `.env`
 2. Restart the application
 
 ### Issue: "QuickML API returned 401"
+
 **Solution**:
+
 1. Token may be expired or invalid
 2. Run `/debug/test-token` to verify token generation
 3. Check `QUICKML_ENDPOINT_KEY` is correct
@@ -244,9 +270,10 @@ Before deploying:
 6. ✅ Enable HTTPS for all API calls
 
 To disable debug routes in production, update [src/routes/index.js](src/routes/index.js):
+
 ```javascript
 // Only register debug routes in development
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   router.use("/debug", debugRoute);
 }
 ```
