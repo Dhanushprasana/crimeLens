@@ -14,6 +14,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3001",
   "http://127.0.0.1:3001",
+  "https://crimelens-be-50043087097.development.catalystappsail.in",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://crimelens-upxftzmq.onslate.in",
