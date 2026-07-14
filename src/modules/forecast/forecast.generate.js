@@ -41,23 +41,36 @@ async function generateForecast(
   const dates = getForecastDates(30);
 
   logger.info("generateForecast: preparing prediction rows");
-  for (const combo of combinations) {
-    for (const d of dates) {
-      predictionRows.push({
-        district_name: combo.district_name,
-        police_station_name: combo.police_station_name,
-        crime_category_name: combo.crime_category_name,
-        crime_registered_date: d.toISOString().slice(0, 10),
-        day_of_week: d.getDay(),
-        week_of_year: weekOfYear(d),
-        crime_month: d.getMonth() + 1,
-        crime_quarter: Math.floor(d.getMonth() / 3) + 1,
-        crime_year: d.getFullYear(),
-        district_id: combo.district_id,
-        police_station_id: combo.police_station_id,
-        crime_category_id: combo.crime_category_id,
-      });
+  logger.info("Combinations loaded", {
+    count: combinations ? combinations.length : 0,
+    isArray: Array.isArray(combinations),
+  });
+
+  try {
+    for (const combo of combinations) {
+      for (const d of dates) {
+        predictionRows.push({
+          district_name: combo.district_name,
+          police_station_name: combo.police_station_name,
+          crime_category_name: combo.crime_category_name,
+          crime_registered_date: d.toISOString().slice(0, 10),
+          day_of_week: d.getDay(),
+          week_of_year: weekOfYear(d),
+          crime_month: d.getMonth() + 1,
+          crime_quarter: Math.floor(d.getMonth() / 3) + 1,
+          crime_year: d.getFullYear(),
+          district_id: combo.district_id,
+          police_station_id: combo.police_station_id,
+          crime_category_id: combo.crime_category_id,
+        });
+      }
     }
+  } catch (loopErr) {
+    logger.error("Error building prediction rows", {
+      message: loopErr.message,
+      stack: loopErr.stack,
+    });
+    throw loopErr;
   }
 
   logger.info("generateForecast: predictionRows prepared", {

@@ -1,7 +1,6 @@
 "use strict";
 
 const express = require("express");
-const cors = require("cors");
 const catalystClient = require("./catalyst/catalyst.client");
 const loggerMiddleware = require("./middleware/logger.middleware");
 const errorMiddleware = require("./middleware/error.middleware");
@@ -10,53 +9,32 @@ const setupSwagger = require("./config/swagger");
 
 const app = express();
 
-// CORS configuration to support credentials (cookies/auth headers)
-const allowedOrigins = [
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-  "https://crimelens-be-50043087097.development.catalystappsail.in",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "https://crimelens-upxftzmq.onslate.in",
-  "https://crime-lens.onslate.in",
-];
-
-if (process.env.CALLBACK_URL) {
-  allowedOrigins.push(process.env.CALLBACK_URL);
-}
-
-const corsOptions = {
-  origin(origin, callback) {
-    // Allow Postman/curl/server-to-server requests
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+/**
+ * ⚡ IMPORTANT FOR CATALYST APPSAIL DEPLOYMENTS:
+ * Platform gateway injects 'Access-Control-Allow-Origin' automatically.
+ * Manual express CORS middleware is removed here to prevent duplicate header values.
+ * 
+ * For localhost development, add an optional header backup ONLY if Catalyst local CLI 
+ * environment doesn't inject it automatically.
+ */
+if (process.env.NODE_ENV === "development") {
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const localOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+    
+    if (origin && localOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With");
     }
-
-    return callback(new Error(`Origin ${origin} not allowed by CORS`));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "Accept",
-    "X-Requested-With",
-  ],
-};
-
-// Handle preflight requests without using route patterns that path-to-regexp
-// may reject. Invoke the cors middleware directly for OPTIONS requests.
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    return cors(corsOptions)(req, res, next);
-  }
-  return next();
-});
-
-// Handle actual requests
-app.use(cors(corsOptions));
+    
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+}
 
 // Body parsers
 app.use(express.json());
