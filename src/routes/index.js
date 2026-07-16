@@ -20,7 +20,6 @@ const criminalProfilingRoute = require("../modules/business/criminal-profiling/c
 const dashboardRoute = require("../modules/business/dashboard/dashboard.route");
 const forecastRoute = require("../modules/forecast/forecast.route");
 const suspectRoute = require("../modules/business/suspect/suspect.route");
-const debugRoute = require("../modules/check-health/debug.route");
 
 router.use("/configurations", configurationRoute);
 router.use("/permissions", permissionRoute);
@@ -40,6 +39,5 @@ router.use("/dashboard", dashboardRoute);
 router.use("/forecast", forecastRoute);
 router.use("/storage", require("../modules/storage/storage.routes"));
 router.use("/suspects", suspectRoute);
-router.use("/debug", debugRoute);
 
 module.exports = router;
