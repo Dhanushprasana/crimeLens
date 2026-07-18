@@ -86,9 +86,21 @@ module.exports = {
   },
 
   async getAllOfficers(query, req) {
-    const sql = `SELECT * FROM ${env.TABLE_POLICE_OFFICER}`;
+    const sql = `
+      SELECT * 
+      FROM ${env.TABLE_POLICE_OFFICER} 
+      INNER JOIN ${env.TABLE_USER} ON ${env.TABLE_POLICE_OFFICER}.user_id = ${env.TABLE_USER}.ROWID 
+      INNER JOIN ${env.TABLE_USER_INFO} ON ${env.TABLE_USER}.user_info_id = ${env.TABLE_USER_INFO}.ROWID
+    `;
     const res = await executeQuery(req, sql);
-    return res.map(r => r[env.TABLE_POLICE_OFFICER]);
+    return res.map(r => {
+      const officer = r[env.TABLE_POLICE_OFFICER] || {};
+      const userInfo = r[env.TABLE_USER_INFO] || {};
+      return {
+        ...officer,
+        name: `${userInfo.user_first_name || ''} ${userInfo.user_last_name || ''}`.trim()
+      };
+    });
   },
 
   async getOneOfficer(id, req) {

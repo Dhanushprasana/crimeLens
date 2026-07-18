@@ -21,6 +21,7 @@ const dashboardRoute = require("../modules/business/dashboard/dashboard.route");
 const forecastRoute = require("../modules/forecast/forecast.route");
 const suspectRoute = require("../modules/business/suspect/suspect.route");      
 const crimeCategoryRoute = require("../modules/business/crime-category/crime-category.route");
+const evidenceAnalysisRoute = require("../modules/business/evidence-analysis/evidence-analysis.route");
 
 router.use("/configurations", configurationRoute);
 router.use("/permissions", permissionRoute);
@@ -41,5 +42,6 @@ router.use("/forecast", forecastRoute);
 router.use("/storage", require("../modules/storage/storage.routes"));
 router.use("/suspects", suspectRoute);  
 router.use("/crime-categories", crimeCategoryRoute);
+router.use("/evidence-analysis", evidenceAnalysisRoute);
 
 module.exports = router;
