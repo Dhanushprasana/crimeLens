@@ -5,12 +5,21 @@ const fs = require("fs");
 const path = require("path");
 const logger = require("../../config/logger");
 
-
 async function generateForecast(req, res, next) {
   try {
+    logger.info("generateForecast endpoint hit", {
+      body: req.body,
+      headers: req.headers,
+    });
     const result = await service.generateForecast(req, req.body || {});
+    logger.info("generateForecast completed successfully", { result });
     return res.status(200).json({ success: true, result });
   } catch (err) {
+    logger.error("generateForecast failed", {
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+    });
     next(err);
   }
 }

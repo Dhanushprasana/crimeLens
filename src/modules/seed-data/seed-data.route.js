@@ -24,7 +24,6 @@ router.post("/incident-criminal/bootstrap", controller.bootstrapIncidentCriminal
 
 router.post("/district-crime-stats/calculate", controller.calculateDistrictCrimeStats);
 router.post("/crime-incident/generate", controller.generateCrime);
-router.get("/dump-data", controller.dumpData);
 router.get("/record-counts", controller.getAllTableCounts);
 
 module.exports = router;

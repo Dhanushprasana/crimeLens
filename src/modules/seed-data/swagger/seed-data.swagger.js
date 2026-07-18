@@ -40,44 +40,6 @@
  *                   type: string
  */
 
-/**
- * @swagger
- * /seed/crime-incident/bootstrap/status/{jobId}:
- *   get:
- *     tags:
- *       - SeedData
- *     summary: Get status for a running or completed bootstrap job
- *     parameters:
- *       - in: path
- *         name: jobId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Job status object
- *       404:
- *         description: Job not found
- */
-
-/**
- * @swagger
- * /seed/crime-incident/generate:
- *   post:
- *     tags:
- *       - SeedData
- *     summary: Generate a single synthetic crime incident and insert into DB
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Created crime incident
- */
-
 module.exports = {};
 /**
  * @openapi
@@ -161,18 +123,6 @@ module.exports = {};
  *     responses:
  *       200:
  *         description: FIRs inserted/skipped counts
- */
-
-/**
- * @openapi
- * /seed/crime-incident/bootstrap:
- *   post:
- *     summary: Bootstrap Crime Incidents
- *     tags: [Seed Data]
- *     description: Reads `data/crimie/crime_incident.json`, resolves categories, stations, districts, and FIR references and inserts into `biz_crime_incident`.
- *     responses:
- *       200:
- *         description: Crime incidents inserted/skipped counts
  */
 
 /**
