@@ -28,6 +28,46 @@ if (process.env.NODE_ENV === "development") {
       res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
       res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With");
     }
+<<<<<<< HEAD
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+// Manual CORS middleware — sets headers directly on the response object.
+// This is necessary because Catalyst AppSail's reverse proxy may intercept
+// OPTIONS preflight requests before they reach Express, stripping CORS headers.
+// By writing headers manually and terminating OPTIONS here, we ensure the
+// browser always receives a valid preflight response.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isAllowed = origin && allowedOrigins.some(allowed => {
+    return origin === allowed || origin.startsWith(allowed);
+  });
+
+  if (isAllowed || process.env.NODE_ENV !== 'production') {
+    // Echo back the exact origin — required when credentials: true
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,X-Requested-With');
+
+  // Terminate preflight immediately — don't let it reach other middleware
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+app.options('/*splat', cors(corsOptions));
+app.use(cors(corsOptions));
+=======
     
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
@@ -35,6 +75,7 @@ if (process.env.NODE_ENV === "development") {
     next();
   });
 }
+>>>>>>> 181b2d05ca761df4ad3e13ca5886d07c0c9d6f10
 
 // Body parsers
 app.use(express.json());
