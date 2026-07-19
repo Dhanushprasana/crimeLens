@@ -167,6 +167,22 @@ module.exports = {};
 
 /**
  * @openapi
+ * /seed/crime-evidence/bootstrap:
+ *   post:
+ *     summary: Bootstrap crime evidence files
+ *     tags: [Seed Data]
+ *     description: Fetches media from Catalyst file storage and assigns them to crime incidents in `biz_crime_evidence`.
+ *     responses:
+ *       200:
+ *         description: Evidence links inserted/skipped counts
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @openapi
  * /seed/district-crime-stats/calculate:
  *   post:
  *     summary: Calculate and upsert district crime statistics

@@ -21,6 +21,7 @@ router.post("/crime-incident/bootstrap", controller.bootstrapCrimeIncidents);  /
 
 router.post("/incident-criminal/bootstrap", controller.bootstrapIncidentCriminals);
 // router.post("/incident-officer/bootstrap", controller.bootstrapIncidentOfficers);
+router.post("/crime-evidence/bootstrap", controller.bootstrapCrimeEvidence);
 
 router.post("/district-crime-stats/calculate", controller.calculateDistrictCrimeStats);
 router.post("/crime-incident/generate", controller.generateCrime);
