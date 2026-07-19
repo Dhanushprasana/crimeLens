@@ -23,6 +23,8 @@ const suspectRoute = require("../modules/business/suspect/suspect.route");
 const crimeCategoryRoute = require("../modules/business/crime-category/crime-category.route");
 const evidenceAnalysisRoute = require("../modules/business/evidence-analysis/evidence-analysis.route");
 
+const networkAnalysisRoute = require("../modules/network-analysis/route");
+
 router.use("/configurations", configurationRoute);
 router.use("/permissions", permissionRoute);
 router.use("/roles", roleRoute);
@@ -43,5 +45,6 @@ router.use("/storage", require("../modules/storage/storage.routes"));
 router.use("/suspects", suspectRoute);  
 router.use("/crime-categories", crimeCategoryRoute);
 router.use("/evidence-analysis", evidenceAnalysisRoute);
+router.use("/", networkAnalysisRoute); // Using "/" because route.js already defines "/network-analysis"
 
 module.exports = router;
