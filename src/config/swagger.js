@@ -27,6 +27,8 @@ const options = {
       { name: "Criminals", description: "Criminal records" },
       { name: "Geo Data", description: "Geospatial/district data" },
       { name: "Profiling", description: "Criminal profiling and network analysis" },
+      { name: "Network Analysis", description: "Generic graph traversal engine for intelligence investigation networks" },
+      { name: "Evidence Match", description: "Evidence match linking and management" },
     ],
     servers: [
       {
@@ -52,6 +54,8 @@ const options = {
     "./src/modules/business/**/swagger/*.js",
     "./src/modules/seed-data/swagger/*.js",
     "./src/modules/storage/swagger/*.js",
+    "./src/modules/network-analysis/swagger/*.js",
+    "./src/modules/business/**/*.swagger.js",
   ],
 };
 

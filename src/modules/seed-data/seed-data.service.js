@@ -1308,97 +1308,113 @@ module.exports = {
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
     if (!zcql) throw new Error("Catalyst not available");
 
-    // 1️⃣ Cache crime incidents (crime_number → ROWID)
+    // 1️⃣ Cache crime incidents (crime_number → ROWID) - Limit to 1000 to save time (we don't need all 40k)
     const crimeMap = {};
     const validCrimes = [];
     try {
-      const crimeRows = await zcql.executeZCQLQuery(
-        `SELECT ROWID, crime_number FROM ${env.TABLE_CRIME_INCIDENT}`,
-      );
-      for (const r of crimeRows) {
-        const rec = r[env.TABLE_CRIME_INCIDENT] || r;
-        if (rec && rec.crime_number) {
-          crimeMap[rec.crime_number.trim().toLowerCase()] = rec.ROWID;
-          validCrimes.push(rec.crime_number);
+      let offset = 0;
+      const limit = 200;
+      while (validCrimes.length < 1000) {
+        const crimeRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, crime_number FROM ${env.TABLE_CRIME_INCIDENT} LIMIT ${limit} OFFSET ${offset}`,
+        );
+        if (!crimeRows || crimeRows.length === 0) break;
+        for (const r of crimeRows) {
+          const rec = r[env.TABLE_CRIME_INCIDENT] || r;
+          if (rec && rec.crime_number) {
+            crimeMap[rec.crime_number.trim().toLowerCase()] = rec.ROWID;
+            validCrimes.push(rec.crime_number);
+          }
         }
+        if (crimeRows.length < limit) break;
+        offset += limit;
       }
     } catch (e) {
       logger.warn("Failed to cache crime incidents", e);
     }
 
-    // 2️⃣ Cache criminals (criminal_number → ROWID)
+    // 2️⃣ Cache criminals (criminal_number → ROWID) - Fetch ALL
     const criminalMap = {};
     const validCriminals = [];
     try {
-      const crimRows = await zcql.executeZCQLQuery(
-        `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL}`,
-      );
-      for (const r of crimRows) {
-        const rec = r[env.TABLE_CRIMINAL] || r;
-        if (rec && rec.criminal_number) {
-          criminalMap[rec.criminal_number.trim().toLowerCase()] = rec.ROWID;
-          validCriminals.push(rec.criminal_number);
+      let offset = 0;
+      const limit = 200;
+      while (true) {
+        const crimRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, criminal_number FROM ${env.TABLE_CRIMINAL} LIMIT ${limit} OFFSET ${offset}`,
+        );
+        if (!crimRows || crimRows.length === 0) break;
+        for (const r of crimRows) {
+          const rec = r[env.TABLE_CRIMINAL] || r;
+          if (rec && rec.criminal_number) {
+            criminalMap[rec.criminal_number.trim().toLowerCase()] = rec.ROWID;
+            validCriminals.push(rec.criminal_number);
+          }
         }
+        if (crimRows.length < limit) break;
+        offset += limit;
       }
     } catch (e) {
       logger.warn("Failed to cache criminals", e);
     }
 
-    // 2.5️⃣ Fetch 'others' files for evidence assignment
-    let othersPaths = [];
-    try {
-      const allOthers = await StorageService.listBucketObjectKeys(
-        req,
-        `${storageConstants.PREFIX_MAP["crime-evidence"]}/`,
-      );
-      othersPaths = allOthers
-        .filter((k) => /\.(jpe?g|png|tiff?|pdf|mp4)$/i.test(k))
-        .sort((a, b) => a.localeCompare(b));
-    } catch (err) {
-      logger.warn(
-        "Failed to fetch 'others' files for evidence assignment",
-        err && err.message ? err.message : err,
-      );
-      othersPaths = [];
-    }
-
     // Replace invalid crimes and criminals with valid ones
     let fileUpdated = false;
-    let othersIndex = 0; // Declare here to use in main loop
     if (validCrimes.length > 0 && validCriminals.length > 0) {
+      const shuffledCrimes = [...validCrimes];
+      const shuffledCriminals = [...validCriminals];
+      
+      for (let i = shuffledCrimes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledCrimes[i], shuffledCrimes[j]] = [shuffledCrimes[j], shuffledCrimes[i]];
+      }
+      for (let i = shuffledCriminals.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledCriminals[i], shuffledCriminals[j]] = [shuffledCriminals[j], shuffledCriminals[i]];
+      }
+      let crimeIndex = 0;
+      const unusedCriminals = new Set(validCriminals);
+
       for (const e of entries) {
+        // Fix invalid crimes
         const crimeKey = (e.crime_number || "").trim().toLowerCase();
         if (!crimeMap[crimeKey]) {
-          const randCrime =
-            validCrimes[Math.floor(Math.random() * validCrimes.length)];
-          e.crime_number = randCrime;
+          e.crime_number = shuffledCrimes[crimeIndex % shuffledCrimes.length];
+          crimeIndex++;
           fileUpdated = true;
         }
 
+        // Guarantee all criminals get used exactly once
         const crimKey = (e.criminal_number || "").trim().toLowerCase();
-        if (!criminalMap[crimKey]) {
-          const randCriminal =
-            validCriminals[Math.floor(Math.random() * validCriminals.length)];
-          e.criminal_number = randCriminal;
+        let criminalToUse = e.criminal_number;
+        const validMatch = Object.values(criminalMap).find(id => id === criminalMap[crimKey]);
+        const originalValidName = validCriminals.find(c => c.toLowerCase() === crimKey);
+
+        if (originalValidName && unusedCriminals.has(originalValidName)) {
+          criminalToUse = originalValidName;
+        } else if (unusedCriminals.size > 0) {
+          criminalToUse = unusedCriminals.values().next().value;
           fileUpdated = true;
         }
+        
+        if (criminalToUse) {
+          e.criminal_number = criminalToUse;
+          unusedCriminals.delete(criminalToUse);
+        }
       }
+      
       if (fileUpdated) {
         await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
         logger.info("Updated incident_criminal.json with valid db references.");
       }
-
-      // prepare to assign evidence files (round-robin through othersPaths)
-      logger.info(
-        `Available evidence files for assignment: ${othersPaths.length}`,
-      );
     }
 
     // 3️⃣ Fetch existing relationships in memory to avoid duplicate checking in the loop
     const existingRelations = new Set();
+    const assignedCriminals = new Set();
     try {
       let offset = 0;
-      const limit = 100;
+      const limit = 200;
       while (true) {
         const rows = await zcql.executeZCQLQuery(
           `SELECT incident_id, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} LIMIT ${limit} OFFSET ${offset}`,
@@ -1408,6 +1424,7 @@ module.exports = {
           const rec = r[env.TABLE_INCIDENT_CRIMINAL] || r;
           if (rec.incident_id && rec.criminal_id) {
             existingRelations.add(`${rec.incident_id}-${rec.criminal_id}`);
+            assignedCriminals.add(rec.criminal_id);
           }
         }
         if (rows.length < limit) break;
@@ -1443,60 +1460,23 @@ module.exports = {
         );
         continue;
       }
-      // assign evidence_url to this mapping if available
-      let assignedEvidence = null;
-      try {
-        if (e.evidence_url) {
-          assignedEvidence = e.evidence_url;
-        } else if (othersPaths.length > 0) {
-          assignedEvidence = othersPaths[othersIndex];
-          othersIndex = (othersIndex + 1) % othersPaths.length;
-          e.evidence_url = assignedEvidence;
-          fileUpdated = true;
-        }
-      } catch (err) {
-        assignedEvidence = null;
+
+      if (assignedCriminals.has(criminalId)) {
+        skipped++;
+        continue;
       }
 
       if (existingRelations.has(`${crimeId}-${criminalId}`)) {
         skipped++;
-        logger.info(
-          `Skipping incident-criminal link: crime_number=${e.crime_number}, criminal_number=${e.criminal_number} - Reason: Duplicate`,
-        );
         continue;
       }
+
+      assignedCriminals.add(criminalId);
 
       rowsToInsert.push({
         incident_id: crimeId,
         criminal_id: criminalId,
       });
-
-      if (assignedEvidence) {
-        // record evidence to insert after relationships are created
-        try {
-          const evidenceNumber = assignedEvidence
-            .split("/")
-            .filter(Boolean)
-            .pop();
-
-          const ev = {
-            incident_id: crimeId,
-            uploaded_by: null,
-            file_url: assignedEvidence,
-            description: null,
-            evidence_number: evidenceNumber || `EVID-${crimeId}`,
-          };
-          // push to evidence insert list (create if needed)
-          if (!Array.isArray(global.__seedEvidenceToInsert))
-            global.__seedEvidenceToInsert = [];
-          global.__seedEvidenceToInsert.push(ev);
-        } catch (err) {
-          logger.warn(
-            "Failed to queue evidence insert",
-            err && err.message ? err.message : err,
-          );
-        }
-      }
     }
 
     // 5️⃣ Insert relationships in batches of 100
@@ -1529,78 +1509,12 @@ module.exports = {
       }
     }
 
-    // Insert queued evidence rows (if any)
-    try {
-      const evidenceList = Array.isArray(global.__seedEvidenceToInsert)
-        ? global.__seedEvidenceToInsert
-        : [];
-      logger.info(
-        `Attempting to insert ${evidenceList.length} evidence records`,
-      );
-      if (evidenceList.length > 0) {
-        const evidenceTable = req.catalyst
-          .datastore()
-          .table(env.TABLE_CRIME_EVIDENCE);
-        const BATCH = 200;
-        let evidenceCreated = 0;
-        let evidenceSkipped = 0;
-        for (let s = 0; s < evidenceList.length; s += BATCH) {
-          const chunk = evidenceList.slice(s, s + BATCH);
-          try {
-            await evidenceTable.insertRows(chunk);
-            logger.info(
-              `Inserted batch of ${chunk.length} evidence rows (${s + chunk.length}/${evidenceList.length})`,
-            );
-            evidenceCreated += chunk.length;
-          } catch (err) {
-            logger.warn(
-              `Failed to batch insert evidence (${s}-${s + chunk.length}), falling back to single inserts`,
-              err && err.message ? err.message : err,
-            );
-            for (const ev of chunk) {
-              try {
-                logger.info(
-                  `Attempting to insert evidence row: ${JSON.stringify(ev)}`,
-                );
-                await evidenceTable.insertRow(ev);
-                evidenceCreated++;
-              } catch (singleErr) {
-                logger.warn(
-                  `Failed to insert single evidence row: ${JSON.stringify(ev)}`,
-                  singleErr && singleErr.message
-                    ? singleErr.message
-                    : singleErr,
-                );
-                evidenceSkipped++;
-              }
-            }
-          }
-        }
-        logger.info(
-          `Evidence insertion complete. Created: ${evidenceCreated}, Skipped: ${evidenceSkipped}`,
-        );
-      }
-    } catch (err) {
-      logger.warn(
-        "Failed to insert seeded evidence",
-        err && err.message ? err.message : err,
-      );
-    }
-
-    // clear the temporary evidence queue
-    try {
-      if (Array.isArray(global.__seedEvidenceToInsert))
-        global.__seedEvidenceToInsert = [];
-    } catch (err) {
-      // ignore
-    }
-
-    // Persist incident_criminal.json if we updated evidence_url fields
+    // Persist incident_criminal.json if we updated crime or criminal numbers
     try {
       if (fileUpdated) {
         await fs.writeFile(filePath, JSON.stringify(entries, null, 2), "utf8");
         logger.info(
-          "Updated incident_criminal.json with assigned evidence_url fields.",
+          "Updated incident_criminal.json.",
         );
       }
     } catch (err) {
@@ -1611,6 +1525,104 @@ module.exports = {
     }
 
     return { created, skipped };
+  },
+
+  async bootstrapCrimeEvidence(req) {
+    logger.info("bootstrapCrimeEvidence");
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    if (!zcql) throw new Error("Catalyst not available");
+
+    let othersPaths = [];
+    try {
+      const allOthers = await StorageService.listBucketObjectKeys(
+        req,
+        `${storageConstants.PREFIX_MAP["crime-evidence"]}/`,
+      );
+      othersPaths = allOthers
+        .filter((k) => /\.(jpe?g|png|tiff?|pdf|mp4)$/i.test(k))
+        .sort((a, b) => a.localeCompare(b));
+    } catch (err) {
+      logger.warn(
+        "Failed to fetch files for evidence assignment",
+        err && err.message ? err.message : err,
+      );
+      return { created: 0, skipped: 0, reason: "Failed to fetch files" };
+    }
+
+    if (othersPaths.length === 0) {
+      logger.info("No evidence files found in storage to bootstrap.");
+      return { created: 0, skipped: 0, reason: "No evidence files found" };
+    }
+
+    // Cache crime incidents
+    const validCrimes = [];
+    try {
+      const crimeRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID FROM ${env.TABLE_CRIME_INCIDENT}`,
+      );
+      for (const r of crimeRows) {
+        const rec = r[env.TABLE_CRIME_INCIDENT] || r;
+        if (rec && rec.ROWID) {
+          validCrimes.push(rec.ROWID);
+        }
+      }
+    } catch (e) {
+      logger.warn("Failed to cache crime incidents for evidence", e);
+    }
+
+    if (validCrimes.length === 0) {
+      logger.info("No crime incidents found to attach evidence to.");
+      return { created: 0, skipped: 0, reason: "No crime incidents found" };
+    }
+
+    const evidenceToInsert = [];
+    
+    // Assign evidence sequentially to incidents
+    for (let i = 0; i < othersPaths.length; i++) {
+      const assignedEvidence = othersPaths[i];
+      const crimeId = validCrimes[i % validCrimes.length]; // cycle through incidents if fewer incidents than files
+      const evidenceNumber = assignedEvidence.split("/").filter(Boolean).pop();
+
+      evidenceToInsert.push({
+        incident_id: crimeId,
+        uploaded_by: null,
+        file_url: assignedEvidence,
+        description: null,
+        evidence_number: evidenceNumber || `EVID-${crimeId}`,
+      });
+    }
+
+    const evidenceTable = req.catalyst.datastore().table(env.TABLE_CRIME_EVIDENCE);
+    const BATCH = 100;
+    let evidenceCreated = 0;
+    let evidenceSkipped = 0;
+
+    for (let s = 0; s < evidenceToInsert.length; s += BATCH) {
+      const chunk = evidenceToInsert.slice(s, s + BATCH);
+      try {
+        await evidenceTable.insertRows(chunk);
+        evidenceCreated += chunk.length;
+      } catch (err) {
+        logger.warn(
+          `Failed to batch insert evidence (${s}-${s + chunk.length}), falling back to single inserts`,
+          err && err.message ? err.message : err,
+        );
+        for (const ev of chunk) {
+          try {
+            await evidenceTable.insertRow(ev);
+            evidenceCreated++;
+          } catch (singleErr) {
+            evidenceSkipped++;
+          }
+        }
+      }
+    }
+
+    logger.info(
+      `Evidence insertion complete. Created: ${evidenceCreated}, Skipped: ${evidenceSkipped}`,
+    );
+
+    return { created: evidenceCreated, skipped: evidenceSkipped };
   },
 
   async generateCrime(req) {

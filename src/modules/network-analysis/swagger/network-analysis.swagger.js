@@ -1,0 +1,293 @@
+/**
+ * @openapi
+ * tags:
+ *   - name: Network Analysis
+ *     description: >
+ *       AI-powered generic graph traversal engine. Builds an entity relationship
+ *       network starting from any root node (criminal, incident, vehicle, evidence, alias, etc.)
+ *       and returns a graph consumable directly by Cytoscape.js or React Flow.
+ *
+ * /network-analysis:
+ *   post:
+ *     summary: Build Network Analysis Graph
+ *     tags: [Network Analysis]
+ *     description: >
+ *       Executes a generic Breadth-First Search (BFS) graph traversal starting
+ *       from any root entity in the CrimeLens database.
+ *
+ *
+ *       **How it works:**
+ *
+ *       The engine uses a Relationship Registry to discover connections without
+ *       hardcoded SQL joins. For each node popped off the queue, the registry
+ *       looks up all registered resolvers for that type, executes them to fetch
+ *       neighbor nodes and edges, then adds unvisited neighbors back to the queue.
+ *       A visited set prevents cycles and infinite loops.
+ *
+ *
+ *       **Supported root entity types:**
+ *
+ *       `criminal`, `incident`, `vehicle`, `alias`, `evidence`
+ *
+ *
+ *       **Supported relationships traversed:**
+ *
+ *       - Criminal ↔ Incident (`INVOLVED_IN`)
+ *
+ *       - Criminal ↔ Vehicle (`USES`)
+ *
+ *       - Criminal ↔ Alias (`KNOWN_AS`)
+ *
+ *       - Incident ↔ Evidence (`HAS_EVIDENCE`)
+ *
+ *
+ *       **Extending the graph:**
+ *       To add new entity types (e.g. Phone, CDR, Bank Account), simply create
+ *       a new resolver function and register it in `registry-initializer.js`.
+ *       The traversal engine requires zero changes.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - root
+ *             properties:
+ *               root:
+ *                 type: object
+ *                 description: The starting entity for the graph traversal.
+ *                 required:
+ *                   - type
+ *                   - id
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     description: >
+ *                       Entity type of the root node.
+ *                       Supported values: `criminal`, `incident`, `vehicle`, `alias`, `evidence`
+ *                     example: criminal
+ *                   id:
+ *                     type: string
+ *                     description: The ROWID of the root entity in the database.
+ *                     example: "46044000000114080"
+ *               filters:
+ *                 type: object
+ *                 description: >
+ *                   Optional filters applied during traversal (not after). Setting
+ *                   a node type to `false` prevents that entire relationship branch
+ *                   from being fetched, improving performance.
+ *                 properties:
+ *                   criminal:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include criminal nodes in the graph.
+ *                   incident:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include incident (FIR) nodes in the graph.
+ *                   vehicle:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include vehicle nodes in the graph.
+ *                   evidence:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include evidence nodes in the graph.
+ *                   alias:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include alias nodes in the graph.
+ *                   biometric:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include biometric nodes (photo, fingerprint, footprint).
+ *                   district:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include district nodes in the graph.
+ *                   policeStation:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include police station nodes in the graph.
+ *                   matchedEvidence:
+ *                     type: boolean
+ *                     default: true
+ *                     description: Include matched evidence nodes (cross-incident similarity).
+ *           examples:
+ *             StartFromCriminal:
+ *               summary: Start traversal from a criminal
+ *               value:
+ *                 root:
+ *                   type: criminal
+ *                   id: "46044000000114080"
+ *                 filters:
+ *                   criminal: true
+ *                   incident: true
+ *                   vehicle: true
+ *                   alias: true
+ *                   evidence: true
+ *             StartFromVehicle:
+ *               summary: Start traversal from a vehicle
+ *               value:
+ *                 root:
+ *                   type: vehicle
+ *                   id: "46044000000114080"
+ *                 filters:
+ *                   criminal: true
+ *                   incident: true
+ *             StartFromIncident:
+ *               summary: Start traversal from an incident (FIR)
+ *               value:
+ *                 root:
+ *                   type: incident
+ *                   id: "46044000000114999"
+ *                 filters:
+ *                   criminal: true
+ *                   evidence: true
+ *                   vehicle: false
+ *                   alias: false
+ *     responses:
+ *       200:
+ *         description: Graph built successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     summary:
+ *                       type: object
+ *                       description: Count of each entity type discovered in the graph.
+ *                       properties:
+ *                         criminals:
+ *                           type: integer
+ *                           example: 3
+ *                         incidents:
+ *                           type: integer
+ *                           example: 5
+ *                         vehicles:
+ *                           type: integer
+ *                           example: 2
+ *                         aliases:
+ *                           type: integer
+ *                           example: 4
+ *                         evidence:
+ *                           type: integer
+ *                           example: 7
+ *                         districts:
+ *                           type: integer
+ *                           example: 1
+ *                         policeStations:
+ *                           type: integer
+ *                           example: 2
+ *                     nodes:
+ *                       type: array
+ *                       description: List of graph nodes ready for Cytoscape.js rendering.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Unique node ID in format `{type}_{rowid}`.
+ *                             example: criminal_45
+ *                           type:
+ *                             type: string
+ *                             description: Entity type of the node.
+ *                             example: criminal
+ *                           label:
+ *                             type: string
+ *                             description: Primary display label for the node.
+ *                             example: Rahul Kumar
+ *                           subtitle:
+ *                             type: string
+ *                             description: Secondary label (e.g. ID number, category).
+ *                             example: CR-00045
+ *                           properties:
+ *                             type: object
+ *                             description: Additional entity-specific metadata.
+ *                             example: { status: "ACTIVE", gender: "MALE" }
+ *                     edges:
+ *                       type: array
+ *                       description: List of graph edges ready for Cytoscape.js rendering.
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Unique edge ID.
+ *                             example: edge_criminal_45_INVOLVED_IN_incident_12
+ *                           source:
+ *                             type: string
+ *                             description: Source node ID.
+ *                             example: criminal_45
+ *                           target:
+ *                             type: string
+ *                             description: Target node ID.
+ *                             example: incident_12
+ *                           relationship:
+ *                             type: string
+ *                             description: Relationship label on the edge.
+ *                             example: INVOLVED_IN
+ *             example:
+ *               status: success
+ *               data:
+ *                 summary:
+ *                   criminals: 1
+ *                   incidents: 2
+ *                   vehicles: 1
+ *                   aliases: 0
+ *                   evidence: 3
+ *                   districts: 0
+ *                   policeStations: 0
+ *                 nodes:
+ *                   - id: criminal_45
+ *                     type: criminal
+ *                     label: Rahul Kumar
+ *                     subtitle: CR-00045
+ *                     properties:
+ *                       status: ACTIVE
+ *                       gender: MALE
+ *                   - id: incident_12
+ *                     type: incident
+ *                     label: FIR-2025-001
+ *                     subtitle: Murder
+ *                     properties:
+ *                       status: OPEN
+ *                 edges:
+ *                   - id: edge_criminal_45_INVOLVED_IN_incident_12
+ *                     source: criminal_45
+ *                     target: incident_12
+ *                     relationship: INVOLVED_IN
+ *       400:
+ *         description: Bad request — missing or invalid root node.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Valid root object with type and id is required
+ *       500:
+ *         description: Internal server error during graph traversal.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */

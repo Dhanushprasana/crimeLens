@@ -48,6 +48,7 @@ const env = {
   TABLE_BEHAVIORAL_FLAG: "biz_behavioral_flag",
   TABLE_CRIMINAL_RISK_FACTOR: "biz_criminal_risk_factor",
   TABLE_COMP_DISTRICT_CRIME_STATS: "biz_comp_district_crime_stats",
+  TABLE_EVIDENCE_MATCH: "biz_evidence_match",
 };
 
 module.exports = env;
