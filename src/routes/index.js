@@ -22,6 +22,7 @@ const forecastRoute = require("../modules/forecast/forecast.route");
 const suspectRoute = require("../modules/business/suspect/suspect.route");      
 const crimeCategoryRoute = require("../modules/business/crime-category/crime-category.route");
 const evidenceAnalysisRoute = require("../modules/business/evidence-analysis/evidence-analysis.route");
+const evidenceMatchRoute    = require("../modules/business/evidence-match/evidence-match.route");
 
 const networkAnalysisRoute = require("../modules/network-analysis/route");
 
@@ -45,6 +46,7 @@ router.use("/storage", require("../modules/storage/storage.routes"));
 router.use("/suspects", suspectRoute);  
 router.use("/crime-categories", crimeCategoryRoute);
 router.use("/evidence-analysis", evidenceAnalysisRoute);
+router.use("/evidence-matches", evidenceMatchRoute);
 router.use("/", networkAnalysisRoute); // Using "/" because route.js already defines "/network-analysis"
 
 module.exports = router;
