@@ -3,21 +3,16 @@
 const env = require("../../../config/env");
 const crypto = require("crypto");
 
-// Catalyst datastore expects datetime strings in this exact format:
-// yyyy-MM-ddTHH:mm:ss:SSSZ  (colon before ms, numeric offset, no literal "Z")
-// Catalyst datastore expects datetime strings in this format:
-// yyyy-MM-dd HH:mm:ss:SSS  (space separator, colon before ms, no offset)
-function toCatalystDateTime(date) {
-  const pad = (n, len = 2) => String(n).padStart(len, "0");
-  const yyyy = date.getFullYear();
-  const MM = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const HH = pad(date.getHours());
-  const mm = pad(date.getMinutes());
-  const ss = pad(date.getSeconds());
-  const SSS = pad(date.getMilliseconds(), 3);
-
-  return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}:${SSS}`;
+/**
+ * Format a Date as 'YYYY-MM-DD HH:MM:SS' — the format Catalyst datetime columns expect.
+ */
+function catalystDateTime(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date);
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  );
 }
 
 async function executeQuery(req, query) {
@@ -32,18 +27,82 @@ function getTable(req, tableName) {
 }
 
 module.exports = {
+  /**
+   * Look up a role by its name.
+   * Returns the role row (including ROWID) or null if not found.
+   */
+  async getRoleByName(roleName, req) {
+    const safe = roleName.replace(/'/g, "''");
+    const sql = `SELECT * FROM ${env.TABLE_ROLE} WHERE role_name = '${safe}'`;
+    const res = await executeQuery(req, sql);
+    if (!res || res.length === 0) return null;
+    return res[0][env.TABLE_ROLE];
+  },
+
+  /**
+   * Get all available roles (surfaces them in the ROLE_NOT_FOUND error).
+   */
+  async getAllRoles(req) {
+    const sql = `SELECT ROWID, role_name FROM ${env.TABLE_ROLE}`;
+    const res = await executeQuery(req, sql);
+    return (res || []).map((r) => r[env.TABLE_ROLE]);
+  },
+
+  /**
+   * Full invite creation flow:
+   *
+   *  1. sys_user_info  → stores name / email / phone
+   *  2. sys_user       → FK to sys_user_info; catalyst_user_id empty until onboarding
+   *  3. sys_user_invite→ user_info_id FK points to sys_user.ROWID  ← fixes the error
+   *  4. sys_user_role  → user_id FK points to sys_user.ROWID
+   *
+   * During onboarding (createUserFromInvite) we only need to update
+   * sys_user.catalyst_user_id with the real Catalyst auth ID.
+   */
   async createInvite(dto, req) {
-    const table = getTable(req, "sys_user_invite");
-    const token = crypto.randomBytes(20).toString("hex");
-    const saved = await table.insertRow({
-      user_info_id: dto.user_info_id || null,
-      invite_token_hash: token,
+    // 1. sys_user_info
+    const userInfoTable = getTable(req, env.TABLE_USER_INFO);
+    const userInfoRow = await userInfoTable.insertRow({
+      user_first_name: dto.first_name || "",
+      user_last_name: dto.last_name || "",
+      email: dto.email,
+      phone: dto.phone || null,
+    });
+    const userInfoId = userInfoRow.ROWID;
+
+    // 2. sys_user  (catalyst_user_id is left empty — filled during onboarding)
+    const userTable = getTable(req, env.TABLE_USER);
+    const userRow = await userTable.insertRow({
+      user_info_id: userInfoId,
+      is_archived: false,
+    });
+    const sysUserId = userRow.ROWID;
+
+    // 3. sys_user_invite  (user_info_id FK → sys_user.ROWID)
+    const tokenHash = crypto.randomBytes(32).toString("hex");
+    const inviteTable = getTable(req, "sys_user_invite");
+    const inviteRow = await inviteTable.insertRow({
+      user_info_id: sysUserId,          // FK → sys_user.ROWID  ✔
+      invite_token_hash: tokenHash,
       invited_by: dto.invited_by || null,
+      accepted_at: catalystDateTime(), // mandatory field; overwritten on actual acceptance
       is_account_setup: false,
       is_accepted: false,
-      accepted_at: toCatalystDateTime(new Date(0)), // sentinel: not yet accepted
     });
-    return { id: saved.ROWID, invite_token: token };
+
+    // 4. sys_user_role
+    const userRoleTable = getTable(req, env.TABLE_USER_ROLE);
+    await userRoleTable.insertRow({
+      user_id: sysUserId,              // FK → sys_user.ROWID  ✔
+      role_id: dto.resolvedRoleId,     // resolved from role_name by service layer
+    });
+
+    return {
+      id: inviteRow.ROWID,
+      sys_user_id: sysUserId,
+      user_info_id: userInfoId,
+      invite_token: tokenHash,
+    };
   },
 
   async getAllInvites(query, req) {
@@ -70,35 +129,50 @@ module.exports = {
     await table.updateRow({
       ROWID: row.ROWID,
       is_accepted: true,
-      accepted_at: toCatalystDateTime(new Date()),
+      accepted_at: catalystDateTime(),
     });
-    return { message: "Invite accepted", userInfoId: row.user_info_id };
+    // user_info_id here is actually sys_user.ROWID (see createInvite step 3)
+    return { message: "Invite accepted", sysUserId: row.user_info_id };
   },
 
-  async linkCatalystUser(userInfoId, catalystUserId, req) {
+  /**
+   * Called during onboarding: updates catalyst_user_id on the existing sys_user row.
+   * The sys_user row was already created during invite, so no new insert needed.
+   */
+  async linkCatalystUser(sysUserId, catalystUserId, req) {
     const table = getTable(req, env.TABLE_USER);
-    const saved = await table.insertRow({
-      user_info_id: userInfoId,
-      catalyst_user_id: catalystUserId,
-      is_archived: false,
+    await table.updateRow({
+      ROWID: sysUserId,
+      catalyst_user_id: String(catalystUserId),
     });
-    return { id: saved.ROWID };
+    return { id: sysUserId };
   },
 
+  /**
+   * Fetch invite by email — joins through sys_user → sys_user_info.
+   */
   async getLatestInviteByEmail(email, req) {
     const rows = await executeQuery(
       req,
-      `SELECT * FROM sys_user_invite WHERE user_info_id IN (SELECT ROWID FROM sys_user_info WHERE email = '${email}') ORDER BY createdtime DESC LIMIT 1`,
+      `SELECT si.* FROM sys_user_invite si
+       INNER JOIN ${env.TABLE_USER} su ON si.user_info_id = su.ROWID
+       INNER JOIN ${env.TABLE_USER_INFO} sui ON su.user_info_id = sui.ROWID
+       WHERE sui.email = '${email}'
+       ORDER BY si.CREATEDTIME DESC LIMIT 1`,
     );
     return rows && rows.length ? rows[0].sys_user_invite : null;
   },
 
   async resendInvite(dto, req) {
     const table = getTable(req, "sys_user_invite");
-    const token = crypto.randomBytes(20).toString("hex");
+    const token = crypto.randomBytes(32).toString("hex");
     const rows = await executeQuery(
       req,
-      `SELECT * FROM sys_user_invite WHERE user_info_id IN (SELECT ROWID FROM sys_user_info WHERE email = '${dto.email}') ORDER BY createdtime DESC LIMIT 1`,
+      `SELECT si.* FROM sys_user_invite si
+       INNER JOIN ${env.TABLE_USER} su ON si.user_info_id = su.ROWID
+       INNER JOIN ${env.TABLE_USER_INFO} sui ON su.user_info_id = sui.ROWID
+       WHERE sui.email = '${dto.email}'
+       ORDER BY si.CREATEDTIME DESC LIMIT 1`,
     );
     if (!rows || rows.length === 0) throw new Error("Invite not found");
     const row = rows[0].sys_user_invite;
@@ -109,6 +183,27 @@ module.exports = {
     return { id: row.ROWID, invite_token: token };
   },
 
+  /**
+   * Returns user_info by sys_user ROWID (used in createUserFromInvite).
+   */
+  async getUserInfoBySysUserId(sysUserId, req) {
+    // sys_user has user_info_id FK → sys_user_info
+    const userRows = await executeQuery(
+      req,
+      `SELECT * FROM ${env.TABLE_USER} WHERE ROWID = '${sysUserId}'`,
+    );
+    if (!userRows || userRows.length === 0) return null;
+    const sysUser = userRows[0][env.TABLE_USER];
+
+    const infoRows = await executeQuery(
+      req,
+      `SELECT * FROM ${env.TABLE_USER_INFO} WHERE ROWID = '${sysUser.user_info_id}'`,
+    );
+    if (!infoRows || infoRows.length === 0) return null;
+    return infoRows[0][env.TABLE_USER_INFO];
+  },
+
+  // Keep old helper for backward compat
   async getUserInfoById(userInfoId, req) {
     const sql = `SELECT * FROM ${env.TABLE_USER_INFO} WHERE ROWID = '${userInfoId}'`;
     const res = await executeQuery(req, sql);
