@@ -7,7 +7,21 @@ module.exports = {
     
     const catalystUser = await catalystApp.userManagement().getCurrentUser();
     
-    const catalystUserId = catalystUser.user_id || catalystUser.id || catalystUser.zuid || catalystUser.USER_ID;
+    if (!catalystUser) {
+      throw new Error("No user is currently logged in.");
+    }
+    
+    const catalystUserId = 
+      catalystUser.user_details?.user_id || 
+      catalystUser.user_details?.zuid || 
+      catalystUser.user_id || 
+      catalystUser.id || 
+      catalystUser.zuid || 
+      catalystUser.USER_ID || 
+      catalystUser.user?.id || 
+      catalystUser.user?.user_id || 
+      null;
+
     let sysUserId = null;
     let sysUserInfoId = null;
     let roles = [];
