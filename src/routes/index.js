@@ -26,6 +26,11 @@ const evidenceMatchRoute    = require("../modules/business/evidence-match/eviden
 
 const networkAnalysisRoute = require("../modules/network-analysis/route");
 
+// Redirect after password set
+router.get("/app", (req, res) => {
+  res.redirect("https://crime-lens.onslate.in/__catalyst/auth/login");
+});
+
 router.use("/configurations", configurationRoute);
 router.use("/permissions", permissionRoute);
 router.use("/roles", roleRoute);
