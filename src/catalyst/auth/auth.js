@@ -7,19 +7,19 @@ module.exports = {
   async createUser(req, email, password, displayName) {
     const catalystApp = catalyst.initialize(req);
     const userManagement = catalystApp.userManagement();
-    // const signupConfig = {
-    //   // platform_type is required by the SDK — use 'embedded' to enable embedded widget flows
-    //   platform_type: "web",
-    //   // // optional redirect_url: frontend callback after embedded auth completes
-    //   // ...(env.FRONTEND_REDIRECT_URL
-    //   //   ? { redirect_url: env.FRONTEND_REDIRECT_URL }
-    //   //   : {}),
-    // };
-
     const signupConfig = {
-      platform_type: "embedded",
-      redirect_url: process.env.FRONTEND_REDIRECT_URL,
+      // platform_type is required by the SDK — use 'embedded' to enable embedded widget flows
+      platform_type: "web",
+      // // optional redirect_url: frontend callback after embedded auth completes
+      // ...(env.FRONTEND_REDIRECT_URL
+      //   ? { redirect_url: env.FRONTEND_REDIRECT_URL }
+      //   : {}),
     };
+
+    // const signupConfig = {
+    //   platform_type: "embedded",
+    //   redirect_url: process.env.FRONTEND_REDIRECT_URL,
+    // };
 
     // helpful debug: log signupConfig without sensitive data
     // eslint-disable-next-line no-console
