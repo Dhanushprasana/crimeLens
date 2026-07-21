@@ -157,7 +157,14 @@
  *
  * /users/invites/invite/onboard:
  *   post:
- *     summary: Onboard a user from an accepted invite (creates Catalyst auth user)
+ *     summary: Onboard a user from an accepted invite (registers in Catalyst Auth)
+ *     description: |
+ *       Registers the user in Catalyst's authentication system using the email stored in sys_user_info.
+ *
+ *       **Important:** Catalyst does not accept a password via the API.
+ *       After this call, Catalyst sends an **activation email** to the user with a secure link
+ *       where they set their own password. The user must click that link to activate their account.
+ *       Inform the user to check their inbox (including spam) after onboarding.
  *     tags: [User Invites]
  *     requestBody:
  *       required: true
@@ -167,18 +174,13 @@
  *             type: object
  *             required:
  *               - sysUserId
- *               - password
  *             properties:
  *               sysUserId:
  *                 type: string
  *                 description: ROWID of the sys_user record (returned in the invite response as sys_user_id)
- *               password:
- *                 type: string
- *                 format: password
- *                 description: Password for the new Catalyst account
  *     responses:
  *       201:
- *         description: Catalyst user created and catalyst_user_id updated on sys_user
+ *         description: Catalyst account created — activation email sent to the user
  *
  * /users/invites/reinvite:
  *   post:

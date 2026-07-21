@@ -83,28 +83,34 @@ module.exports = {
   async createUserFromInvite(dto, req) {
     logger.info("createUserFromInvite");
     // sysUserId = ROWID of sys_user (created during invite)
-    if (!dto || !dto.sysUserId || !dto.password)
-      throw new Error("sysUserId and password required");
+    if (!dto || !dto.sysUserId)
+      throw new Error("sysUserId is required");
 
     // Look up user_info via sys_user join
     const userInfo = await repository.getUserInfoBySysUserId(dto.sysUserId, req);
     if (!userInfo) throw new Error("User not found");
 
-    // Create user in Catalyst Auth
+    // Register user in Catalyst Auth.
+    // NOTE: Catalyst's registerUser() does NOT accept a password — it sends its own
+    // "Set up your account" activation email where the user sets their password securely.
+    // Any password passed here is silently ignored by Catalyst.
+    // The frontend should inform the user to check their email to complete account setup.
     const catalystUser = await catalystAuth.createUser(
       req,
       userInfo.email,
-      dto.password,
+      null, // password intentionally omitted — Catalyst manages this
       `${userInfo.user_first_name || ""} ${userInfo.user_last_name || ""}`.trim() ||
       null,
     );
 
-    // Resolve the Catalyst user identifier
+    // Resolve the Catalyst user identifier from the response
     const catalystUserId =
-      catalystUser &&
-        (catalystUser.id || catalystUser.user_id || catalystUser.ROWID)
-        ? catalystUser.id || catalystUser.user_id || catalystUser.ROWID
-        : catalystUser;
+      catalystUser?.user_details?.user_id ||
+      catalystUser?.user_details?.userid ||
+      catalystUser?.id ||
+      catalystUser?.user_id ||
+      catalystUser?.ROWID ||
+      null;
 
     // Update catalyst_user_id on the existing sys_user row
     const saved = await repository.linkCatalystUser(
@@ -112,7 +118,12 @@ module.exports = {
       catalystUserId,
       req,
     );
-    return saved;
+
+    return {
+      ...saved,
+      message:
+        "Account registration initiated. The user will receive an activation email from Catalyst to set their password.",
+    };
   },
 
   async resendInvite(dto, req) {
