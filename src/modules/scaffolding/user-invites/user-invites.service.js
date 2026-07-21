@@ -9,8 +9,27 @@ module.exports = {
   async inviteUser(dto, req) {
     logger.info("inviteUser called");
     if (!dto || !dto.email) throw new Error("email required");
-    // create invite record and send email via catalyst mail
-    const invite = await repository.createInvite(dto, req);
+
+    // 1. look up existing sys_user_info by email, or create one
+    let userInfo = await repository.getUserInfoByEmail(dto.email, req);
+    if (!userInfo) {
+      userInfo = await repository.createUserInfo(dto, req);
+    }
+
+    // 2. sys_user_invite.user_info_id actually references sys_user.ROWID
+    //    (not sys_user_info.ROWID, despite the column name) — resolve/create
+    //    the sys_user row linked to this user_info
+    let user = await repository.getUserByUserInfoId(userInfo.ROWID, req);
+    if (!user) {
+      user = await repository.createUserRecord(userInfo.ROWID, req);
+    }
+
+    // 3. create invite record, tied to the resolved sys_user ROWID
+    const invite = await repository.createInvite(
+      { ...dto, user_info_id: user.ROWID },
+      req,
+    );
+
     // send mail using catalyst adapter
     const BASE_URL = process.env.CALLBACK_URL || "http://localhost:3000";
     const link = `${BASE_URL}/user/invite?token=${invite.invite_token}`;
@@ -55,7 +74,6 @@ module.exports = {
       `${userInfo.user_first_name || ""} ${userInfo.user_last_name || ""}`.trim() ||
         null,
     );
-    // persist mapping
     // persist mapping (store catalyst user identifier)
     const catalystUserId =
       catalystUser &&
