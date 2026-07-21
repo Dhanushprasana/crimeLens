@@ -210,4 +210,37 @@ module.exports = {
     if (!res || res.length === 0) return null;
     return res[0][env.TABLE_USER_INFO];
   },
+
+  async getUserInfoByEmail(email, req) {
+    const sql = `SELECT * FROM sys_user_info WHERE email = '${email}'`;
+    const res = await executeQuery(req, sql);
+    return res && res.length ? res[0].sys_user_info : null;
+  },
+
+  async createUserInfo(dto, req) {
+    const table = getTable(req, "sys_user_info");
+    const fallbackFirstName = dto.email ? dto.email.split("@")[0] : "User";
+    const saved = await table.insertRow({
+      email: dto.email,
+      user_first_name: dto.first_name || fallbackFirstName,
+      user_last_name: dto.last_name || null,
+      phone: dto.phone || null,
+    });
+    return { ROWID: saved.ROWID, email: dto.email };
+  },
+
+  async getUserByUserInfoId(userInfoId, req) {
+    const sql = `SELECT * FROM sys_user WHERE user_info_id = '${userInfoId}'`;
+    const res = await executeQuery(req, sql);
+    return res && res.length ? res[0].sys_user : null;
+  },
+
+  async createUserRecord(userInfoId, req) {
+    const table = getTable(req, env.TABLE_USER);
+    const saved = await table.insertRow({
+      user_info_id: userInfoId,
+      is_archived: false,
+    });
+    return { ROWID: saved.ROWID };
+  },
 };
