@@ -1,7 +1,7 @@
 "use strict";
 
 const constants = require("./forecast.constants");
-const prediction = require("./forecast.prediction");
+
 const logger = require("../../config/logger");
 
 const generator = require("./forecast.generate");

@@ -56,6 +56,7 @@ const options = {
     "./src/modules/storage/swagger/*.js",
     "./src/modules/network-analysis/swagger/*.js",
     "./src/modules/business/**/*.swagger.js",
+    "./src/modules/auth/swagger/*.js",
   ],
 };
 

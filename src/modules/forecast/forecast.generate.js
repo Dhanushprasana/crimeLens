@@ -3,7 +3,6 @@
 const fs = require("fs");
 const path = require("path");
 const constants = require("./forecast.constants");
-const prediction = require("./forecast.prediction");
 const logger = require("../../config/logger");
 const combinations = require("./forecast-combinations.json");
 
@@ -89,19 +88,9 @@ async function generateForecast(
       },
     );
 
-    let predictions;
     try {
-      logger.info("About to call prediction.predict", {
-        batchSize: batch.length,
-        catalyst: !!req.catalyst,
-      });
-      predictions = await prediction.predict(req, {
-        predictionRows: batch,
-        batchSize: BATCH_SIZE,
-      });
-      logger.info("Prediction completed", {
-        resultLength: predictions ? predictions.length : 0,
-      });
+      // QuickML has been removed, generate mock predictions for testing
+      predictions = batch.map(() => ({ predicted_count: Math.floor(Math.random() * 10) }));
     } catch (err) {
       logger.error("Forecast prediction failed for batch", {
         error: err && err.message ? err.message : err,
@@ -113,15 +102,9 @@ async function generateForecast(
 
     const resultRows = [];
     for (let j = 0; j < batch.length; j++) {
-      // Handle the output structure based on QuickML format
       let p = null;
       if (predictions && predictions[j]) {
-        p =
-          predictions[j].predicted_count ??
-          predictions[j].prediction ??
-          predictions[j].score ??
-          predictions[j].value ??
-          null;
+        p = predictions[j].predicted_count ?? null;
       }
 
       resultRows.push({
