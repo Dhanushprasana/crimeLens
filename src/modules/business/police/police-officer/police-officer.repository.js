@@ -39,7 +39,13 @@ module.exports = {
         user_first_name: first,
         user_last_name: last,
         email: email,
-        phone: dto.contact_number || null
+        phone: dto.contact_number || null,
+        isOfficer: true,
+        badge_number: badge,
+        rank_id: dto.rank_id || null,
+        station_id: dto.station_id || null,
+        date_of_joining: dto.date_of_joining || null,
+        operational_status: dto.operational_status || 'ACTIVE'
       });
       userInfoId = savedInfo.ROWID;
     }
