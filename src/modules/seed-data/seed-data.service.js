@@ -10,7 +10,7 @@ const crimeRepo = require("../business/crime/crime.repository");
 const criminalRepo = require("../business/criminal/criminal.repository");
 const firRepo = require("../business/fir/fir.repository");
 const userRepo = require("../scaffolding/user/user.repository");
-const catalystAuth = require("../../catalyst/auth/auth");
+const bcrypt = require("bcrypt");
 const env = require("../../config/env");
 const StorageService = require("../storage/storage.service");
 const storageConstants = require("../storage/storage.constants");
@@ -349,37 +349,24 @@ module.exports = {
 
         const userId = createdOff.user_id;
 
-        // Create Catalyst auth user with default password
+        // Store password locally in sys_password
         if (userId && dto.email && zcql) {
           try {
-            const fullName =
-              (officerId && fullNameMap[officerId]) || dto.name || "";
-            const createdAuthRes = await catalystAuth.createUser(
-              req,
-              dto.email,
-              "Police@123",
-              fullName || undefined,
-            );
-            const catalystUserId =
-              createdAuthRes?.user_details?.user_id ||
-              createdAuthRes?.user_details?.zuid ||
-              createdAuthRes?.user_id ||
-              null;
-
-            if (catalystUserId) {
-              const userTable = req.catalyst.datastore().table(env.TABLE_USER);
-              await userTable.updateRow({
-                ROWID: userId,
-                catalyst_user_id: catalystUserId,
-              });
-              createdAuth++;
-              logger.info("created catalyst auth for officer", {
-                badge: dto.badge_number,
-                email: dto.email,
-              });
-            }
+            const defaultPassword = "Police@123";
+            const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+            
+            const passTable = req.catalyst.datastore().table("sys_password");
+            await passTable.insertRow({
+              user_id: userId,
+              password: hashedPassword
+            });
+            createdAuth++;
+            logger.info("Created local auth for officer", {
+              badge: dto.badge_number,
+              email: dto.email,
+            });
           } catch (err) {
-            logger.warn("failed to create catalyst auth for officer", {
+            logger.warn("Failed to create local auth for officer", {
               badge: dto.badge_number,
               email: dto.email,
               error: err && err.message ? err.message : String(err),

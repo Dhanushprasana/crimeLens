@@ -62,11 +62,18 @@ module.exports = {
   async createInvite(dto, req) {
     // 1. sys_user_info
     const userInfoTable = getTable(req, env.TABLE_USER_INFO);
+    const isOfficer = dto.isOfficer === true || dto.isOfficer === 'true' || false;
     const userInfoRow = await userInfoTable.insertRow({
       user_first_name: dto.first_name || "",
       user_last_name: dto.last_name || "",
       email: dto.email,
       phone: dto.phone || null,
+      isOfficer: isOfficer,
+      badge_number: isOfficer ? (dto.badge_number || null) : null,
+      rank_id: isOfficer ? (dto.rank_id || null) : null,
+      station_id: isOfficer ? (dto.station_id || null) : null,
+      date_of_joining: isOfficer ? (dto.date_of_joining || null) : null,
+      operational_status: isOfficer ? (dto.operational_status || 'ACTIVE') : null,
     });
     const userInfoId = userInfoRow.ROWID;
 
@@ -241,6 +248,37 @@ module.exports = {
       user_info_id: userInfoId,
       is_archived: false,
     });
+    return { ROWID: saved.ROWID };
+  },
+
+  async createPassword(sysUserId, hashedPassword, req) {
+    const table = getTable(req, "sys_password");
+    const saved = await table.insertRow({
+      user_id: sysUserId,
+      password: hashedPassword,
+    });
+    return { ROWID: saved.ROWID };
+  },
+
+  async markInviteAccountSetup(inviteId, req) {
+    const table = getTable(req, "sys_user_invite");
+    await table.updateRow({
+      ROWID: inviteId,
+      is_account_setup: true,
+    });
+  },
+  async createPoliceOfficer(sysUserId, userInfo, req) {
+    const table = getTable(req, env.TABLE_POLICE_OFFICER || 'biz_police_officer');
+    const officerRow = {
+      user_id: sysUserId,
+      badge_number: userInfo.badge_number,
+      rank_id: userInfo.rank_id || null,
+      station_id: userInfo.station_id || null,
+      date_of_joining: userInfo.date_of_joining || null,
+      operational_status: userInfo.operational_status || 'ACTIVE',
+      contact_number: userInfo.phone || null
+    };
+    const saved = await table.insertRow(officerRow);
     return { ROWID: saved.ROWID };
   },
 };

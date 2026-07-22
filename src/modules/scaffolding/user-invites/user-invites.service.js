@@ -1,7 +1,6 @@
 "use strict";
 
 const repository = require("./user-invites.repository");
-const catalystAuth = require("../../../catalyst/auth/auth");
 const catalystMail = require("../../../catalyst/mail/mail");
 const logger = require("../../../config/logger");
 
@@ -82,47 +81,39 @@ module.exports = {
 
   async createUserFromInvite(dto, req) {
     logger.info("createUserFromInvite");
+    const bcrypt = require("bcrypt");
+    
     // sysUserId = ROWID of sys_user (created during invite)
     if (!dto || !dto.sysUserId)
       throw new Error("sysUserId is required");
+    if (!dto.password)
+      throw new Error("password is required");
 
     // Look up user_info via sys_user join
     const userInfo = await repository.getUserInfoBySysUserId(dto.sysUserId, req);
     if (!userInfo) throw new Error("User not found");
 
-    // Register user in Catalyst Auth.
-    // NOTE: Catalyst's registerUser() does NOT accept a password — it sends its own
-    // "Set up your account" activation email where the user sets their password securely.
-    // Any password passed here is silently ignored by Catalyst.
-    // The frontend should inform the user to check their email to complete account setup.
-    const catalystUser = await catalystAuth.createUser(
-      req,
-      userInfo.email,
-      null, // password intentionally omitted — Catalyst manages this
-      `${userInfo.user_first_name || ""} ${userInfo.user_last_name || ""}`.trim() ||
-      null,
-    );
+    // Verify invite exists and hasn't been used
+    const invite = await repository.getLatestInviteByEmail(userInfo.email, req);
+    if (!invite) throw new Error("Invite not found");
+    if (invite.is_account_setup) throw new Error("Account already setup");
 
-    // Resolve the Catalyst user identifier from the response
-    const catalystUserId =
-      catalystUser?.user_details?.user_id ||
-      catalystUser?.user_details?.userid ||
-      catalystUser?.id ||
-      catalystUser?.user_id ||
-      catalystUser?.ROWID ||
-      null;
+    // Hash password
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+    // Save password
+    await repository.createPassword(dto.sysUserId, hashedPassword, req);
 
-    // Update catalyst_user_id on the existing sys_user row
-    const saved = await repository.linkCatalystUser(
-      dto.sysUserId,
-      catalystUserId,
-      req,
-    );
+    // If invited as an officer, create the police officer record
+    if (userInfo.isOfficer === true || userInfo.isOfficer === 'true') {
+      await repository.createPoliceOfficer(dto.sysUserId, userInfo, req);
+    }
+
+    // Update invite status
+    await repository.markInviteAccountSetup(invite.ROWID, req);
 
     return {
-      ...saved,
-      message:
-        "Account registration initiated. The user will receive an activation email from Catalyst to set their password.",
+      message: "Account registration completed. The user can now log in.",
     };
   },
 

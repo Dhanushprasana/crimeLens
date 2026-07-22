@@ -3,7 +3,6 @@
 const env = require("../../../config/env");
 const logger = require("../../../config/logger");
 const bcrypt = require("bcrypt");
-const catalystAuth = require("../../../catalyst/auth/auth");
 
 const SUPER_ADMIN_ROLE = "SUPER_ADMIN";
 
@@ -68,35 +67,7 @@ module.exports = {
       roleDetails.push({ id: role.ROWID, name: role.role_name });
     }
 
-    // 3. Ensure user exists in Catalyst Auth — create if catalystUserId not provided
-    let catalystUserId = dto.catalystUserId || null;
-    if (!catalystUserId) {
-      try {
-        const created = await catalystAuth.createUser(
-          req,
-          email,
-          dto.password,
-          userFirstName,
-        );
-
-        // Try common response shapes to extract an id. SDK returns { user_details: ICatalystUser }
-        catalystUserId =
-          created?.user_details?.user_id ||
-          created?.user_details?.zuid ||
-          created?.user_id ||
-          created?.id ||
-          created?.USER_ID ||
-          created?.user?.id ||
-          created?.user?.user_id ||
-          null;
-        logger.info(`Catalyst user created or returned id: ${catalystUserId}`);
-      } catch (err) {
-        logger.error("Failed to create or fetch Catalyst auth user", err);
-        throw err;
-      }
-    }
-
-    // 4. Save profile metadata first in sys_user_info table (to retrieve its ROWID for foreign key user_info_id)
+    // Save profile metadata first in sys_user_info table (to retrieve its ROWID for foreign key user_info_id)
     const userInfoTable = getTable(req, env.TABLE_USER_INFO);
     const savedInfo = await userInfoTable.insertRow({
       user_first_name: userFirstName,
@@ -105,13 +76,23 @@ module.exports = {
       phone: dto.phone || null,
     });
 
-    // 5. Save account credential configurations in sys_user table (associated to user_info_id)
+    // Save account credential configurations in sys_user table (associated to user_info_id)
     const userTable = getTable(req, env.TABLE_USER);
     const savedUser = await userTable.insertRow({
       user_info_id: savedInfo.ROWID,
       is_archived: false,
-      catalyst_user_id: catalystUserId || null,
+      catalyst_user_id: null,
     });
+
+    // Hash password and store locally if provided
+    if (dto.password) {
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const passTable = getTable(req, "sys_password");
+      await passTable.insertRow({
+        user_id: savedUser.ROWID,
+        password: hashedPassword,
+      });
+    }
 
     // 6. Map Roles in sys_user_role table
     const userRoleTable = getTable(req, env.TABLE_USER_ROLE);
