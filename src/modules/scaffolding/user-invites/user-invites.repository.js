@@ -92,6 +92,8 @@ module.exports = {
       user_info_id: sysUserId,          // FK → sys_user.ROWID  ✔
       invite_token_hash: tokenHash,
       invited_by: dto.invited_by || null,
+      invited_at: catalystDateTime(),
+      invite_expiry: catalystDateTime(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), // 7 days from now
       accepted_at: catalystDateTime(), // mandatory field; overwritten on actual acceptance
       is_account_setup: false,
       is_accepted: false,
@@ -159,30 +161,37 @@ module.exports = {
    * Fetch invite by email — joins through sys_user → sys_user_info.
    */
   async getLatestInviteByEmail(email, req) {
-    const rows = await executeQuery(
-      req,
-      `SELECT si.* FROM sys_user_invite si
-       INNER JOIN ${env.TABLE_USER} su ON si.user_info_id = su.ROWID
-       INNER JOIN ${env.TABLE_USER_INFO} sui ON su.user_info_id = sui.ROWID
-       WHERE sui.email = '${email}'
-       ORDER BY si.CREATEDTIME DESC LIMIT 1`,
-    );
-    return rows && rows.length ? rows[0].sys_user_invite : null;
+    try {
+      // 1. Get user_info
+      const infoRows = await executeQuery(req, `SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${email}'`);
+      if (!infoRows || infoRows.length === 0) return null;
+      const userInfoId = infoRows[0][env.TABLE_USER_INFO].ROWID;
+
+      // 2. Get sys_user
+      const userRows = await executeQuery(req, `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = '${userInfoId}'`);
+      if (!userRows || userRows.length === 0) return null;
+      const sysUserId = userRows[0][env.TABLE_USER].ROWID;
+
+      // 3. Get invite
+      const inviteRows = await executeQuery(req, `SELECT * FROM sys_user_invite WHERE user_info_id = '${sysUserId}'`);
+      if (!inviteRows || inviteRows.length === 0) return null;
+      
+      const sorted = inviteRows.map(r => r.sys_user_invite).sort((a, b) => {
+        return new Date(b.CREATEDTIME).getTime() - new Date(a.CREATEDTIME).getTime();
+      });
+      return sorted[0];
+    } catch (err) {
+      console.log("getLatestInviteByEmail error:", err);
+      return null;
+    }
   },
 
   async resendInvite(dto, req) {
     const table = getTable(req, "sys_user_invite");
     const token = crypto.randomBytes(32).toString("hex");
-    const rows = await executeQuery(
-      req,
-      `SELECT si.* FROM sys_user_invite si
-       INNER JOIN ${env.TABLE_USER} su ON si.user_info_id = su.ROWID
-       INNER JOIN ${env.TABLE_USER_INFO} sui ON su.user_info_id = sui.ROWID
-       WHERE sui.email = '${dto.email}'
-       ORDER BY si.CREATEDTIME DESC LIMIT 1`,
-    );
-    if (!rows || rows.length === 0) throw new Error("Invite not found");
-    const row = rows[0].sys_user_invite;
+    const row = await this.getLatestInviteByEmail(dto.email, req);
+    if (!row) throw new Error("Invite not found");
+    
     await table.updateRow({
       ROWID: row.ROWID,
       invite_token_hash: token,
