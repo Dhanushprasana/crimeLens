@@ -39,7 +39,13 @@ module.exports = {
         user_first_name: first,
         user_last_name: last,
         email: email,
-        phone: dto.contact_number || null
+        phone: dto.contact_number || null,
+        isOfficer: true,
+        badge_number: badge,
+        rank_id: dto.rank_id || null,
+        station_id: dto.station_id || null,
+        date_of_joining: dto.date_of_joining || null,
+        operational_status: dto.operational_status || 'ACTIVE'
       });
       userInfoId = savedInfo.ROWID;
     }
@@ -58,14 +64,22 @@ module.exports = {
       });
       userId = savedUser.ROWID;
 
-      // Assign default role
-      const roleName = env.DEFAULT_OFFICER_ROLE;
-      const roleQuery = `SELECT * FROM ${env.TABLE_ROLE} WHERE role_name = '${roleName}'`;
-      const roleRes = await executeQuery(req, roleQuery);
-      if (roleRes && roleRes.length > 0) {
-        const roleId = roleRes[0][env.TABLE_ROLE].ROWID;
+      // Assign OFFICER role — use pre-resolved ID if passed (bootstrap), else look up from DB
+      let roleId = dto.resolvedRoleId || null;
+      if (!roleId) {
+        const roleName = env.DEFAULT_OFFICER_ROLE;
+        const roleQuery = `SELECT * FROM ${env.TABLE_ROLE} WHERE role_name = '${roleName}'`;
+        const roleRes = await executeQuery(req, roleQuery);
+        if (roleRes && roleRes.length > 0) {
+          roleId = roleRes[0][env.TABLE_ROLE].ROWID;
+        }
+      }
+      if (roleId) {
         const urTable = getTable(req, env.TABLE_USER_ROLE);
         await urTable.insertRow({ user_id: userId, role_id: roleId });
+        logger.info('Assigned OFFICER role to user', { userId, roleId });
+      } else {
+        logger.warn('OFFICER role not found — sys_user_role record skipped', { userId });
       }
     }
 

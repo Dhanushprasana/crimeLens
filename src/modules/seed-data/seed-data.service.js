@@ -10,7 +10,7 @@ const crimeRepo = require("../business/crime/crime.repository");
 const criminalRepo = require("../business/criminal/criminal.repository");
 const firRepo = require("../business/fir/fir.repository");
 const userRepo = require("../scaffolding/user/user.repository");
-const catalystAuth = require("../../catalyst/auth/auth");
+const bcrypt = require("bcrypt");
 const env = require("../../config/env");
 const StorageService = require("../storage/storage.service");
 const storageConstants = require("../storage/storage.constants");
@@ -275,13 +275,14 @@ module.exports = {
     // Pre-fetch maps to avoid multiple db calls
     const rankMap = new Map();
     const stationMap = new Map();
+    let officerRoleId = null;
     if (zcql) {
       try {
         const rankRows = await zcql.executeZCQLQuery(
           `SELECT ROWID, rank_name FROM ${env.TABLE_POLICE_RANK}`,
         );
         for (const row of rankRows) {
-          const r = row[env.TABLE_POLICE_RANK];
+          const r = row[env.TABLE_POLICE_RANK] || row;
           if (r && r.rank_name && r.ROWID)
             rankMap.set(r.rank_name.toLowerCase(), r.ROWID);
         }
@@ -289,13 +290,71 @@ module.exports = {
           `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION}`,
         );
         for (const row of stationRows) {
-          const s = row[env.TABLE_POLICE_STATION];
+          const s = row[env.TABLE_POLICE_STATION] || row;
           if (s && s.station_name && s.ROWID)
             stationMap.set(s.station_name.toLowerCase(), s.ROWID);
         }
+        // Pre-fetch OFFICER role ID
+        const officerRoleName = (env.DEFAULT_OFFICER_ROLE || "OFFICER").toLowerCase();
+        const roleRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, role_name FROM ${env.TABLE_ROLE}`,
+        );
+        for (const row of roleRows) {
+          const role = row[env.TABLE_ROLE] || row;
+          if (role && role.role_name && role.role_name.toLowerCase() === officerRoleName) {
+            officerRoleId = role.ROWID;
+          }
+        }
+        logger.info("Officer bootstrap maps loaded", {
+          ranks: rankMap.size,
+          stations: stationMap.size,
+          officerRoleId,
+        });
       } catch (err) {
         logger.warn(
           "failed to bulk load maps for officer bootstrap",
+          err && err.message ? err.message : String(err),
+        );
+      }
+    }
+
+    // Pre-fetch existing badges (dedup) and existing user emails (userInfo lookup)
+    const existingBadges = new Set();
+    const existingEmailToUserInfoId = new Map(); // email → sys_user_info ROWID
+    const existingUserInfoToSysUserId = new Map(); // user_info_id → sys_user ROWID
+    if (zcql) {
+      try {
+        const badgeRows = await zcql.executeZCQLQuery(
+          `SELECT badge_number FROM ${env.TABLE_POLICE_OFFICER}`,
+        );
+        for (const row of badgeRows) {
+          const b = row[env.TABLE_POLICE_OFFICER] || row;
+          if (b && b.badge_number) existingBadges.add(b.badge_number);
+        }
+        const infoRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, email FROM ${env.TABLE_USER_INFO}`,
+        );
+        for (const row of infoRows) {
+          const info = row[env.TABLE_USER_INFO] || row;
+          if (info && info.email && info.ROWID)
+            existingEmailToUserInfoId.set(info.email.toLowerCase(), info.ROWID);
+        }
+        const sysUserRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, user_info_id FROM ${env.TABLE_USER}`,
+        );
+        for (const row of sysUserRows) {
+          const u = row[env.TABLE_USER] || row;
+          if (u && u.user_info_id && u.ROWID)
+            existingUserInfoToSysUserId.set(String(u.user_info_id), u.ROWID);
+        }
+        logger.info("Officer bootstrap dedup maps loaded", {
+          existingBadges: existingBadges.size,
+          existingEmails: existingEmailToUserInfoId.size,
+          existingSysUsers: existingUserInfoToSysUserId.size,
+        });
+      } catch (err) {
+        logger.warn(
+          "failed to load dedup maps for officer bootstrap",
           err && err.message ? err.message : String(err),
         );
       }
@@ -317,80 +376,132 @@ module.exports = {
           station_id = stationMap.get(stationName);
         }
 
-        const dto = {
-          email: (e.email || "").trim(),
-          badge_number: e.badge_number || e.badge || e.badgeNo || null,
-          name:
-            e.name ||
-            e.full_name ||
-            `${e.first_name || ""} ${e.last_name || ""}`.trim(),
-          rank_id,
-          station_id,
-          date_of_joining: e.date_of_joining || null,
-          operational_status: e.operational_status || "ACTIVE",
-          contact_number: e.contact_number || e.phone || null,
-        };
+        // Skip if station is mandatory but could not be resolved
+        if (!station_id && stationName) {
+          skipped++;
+          logger.warn("skipping officer: station not found in DB", {
+            badge: e.badge_number,
+            station_name: e.station_name,
+          });
+          continue;
+        }
+
+        const badge = e.badge_number || e.badge || e.badgeNo || null;
+
+        // Skip duplicate badges using pre-fetched set
+        if (badge && existingBadges.has(badge)) {
+          skipped++;
+          logger.warn("skipping officer: badge already exists", { badge });
+          continue;
+        }
 
         const officerId =
           e.user_id && e.user_id.match(/\d+/)
             ? parseInt(e.user_id.match(/\d+/)[0], 10)
             : null;
 
-        const officerEmail =
+        const officerEmail = (
           (officerId && emailMap[officerId]) ||
-          dto.email ||
-          `${dto.badge_number}@police.local`.toLowerCase();
+          e.email ||
+          `${badge}@police.local`
+        ).trim().toLowerCase();
 
-        dto.email = officerEmail;
+        const officerName =
+          (officerId && fullNameMap[officerId]) ||
+          e.name ||
+          e.full_name ||
+          `${e.first_name || ""} ${e.last_name || ""}`.trim();
 
-        // createOfficer handles sys_user, sys_user_info, and role assignment
-        const createdOff = await policeRepo.createOfficer(dto, req);
+        const nameParts = officerName.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        // Resolve or reuse sys_user_info (skip DB query using map)
+        let userInfoId = existingEmailToUserInfoId.get(officerEmail) || null;
+        if (!userInfoId) {
+          const infoTable = req.catalyst.datastore().table(env.TABLE_USER_INFO);
+          const savedInfo = await infoTable.insertRow({
+            user_first_name: firstName,
+            user_last_name: lastName,
+            email: officerEmail,
+            phone: e.contact_number || e.phone || null,
+            isOfficer: true,
+            badge_number: badge,
+            rank_id: rank_id || null,
+            station_id: station_id || null,
+            date_of_joining: e.date_of_joining || null,
+            operational_status: e.operational_status || "ACTIVE",
+          });
+          userInfoId = savedInfo.ROWID;
+          existingEmailToUserInfoId.set(officerEmail, userInfoId);
+        }
+
+        // Resolve or reuse sys_user (skip DB query using map)
+        let sysUserId = existingUserInfoToSysUserId.get(String(userInfoId)) || null;
+        if (!sysUserId) {
+          const userTable = req.catalyst.datastore().table(env.TABLE_USER);
+          const savedUser = await userTable.insertRow({
+            user_info_id: userInfoId,
+            is_archived: false,
+          });
+          sysUserId = savedUser.ROWID;
+          existingUserInfoToSysUserId.set(String(userInfoId), sysUserId);
+
+          // Assign OFFICER role
+          if (officerRoleId) {
+            const urTable = req.catalyst.datastore().table(env.TABLE_USER_ROLE);
+            await urTable.insertRow({ user_id: sysUserId, role_id: officerRoleId });
+          } else {
+            logger.warn("OFFICER role not found — sys_user_role skipped", { sysUserId });
+          }
+        }
+
+        // Insert biz_police_officer record
+        const officerTable = req.catalyst.datastore().table(env.TABLE_POLICE_OFFICER);
+        await officerTable.insertRow({
+          user_id: sysUserId,
+          badge_number: badge,
+          rank_id: rank_id || null,
+          station_id: station_id || null,
+          date_of_joining: e.date_of_joining || null,
+          operational_status: e.operational_status || "ACTIVE",
+          contact_number: e.contact_number || e.phone || null,
+        });
+        existingBadges.add(badge);
         created++;
 
-        const userId = createdOff.user_id;
-
-        // Create Catalyst auth user with default password
-        if (userId && dto.email && zcql) {
-          try {
-            const fullName =
-              (officerId && fullNameMap[officerId]) || dto.name || "";
-            const createdAuthRes = await catalystAuth.createUser(
-              req,
-              dto.email,
-              "Police@123",
-              fullName || undefined,
-            );
-            const catalystUserId =
-              createdAuthRes?.user_details?.user_id ||
-              createdAuthRes?.user_details?.zuid ||
-              createdAuthRes?.user_id ||
-              null;
-
-            if (catalystUserId) {
-              const userTable = req.catalyst.datastore().table(env.TABLE_USER);
-              await userTable.updateRow({
-                ROWID: userId,
-                catalyst_user_id: catalystUserId,
-              });
-              createdAuth++;
-              logger.info("created catalyst auth for officer", {
-                badge: dto.badge_number,
-                email: dto.email,
-              });
-            }
-          } catch (err) {
-            logger.warn("failed to create catalyst auth for officer", {
-              badge: dto.badge_number,
-              email: dto.email,
-              error: err && err.message ? err.message : String(err),
-            });
-          }
+        // Store password in sys_password
+        try {
+          const defaultPassword = "Police@123";
+          const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+          const passTable = req.catalyst.datastore().table("sys_password");
+          await passTable.insertRow({ user_id: sysUserId, password: hashedPassword });
+          createdAuth++;
+          logger.info("Created local auth for officer", {
+            badge,
+            email: officerEmail,
+          });
+        } catch (err) {
+          logger.warn("Failed to create local auth for officer", {
+            badge,
+            email: officerEmail,
+            error: err && err.message ? err.message : String(err),
+          });
         }
       } catch (err) {
         skipped++;
+        const _officerId =
+          e.user_id && e.user_id.match(/\d+/)
+            ? parseInt(e.user_id.match(/\d+/)[0], 10)
+            : null;
+        const _resolvedName =
+          (_officerId && fullNameMap[_officerId]) ||
+          e.name ||
+          e.full_name ||
+          "unknown";
         logger.warn("skipping officer insert", {
           badge: e.badge_number || e.user_id || "unknown",
-          name: e.name || e.full_name || "unknown",
+          name: _resolvedName,
           rank: e.rank_name || "unknown",
           station: e.station_name || "unknown",
           error: err && err.message ? err.message : String(err),

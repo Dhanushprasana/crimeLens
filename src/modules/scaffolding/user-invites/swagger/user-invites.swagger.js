@@ -46,6 +46,27 @@
  *                   The backend looks up the matching role by name.
  *                   If the role does not exist, a 400 error is returned with the list of available roles.
  *                 example: OFFICER
+ *               isOfficer:
+ *                 type: boolean
+ *                 description: Set to true if the invite is for a police officer
+ *                 example: true
+ *               badge_number:
+ *                 type: string
+ *                 description: Badge number of the officer (required if isOfficer is true)
+ *               rank_id:
+ *                 type: string
+ *                 description: ROWID of the police rank (required if isOfficer is true)
+ *               station_id:
+ *                 type: string
+ *                 description: ROWID of the police station (required if isOfficer is true)
+ *               date_of_joining:
+ *                 type: string
+ *                 format: date
+ *                 description: Officer's date of joining (optional)
+ *               operational_status:
+ *                 type: string
+ *                 description: Current operational status of the officer (defaults to ACTIVE)
+ *                 example: ACTIVE
  *               invited_by:
  *                 type: string
  *                 description: ROWID of the sys_user record of the person sending the invite
@@ -157,14 +178,10 @@
  *
  * /users/invites/invite/onboard:
  *   post:
- *     summary: Onboard a user from an accepted invite (registers in Catalyst Auth)
+ *     summary: Onboard a user from an accepted invite
  *     description: |
- *       Registers the user in Catalyst's authentication system using the email stored in sys_user_info.
- *
- *       **Important:** Catalyst does not accept a password via the API.
- *       After this call, Catalyst sends an **activation email** to the user with a secure link
- *       where they set their own password. The user must click that link to activate their account.
- *       Inform the user to check their inbox (including spam) after onboarding.
+ *       Sets up the user's password locally and marks their account as completely set up.
+ *       After this call, the user can log in using /auth/login.
  *     tags: [User Invites]
  *     requestBody:
  *       required: true
@@ -174,13 +191,17 @@
  *             type: object
  *             required:
  *               - sysUserId
+ *               - password
  *             properties:
  *               sysUserId:
  *                 type: string
  *                 description: ROWID of the sys_user record (returned in the invite response as sys_user_id)
+ *               password:
+ *                 type: string
+ *                 description: The new password to set for the user
  *     responses:
  *       201:
- *         description: Catalyst account created — activation email sent to the user
+ *         description: Local account registration completed
  *
  * /users/invites/reinvite:
  *   post:
