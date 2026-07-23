@@ -29,9 +29,51 @@ module.exports = {
   },
 
   async getAllCriminals(query, req) {
-    const sql = `SELECT * FROM ${env.TABLE_CRIMINAL}`;
+    const districtId = query?.districtId || query?.district_id || null;
+    const stationId = query?.stationId || query?.station_id || null;
+
+    const safeDistrictId = districtId
+      ? String(districtId).replace(/'/g, "''")
+      : null;
+    const safeStationId = stationId
+      ? String(stationId).replace(/'/g, "''")
+      : null;
+
+    const conditions = [];
+
+    if (safeDistrictId) {
+      conditions.push(
+        `${env.TABLE_CRIMINAL}.district_id_of_criminal = '${safeDistrictId}'`,
+      );
+    }
+
+    if (safeStationId) {
+      conditions.push(
+        `${env.TABLE_CRIME_INCIDENT}.police_station_id = '${safeStationId}'`,
+      );
+    }
+
+    const whereClause =
+      conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+    let sql;
+
+    if (safeStationId) {
+      sql = `
+        SELECT DISTINCT ${env.TABLE_CRIMINAL}.*
+        FROM ${env.TABLE_CRIMINAL}
+        INNER JOIN ${env.TABLE_INCIDENT_CRIMINAL}
+          ON ${env.TABLE_CRIMINAL}.ROWID = ${env.TABLE_INCIDENT_CRIMINAL}.criminal_id
+        INNER JOIN ${env.TABLE_CRIME_INCIDENT}
+          ON ${env.TABLE_INCIDENT_CRIMINAL}.incident_id = ${env.TABLE_CRIME_INCIDENT}.ROWID
+        ${whereClause}
+      `;
+    } else {
+      sql = `SELECT * FROM ${env.TABLE_CRIMINAL}${whereClause}`;
+    }
+
     const res = await executeQuery(req, sql);
-    return res.map(r => r[env.TABLE_CRIMINAL]);
+    return res.map((r) => r[env.TABLE_CRIMINAL]);
   },
 
   async getOneCriminal(id, req) {
