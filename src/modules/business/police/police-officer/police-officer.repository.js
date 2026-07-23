@@ -64,22 +64,25 @@ module.exports = {
       });
       userId = savedUser.ROWID;
 
-      // Assign OFFICER role — use pre-resolved ID if passed (bootstrap), else look up from DB
+      // Assign CASE_OFFICER role — use pre-resolved ID if passed (bootstrap), else look up from DB
+      let officerRoleId = null;
       let roleId = dto.resolvedRoleId || null;
-      if (!roleId) {
+      if (roleId) {
+        officerRoleId = roleId;
+      } else {
         const roleName = env.DEFAULT_OFFICER_ROLE;
-        const roleQuery = `SELECT * FROM ${env.TABLE_ROLE} WHERE role_name = '${roleName}'`;
-        const roleRes = await executeQuery(req, roleQuery);
+        const roleRes = await executeQuery(req, `SELECT ROWID FROM ${env.TABLE_ROLE} WHERE role_name = '${roleName}'`);
         if (roleRes && roleRes.length > 0) {
-          roleId = roleRes[0][env.TABLE_ROLE].ROWID;
+          officerRoleId = roleRes[0][env.TABLE_ROLE].ROWID;
         }
       }
-      if (roleId) {
+
+      if (officerRoleId) {
         const urTable = getTable(req, env.TABLE_USER_ROLE);
-        await urTable.insertRow({ user_id: userId, role_id: roleId });
-        logger.info('Assigned OFFICER role to user', { userId, roleId });
+        await urTable.insertRow({ user_id: userId, role_id: officerRoleId });
+        logger.info('Assigned CASE_OFFICER role to user', { userId, roleId });
       } else {
-        logger.warn('OFFICER role not found — sys_user_role record skipped', { userId });
+        logger.warn('CASE_OFFICER role not found — sys_user_role record skipped', { userId });
       }
     }
 

@@ -294,8 +294,8 @@ module.exports = {
           if (s && s.station_name && s.ROWID)
             stationMap.set(s.station_name.toLowerCase(), s.ROWID);
         }
-        // Pre-fetch OFFICER role ID
-        const officerRoleName = (env.DEFAULT_OFFICER_ROLE || "OFFICER").toLowerCase();
+        // Pre-fetch CASE_OFFICER role ID
+        const officerRoleName = (env.DEFAULT_OFFICER_ROLE || "CASE_OFFICER").toLowerCase();
         const roleRows = await zcql.executeZCQLQuery(
           `SELECT ROWID, role_name FROM ${env.TABLE_ROLE}`,
         );
@@ -447,12 +447,12 @@ module.exports = {
           sysUserId = savedUser.ROWID;
           existingUserInfoToSysUserId.set(String(userInfoId), sysUserId);
 
-          // Assign OFFICER role
+          // Assign CASE_OFFICER role
           if (officerRoleId) {
             const urTable = req.catalyst.datastore().table(env.TABLE_USER_ROLE);
             await urTable.insertRow({ user_id: sysUserId, role_id: officerRoleId });
           } else {
-            logger.warn("OFFICER role not found — sys_user_role skipped", { sysUserId });
+            logger.warn("CASE_OFFICER role not found — sys_user_role skipped", { sysUserId });
           }
         }
 

@@ -42,10 +42,10 @@
  *               role_name:
  *                 type: string
  *                 description: |
- *                   Name of the role to assign (e.g. "ADMIN", "OFFICER").
+ *                   Name of the role to assign (e.g. "ADMIN", "CASE_OFFICER").
  *                   The backend looks up the matching role by name.
  *                   If the role does not exist, a 400 error is returned with the list of available roles.
- *                 example: OFFICER
+ *                 example: CASE_OFFICER
  *               isOfficer:
  *                 type: boolean
  *                 description: Set to true if the invite is for a police officer
@@ -113,7 +113,7 @@
  *                     Role "SUPER_USER" does not exist. Please create the role first and then retry the invite.
  *                     Available roles:
  *                     • ADMIN
- *                     • OFFICER
+ *                     • CASE_OFFICER
  *                 code:
  *                   type: string
  *                   example: ROLE_NOT_FOUND

@@ -57,14 +57,16 @@ module.exports = {
 
     const newRole = {
       role_name: name,
-      is_default: dto.isDefault || false
+      is_default: dto.isDefault || false,
+      description: dto.description || ''
     };
 
     const saved = await table.insertRow(newRole);
     return {
       id: saved.ROWID,
       name: saved.role_name,
-      isDefault: saved.is_default
+      isDefault: saved.is_default,
+      description: saved.description
     };
   },
 
@@ -110,6 +112,7 @@ module.exports = {
           id: role.ROWID,
           name: role.role_name,
           isDefault: role.is_default ?? false,
+          description: role.description,
           isEditable,
           createdAt: role.CREATEDTIME,
           updatedAt: role.MODIFIEDTIME
@@ -155,6 +158,7 @@ module.exports = {
           id: role.ROWID,
           name: role.role_name,
           isDefault: role.is_default ?? false,
+          description: role.description,
           isEditable,
           createdAt: role.CREATEDTIME,
           updatedAt: role.MODIFIEDTIME,
@@ -193,6 +197,7 @@ module.exports = {
       id: role.ROWID,
       name: role.role_name,
       isDefault: role.is_default ?? false,
+      description: role.description,
       permissions
     };
   },
@@ -212,7 +217,10 @@ module.exports = {
       throw new Error(`${role.role_name} role cannot be updated.`);
     }
 
-    // Update role name
+    // Update role name and description
+    let updated = false;
+    const updatePayload = { ROWID: id };
+
     if (dto.name && dto.name.trim() !== role.role_name) {
       const newName = dto.name.trim();
 
@@ -222,10 +230,17 @@ module.exports = {
         throw new Error(`Role name ${newName} already exists`);
       }
 
-      await table.updateRow({
-        ROWID: id,
-        role_name: newName
-      });
+      updatePayload.role_name = newName;
+      updated = true;
+    }
+
+    if (dto.description !== undefined && dto.description !== role.description) {
+      updatePayload.description = dto.description;
+      updated = true;
+    }
+
+    if (updated) {
+      await table.updateRow(updatePayload);
     }
 
     // Update mapped permissions if provided in DTO

@@ -19,6 +19,9 @@
  *               isDefault:
  *                 type: boolean
  *                 example: false
+ *               description:
+ *                 type: string
+ *                 example: Contributor role description
  *     responses:
  *       200:
  *         description: Role created successfully
@@ -92,6 +95,9 @@
  *               name:
  *                 type: string
  *                 example: CONTRIBUTOR_UPDATED
+ *               description:
+ *                 type: string
+ *                 example: Updated role description
  *               permission:
  *                 type: array
  *                 items:
