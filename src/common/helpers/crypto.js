@@ -17,8 +17,8 @@ const iv = ivHex ? Buffer.from(ivHex, 'hex') : crypto.randomBytes(16);
 
 module.exports = {
   encrypt(text) {
-    if (!text || typeof text !== 'string') {
-      throw new Error('Invalid input: text must be a non-empty string');
+    if (text === null || text === undefined || typeof text !== 'string') {
+      throw new Error('Invalid input: text must be a string');
     }
     try {
       const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -29,8 +29,8 @@ module.exports = {
   },
 
   decrypt(encrypted) {
-    if (!encrypted || typeof encrypted !== 'string') {
-      throw new Error('Invalid input: encrypted text must be a non-empty string');
+    if (encrypted === null || encrypted === undefined || typeof encrypted !== 'string') {
+      throw new Error('Invalid input: encrypted text must be a string');
     }
     try {
       const decipher = crypto.createDecipheriv(algorithm, key, iv);
