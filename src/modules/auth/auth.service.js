@@ -208,6 +208,7 @@ module.exports = {
         first_name: userInfo.user_first_name,
         last_name: userInfo.user_last_name,
       },
+      user_info: userInfo,
       sys_user_id: sysUserId,
       user_info_id: sysUserInfoId,
       roles: roles
