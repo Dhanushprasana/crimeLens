@@ -38,6 +38,9 @@ const env = {
   TABLE_INCIDENT_OFFICER: "biz_incident_officer",
   TABLE_INCIDENT_CRIMINAL: "biz_incident_criminals",
   TABLE_CRIME_CATEGORY: "biz_crime_category",
+  TABLE_SUSPECT_PHOTO: "biz_suspect_photo",
+  TABLE_CASE_WITNESS: "biz_case_witness",
+  TABLE_CASE_VICTIM: "biz_case_victim",
 
   // Profiling
   TABLE_CRIMINAL_PROFILE: "biz_criminal_profile",

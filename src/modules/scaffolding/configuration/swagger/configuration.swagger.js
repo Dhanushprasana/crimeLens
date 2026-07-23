@@ -33,6 +33,12 @@
  *     responses:
  *       200:
  *         description: Configuration saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
  *       500:
  *         description: Server error
  *   get:
@@ -47,6 +53,15 @@
  *     responses:
  *       200:
  *         description: List of configurations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name: { type: string }
+ *                   config: { type: object }
  *       500:
  *         description: Server error
  */
@@ -72,6 +87,12 @@
  *     responses:
  *       200:
  *         description: Upload path updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
  *       500:
  *         description: Server error
  */

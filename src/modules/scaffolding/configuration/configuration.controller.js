@@ -6,9 +6,9 @@ const sendResponse = require('../../../common/response');
 module.exports = {
   async upsertConfig(req, res, next) {
     try {
-      // Mocking userId until auth token integration is set up
-      const userId = req.user?.userId || 'mock-user-123';
-      const result = await service.upsertConfig(req.body, userId, req);
+      // Use email (header x-user-email or query param) for branding configs
+      const email = req.headers['x-user-email'] || req.query.email;
+      const result = await service.upsertConfig(req.body, email, req);
       sendResponse(res, result, 200);
     } catch (err) {
       next(err);
@@ -18,8 +18,8 @@ module.exports = {
   async getConfig(req, res, next) {
     try {
       const { name } = req.params;
-      const userId = req.user?.userId || 'mock-user-123';
-      const result = await service.getConfig(name, userId, req);
+      const email = req.headers['x-user-email'] || req.query.email;
+      const result = await service.getConfig(name, email, req);
       sendResponse(res, result, 200);
     } catch (err) {
       next(err);
@@ -28,8 +28,8 @@ module.exports = {
 
   async getAllConfigs(req, res, next) {
     try {
-      const userId = req.user?.userId || 'mock-user-123';
-      const result = await service.getAllConfigs(userId, req);
+      const email = req.headers['x-user-email'] || req.query.email;
+      const result = await service.getAllConfigs(email, req);
       sendResponse(res, result, 200);
     } catch (err) {
       next(err);

@@ -22,7 +22,7 @@ function getTable(req, tableName) {
 }
 
 module.exports = {
-  async upsertConfig(dto, userId, req) {
+  async upsertConfig(dto, email, req) {
     const encryptedConfig = {};
 
     // Encrypt config properties using the ENCRYPTION_KEY/IV-based crypto service
@@ -39,16 +39,20 @@ module.exports = {
     }
 
     if (dto.name === 'branding') {
-      if (!userId) {
-        throw new Error('userId is required for user branding configurations');
+      if (!email) {
+        throw new Error('email is required for user branding configurations');
       }
 
-      // 1. Fetch the user's sys_user record
+      // Resolve userId from email via sys_user_info and sys_user tables
+      const userIdQuery = `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = (SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${email}')`;
+      const userIdResult = await executeQuery(req, userIdQuery);
+      if (!userIdResult || userIdResult.length === 0) {
+        throw new Error(`User not found for email: ${email}`);
+      }
+      const userId = userIdResult[0][env.TABLE_USER].ROWID;
+      // Now fetch the user's sys_user record using the resolved userId
       const userQuery = `SELECT * FROM ${env.TABLE_USER} WHERE ROWID = '${userId}'`;
       const userResult = await executeQuery(req, userQuery);
-      if (!userResult || userResult.length === 0) {
-        throw new Error(`User not found for ID: ${userId}`);
-      }
       const userRow = userResult[0][env.TABLE_USER];
       const userConfigId = userRow.user_configuration_id;
 
@@ -102,10 +106,17 @@ module.exports = {
     }
   },
 
-  async getConfig(name, userId, req) {
+  async getConfig(name, email, req) {
     let rawConfig = null;
 
-    if (name === 'branding' && userId) {
+    if (name === 'branding' && email) {
+      // Resolve userId from email
+      const userIdQuery = `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = (SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${email}')`;
+      const userIdResult = await executeQuery(req, userIdQuery);
+      if (!userIdResult || userIdResult.length === 0) {
+        throw new Error(`User not found for email: ${email}`);
+      }
+      const userId = userIdResult[0][env.TABLE_USER].ROWID;
       // Fetch user configuration via user_configuration_id mapping
       const userQuery = `SELECT * FROM ${env.TABLE_USER} WHERE ROWID = '${userId}'`;
       const userResult = await executeQuery(req, userQuery);
@@ -153,7 +164,7 @@ module.exports = {
     return decrypted;
   },
 
-  async getAllConfigs(userId, req) {
+  async getAllConfigs(email, req) {
     const configQuery = `SELECT * FROM ${env.TABLE_CONFIGURATION}`;
     const configsResult = await executeQuery(req, configQuery);
     const result = [];
@@ -174,7 +185,12 @@ module.exports = {
     }
 
     // Merge in user specific branding if it exists
-    if (userId) {
+    if (email) {
+      // Resolve userId from email if provided
+      const userIdQuery = `SELECT ROWID FROM ${env.TABLE_USER} WHERE user_info_id = (SELECT ROWID FROM ${env.TABLE_USER_INFO} WHERE email = '${email}')`;
+      const userIdResult = await executeQuery(req, userIdQuery);
+      const userId = (userIdResult && userIdResult.length > 0) ? userIdResult[0][env.TABLE_USER].ROWID : null;
+      if (userId) {
       const userQuery = `SELECT * FROM ${env.TABLE_USER} WHERE ROWID = '${userId}'`;
       const userResult = await executeQuery(req, userQuery);
       if (userResult && userResult.length > 0) {
@@ -203,4 +219,5 @@ module.exports = {
 
     return result;
   }
-};
+}
+}

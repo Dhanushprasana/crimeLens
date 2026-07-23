@@ -29,6 +29,11 @@ const options = {
       { name: "Profiling", description: "Criminal profiling and network analysis" },
       { name: "Network Analysis", description: "Generic graph traversal engine for intelligence investigation networks" },
       { name: "Evidence Match", description: "Evidence match linking and management" },
+      { name: "Suspects", description: "Suspect management" },
+      { name: "Suspect Photos", description: "Photos linked to suspects" },
+      { name: "Incident Officers", description: "Officer assignments to crime incidents" },
+      { name: "Case Witnesses", description: "Witnesses linked to crime incidents" },
+      { name: "Case Victims", description: "Victims linked to crime incidents" },
     ],
     servers: [
       {
