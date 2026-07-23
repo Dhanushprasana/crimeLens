@@ -194,6 +194,17 @@ module.exports = {
     const userInfoRes = await zcql.executeZCQLQuery(`SELECT * FROM sys_user_info WHERE ROWID = '${sysUserInfoId}'`);
     const userInfo = userInfoRes[0].sys_user_info;
     
+    if (userInfo.station_id) {
+      try {
+        const stationRes = await zcql.executeZCQLQuery(`SELECT district_id FROM biz_police_station WHERE ROWID = '${userInfo.station_id}'`);
+        if (stationRes && stationRes.length > 0) {
+          userInfo.district_id = stationRes[0].biz_police_station.district_id;
+        }
+      } catch(e) {
+        // Handle gracefully if table missing or field differs
+      }
+    }
+    
     let roles = [];
     const urRes = await zcql.executeZCQLQuery(`SELECT * FROM sys_user_role WHERE user_id = '${sysUserId}'`);
     if (urRes && urRes.length > 0) {
