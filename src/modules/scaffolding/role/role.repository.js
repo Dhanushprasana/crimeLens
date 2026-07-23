@@ -181,20 +181,20 @@ module.exports = {
 
         let users = [];
         if (userIds.length > 0) {
-          // First fetch sys_user rows to get user_info_id and archived flag
-          const userRows = await executeQuery(req, `SELECT ROWID, user_info_id, isArchived FROM ${env.TABLE_USER} WHERE ROWID IN (${userIds.map(id => `'${id}'`).join(',')})`);
+          // First fetch sys_user rows to get user_info_id (no isArchived column in current schema)
+          const userRows = await executeQuery(req, `SELECT ROWID, user_info_id FROM ${env.TABLE_USER} WHERE ROWID IN (${userIds.map(id => `'${id}'`).join(',')})`);
           const userInfoIds = [];
           const userMap = {};
           userRows.forEach(r => {
             const row = r[env.TABLE_USER];
-            userMap[row.ROWID] = { isArchived: row.isArchived ?? false, userInfoId: row.user_info_id };
+            userMap[row.ROWID] = { isArchived: false, userInfoId: row.user_info_id };
             if (row.user_info_id) userInfoIds.push(row.user_info_id);
           });
 
-          // Fetch sys_user_info for those IDs
+          // Fetch sys_user_info for those IDs (only email column exists in current schema)
           const userInfoMap = {};
           if (userInfoIds.length > 0) {
-            const infoRows = await executeQuery(req, `SELECT ROWID, email, first_name, last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIds.map(id => `'${id}'`).join(',')})`);
+            const infoRows = await executeQuery(req, `SELECT ROWID, email, user_first_name, user_last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIds.map(id => `'${id}'`).join(',')})`);
             infoRows.forEach(r => {
               const info = r[env.TABLE_USER_INFO];
               userInfoMap[info.ROWID] = info;
@@ -207,7 +207,7 @@ module.exports = {
             return {
               id: userId,
               email: info.email || null,
-              name: (info.first_name || info.last_name) ? `${info.first_name || ''} ${info.last_name || ''}`.trim() : null,
+              name: `${info.user_first_name || ''} ${info.user_last_name || ''}`.trim() || null,
               isArchived: meta.isArchived
             };
           });
