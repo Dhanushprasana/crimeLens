@@ -54,7 +54,7 @@
  *           type: boolean
  *     responses:
  *       200:
- *         description: List of roles
+ *         description: List of roles (Includes systemPermissions and businessPermissions tree when isDetailed is true)
  *       500:
  *         description: Server error
  */
@@ -73,7 +73,7 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Role details
+ *         description: Role details including systemPermissions and businessPermissions tree
  *       500:
  *         description: Server error
  *   put:

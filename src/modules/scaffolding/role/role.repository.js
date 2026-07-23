@@ -137,6 +137,43 @@ module.exports = {
           }));
         }
 
+        // Fetch mapped business permissions
+        let bizRoots = [];
+        try {
+          const brpQuery = `SELECT * FROM ${env.TABLE_BIZ_ROLE_PERMISSION} WHERE role_id = '${role.ROWID}'`;
+          const brpResult = await executeQuery(req, brpQuery);
+          const bizPermIds = brpResult.map(item => item[env.TABLE_BIZ_ROLE_PERMISSION].permission_id);
+
+          if (bizPermIds.length > 0) {
+            const bizPermQuery = `SELECT * FROM ${env.TABLE_BIZ_PERMISSION} WHERE ROWID IN (${bizPermIds.map(id => `'${id}'`).join(',')})`;
+            const bizPermResult = await executeQuery(req, bizPermQuery);
+            
+            const bizNodes = bizPermResult.map(p => ({
+              id: p[env.TABLE_BIZ_PERMISSION].ROWID,
+              name: p[env.TABLE_BIZ_PERMISSION].permission_name,
+              description: p[env.TABLE_BIZ_PERMISSION].description,
+              parentId: p[env.TABLE_BIZ_PERMISSION].parent_id || null,
+              enabled: p[env.TABLE_BIZ_PERMISSION].is_enabled ?? true,
+              createdAt: p[env.TABLE_BIZ_PERMISSION].CREATEDTIME,
+              updatedAt: p[env.TABLE_BIZ_PERMISSION].MODIFIEDTIME,
+              children: []
+            }));
+            
+            const idToBiz = new Map();
+            bizNodes.forEach(node => idToBiz.set(node.id, node));
+            
+            bizNodes.forEach(node => {
+              if (node.parentId && idToBiz.has(node.parentId)) {
+                idToBiz.get(node.parentId).children.push(node);
+              } else {
+                bizRoots.push(node);
+              }
+            });
+          }
+        } catch (e) {
+          logger.warn('Could not fetch business permissions for role ' + role.ROWID);
+        }
+
         // Fetch users mapped to this role from UserRole join table
         const urQuery = `SELECT * FROM ${env.TABLE_USER_ROLE} WHERE role_id = '${role.ROWID}'`;
         const urResult = await executeQuery(req, urQuery);
@@ -144,14 +181,36 @@ module.exports = {
 
         let users = [];
         if (userIds.length > 0) {
-          const userQuery = `SELECT * FROM ${env.TABLE_USER} WHERE ROWID IN (${userIds.map(id => `'${id}'`).join(',')})`;
-          const userResult = await executeQuery(req, userQuery);
-          users = userResult.map(u => ({
-            id: u[env.TABLE_USER].ROWID,
-            username: u[env.TABLE_USER].username,
-            email: u[env.TABLE_USER].email,
-            isArchived: u[env.TABLE_USER].isArchived ?? false
-          }));
+          // First fetch sys_user rows to get user_info_id and archived flag
+          const userRows = await executeQuery(req, `SELECT ROWID, user_info_id, isArchived FROM ${env.TABLE_USER} WHERE ROWID IN (${userIds.map(id => `'${id}'`).join(',')})`);
+          const userInfoIds = [];
+          const userMap = {};
+          userRows.forEach(r => {
+            const row = r[env.TABLE_USER];
+            userMap[row.ROWID] = { isArchived: row.isArchived ?? false, userInfoId: row.user_info_id };
+            if (row.user_info_id) userInfoIds.push(row.user_info_id);
+          });
+
+          // Fetch sys_user_info for those IDs
+          const userInfoMap = {};
+          if (userInfoIds.length > 0) {
+            const infoRows = await executeQuery(req, `SELECT ROWID, email, first_name, last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIds.map(id => `'${id}'`).join(',')})`);
+            infoRows.forEach(r => {
+              const info = r[env.TABLE_USER_INFO];
+              userInfoMap[info.ROWID] = info;
+            });
+          }
+
+          // Assemble enriched users array
+          users = Object.entries(userMap).map(([userId, meta]) => {
+            const info = userInfoMap[meta.userInfoId] || {};
+            return {
+              id: userId,
+              email: info.email || null,
+              name: (info.first_name || info.last_name) ? `${info.first_name || ''} ${info.last_name || ''}`.trim() : null,
+              isArchived: meta.isArchived
+            };
+          });
         }
 
         enrichedRoles.push({
@@ -163,7 +222,7 @@ module.exports = {
           createdAt: role.CREATEDTIME,
           updatedAt: role.MODIFIEDTIME,
           systemPermissions,
-          businessPermissions: [], // business permission stubs
+          businessPermissions: bizRoots,
           users
         });
       }
@@ -181,16 +240,60 @@ module.exports = {
 
     const role = result[0][env.TABLE_ROLE];
 
-    // Fetch associated permissions
+    // Fetch associated system permissions
     const rpQuery = `SELECT * FROM ${env.TABLE_ROLE_PERMISSION} WHERE role_id = '${role.ROWID}'`;
     const rpResult = await executeQuery(req, rpQuery);
     const permIds = rpResult.map(item => item[env.TABLE_ROLE_PERMISSION].permission_id);
 
-    let permissions = [];
+    let systemPermissions = [];
     if (permIds.length > 0) {
       const permQuery = `SELECT * FROM ${env.TABLE_PERMISSION} WHERE ROWID IN (${permIds.map(pId => `'${pId}'`).join(',')})`;
       const permResult = await executeQuery(req, permQuery);
-      permissions = permResult.map(p => p[env.TABLE_PERMISSION]);
+      systemPermissions = permResult.map(p => ({
+        id: p[env.TABLE_PERMISSION].ROWID,
+        name: p[env.TABLE_PERMISSION].permission_name,
+        description: p[env.TABLE_PERMISSION].description,
+        enabled: true,
+        createdAt: p[env.TABLE_PERMISSION].CREATEDTIME,
+        updatedAt: p[env.TABLE_PERMISSION].MODIFIEDTIME
+      }));
+    }
+
+    // Fetch associated business permissions
+    let businessPermissions = [];
+    try {
+      const brpQuery = `SELECT * FROM ${env.TABLE_BIZ_ROLE_PERMISSION} WHERE role_id = '${role.ROWID}'`;
+      const brpResult = await executeQuery(req, brpQuery);
+      const bizPermIds = brpResult.map(item => item[env.TABLE_BIZ_ROLE_PERMISSION].permission_id);
+
+      if (bizPermIds.length > 0) {
+        const bizPermQuery = `SELECT * FROM ${env.TABLE_BIZ_PERMISSION} WHERE ROWID IN (${bizPermIds.map(id => `'${id}'`).join(',')})`;
+        const bizPermResult = await executeQuery(req, bizPermQuery);
+        
+        const bizNodes = bizPermResult.map(p => ({
+          id: p[env.TABLE_BIZ_PERMISSION].ROWID,
+          name: p[env.TABLE_BIZ_PERMISSION].permission_name,
+          description: p[env.TABLE_BIZ_PERMISSION].description,
+          parentId: p[env.TABLE_BIZ_PERMISSION].parent_id || null,
+          enabled: p[env.TABLE_BIZ_PERMISSION].is_enabled ?? true,
+          createdAt: p[env.TABLE_BIZ_PERMISSION].CREATEDTIME,
+          updatedAt: p[env.TABLE_BIZ_PERMISSION].MODIFIEDTIME,
+          children: []
+        }));
+        
+        const idToBiz = new Map();
+        bizNodes.forEach(node => idToBiz.set(node.id, node));
+        
+        bizNodes.forEach(node => {
+          if (node.parentId && idToBiz.has(node.parentId)) {
+            idToBiz.get(node.parentId).children.push(node);
+          } else {
+            businessPermissions.push(node);
+          }
+        });
+      }
+    } catch (e) {
+      logger.warn('Could not fetch business permissions for role ' + role.ROWID);
     }
 
     return {
@@ -198,7 +301,8 @@ module.exports = {
       name: role.role_name,
       isDefault: role.is_default ?? false,
       description: role.description,
-      permissions
+      systemPermissions,
+      businessPermissions
     };
   },
 
@@ -303,6 +407,18 @@ module.exports = {
       await rpTable.deleteRow(rowObj[env.TABLE_ROLE_PERMISSION].ROWID);
     }
 
+    // Also clear mappings from biz_role_permission
+    try {
+      const brpTable = getTable(req, env.TABLE_BIZ_ROLE_PERMISSION);
+      const brpQuery = `SELECT ROWID FROM ${env.TABLE_BIZ_ROLE_PERMISSION} WHERE role_id = '${roleId}'`;
+      const brpResult = await executeQuery(req, brpQuery);
+      for (const rowObj of brpResult) {
+        await brpTable.deleteRow(rowObj[env.TABLE_BIZ_ROLE_PERMISSION].ROWID);
+      }
+    } catch (e) {
+      logger.warn('Failed to clear biz_role_permissions during delete for role ' + roleId);
+    }
+
     // Hard delete the role
     const table = getTable(req, env.TABLE_ROLE);
     await table.deleteRow(roleId);
@@ -340,44 +456,99 @@ module.exports = {
       throw new Error(`Role with ID ${roleId} not found`);
     }
 
-    // 2. Fetch matched permissions from sys_permission
     if (permissionNames.length === 0) {
       return { message: 'No permissions to map' };
     }
 
-    const formattedNames = permissionNames.map(name => `'${name.trim()}'`).join(',');
-    const permQuery = `SELECT * FROM ${env.TABLE_PERMISSION} WHERE permission_name IN (${formattedNames})`;
-    const permResult = await executeQuery(req, permQuery);
-    const matchedPermissions = permResult.map(p => p[env.TABLE_PERMISSION]);
+    // Fetch all system and business permissions to build lookup trees
+    const allSysPermsResult = await executeQuery(req, `SELECT * FROM ${env.TABLE_PERMISSION}`).catch(() => []);
+    const allBizPermsResult = await executeQuery(req, `SELECT * FROM ${env.TABLE_BIZ_PERMISSION}`).catch(() => []);
 
-    const foundNames = matchedPermissions.map(p => p.permission_name);
-    const missingNames = permissionNames.filter(name => !foundNames.includes(name));
+    const allSysPerms = allSysPermsResult.map(p => p[env.TABLE_PERMISSION]);
+    const allBizPerms = allBizPermsResult.map(p => p[env.TABLE_BIZ_PERMISSION]);
+
+    const sysNameToPerm = new Map(allSysPerms.map(p => [p.permission_name, p]));
+    const sysIdToPerm = new Map(allSysPerms.map(p => [p.ROWID, p]));
+    
+    const bizNameToPerm = new Map(allBizPerms.map(p => [p.permission_name, p]));
+    const bizIdToPerm = new Map(allBizPerms.map(p => [p.ROWID, p]));
+
+    const collectedSys = new Map();
+    const collectedBiz = new Map();
+    const missingNames = [];
+
+    const collectSysAncestors = (perm) => {
+      if (collectedSys.has(perm.ROWID)) return;
+      collectedSys.set(perm.ROWID, perm);
+      if (perm.parent_id) {
+        const parent = sysIdToPerm.get(perm.parent_id);
+        if (parent) collectSysAncestors(parent);
+      }
+    };
+
+    const collectBizAncestors = (perm) => {
+      if (collectedBiz.has(perm.ROWID)) return;
+      collectedBiz.set(perm.ROWID, perm);
+      if (perm.parent_id) {
+        const parent = bizIdToPerm.get(perm.parent_id);
+        if (parent) collectBizAncestors(parent);
+      }
+    };
+
+    for (const name of permissionNames) {
+      if (sysNameToPerm.has(name)) {
+        collectSysAncestors(sysNameToPerm.get(name));
+      } else if (bizNameToPerm.has(name)) {
+        collectBizAncestors(bizNameToPerm.get(name));
+      } else {
+        missingNames.push(name);
+      }
+    }
+
     if (missingNames.length > 0) {
       throw new Error(`Permissions not found: ${missingNames.join(', ')}`);
     }
 
-    // 3. Clear existing role mappings from sys_role_permission
+    // Clear existing system mappings
     const rpTable = getTable(req, env.TABLE_ROLE_PERMISSION);
-    const currentRpQuery = `SELECT ROWID FROM ${env.TABLE_ROLE_PERMISSION} WHERE role_id = '${roleId}'`;
-    const currentRpResult = await executeQuery(req, currentRpQuery);
+    const currentRpResult = await executeQuery(req, `SELECT ROWID FROM ${env.TABLE_ROLE_PERMISSION} WHERE role_id = '${roleId}'`).catch(() => []);
     for (const rowObj of currentRpResult) {
       await rpTable.deleteRow(rowObj[env.TABLE_ROLE_PERMISSION].ROWID);
     }
 
-    // 4. Save new mappings
-    const addedMappings = [];
-    for (const perm of matchedPermissions) {
-      const newMapping = {
-        role_id: roleId,
-        permission_id: perm.ROWID
-      };
-      const inserted = await rpTable.insertRow(newMapping);
-      addedMappings.push(inserted.ROWID);
+    // Clear existing business mappings
+    try {
+      const brpTable = getTable(req, env.TABLE_BIZ_ROLE_PERMISSION);
+      const currentBrpResult = await executeQuery(req, `SELECT ROWID FROM ${env.TABLE_BIZ_ROLE_PERMISSION} WHERE role_id = '${roleId}'`).catch(() => []);
+      for (const rowObj of currentBrpResult) {
+        await brpTable.deleteRow(rowObj[env.TABLE_BIZ_ROLE_PERMISSION].ROWID);
+      }
+    } catch (e) {
+      logger.warn('Could not clear biz_role_permissions for role ' + roleId);
+    }
+
+    // Save new mappings
+    const addedSystem = [];
+    for (const perm of collectedSys.values()) {
+      const inserted = await rpTable.insertRow({ role_id: roleId, permission_id: perm.ROWID });
+      addedSystem.push(inserted.ROWID);
+    }
+
+    const addedBiz = [];
+    try {
+      const brpTable = getTable(req, env.TABLE_BIZ_ROLE_PERMISSION);
+      for (const perm of collectedBiz.values()) {
+        const inserted = await brpTable.insertRow({ role_id: roleId, permission_id: perm.ROWID });
+        addedBiz.push(inserted.ROWID);
+      }
+    } catch(e) {
+      logger.warn('Could not save biz_role_permissions for role ' + roleId);
     }
 
     return {
-      message: 'System permissions mapped successfully',
-      added: addedMappings.length
+      message: 'System and business permissions mapped successfully (hierarchy respected)',
+      addedSystem: addedSystem.length,
+      addedBusiness: addedBiz.length
     };
   }
 };

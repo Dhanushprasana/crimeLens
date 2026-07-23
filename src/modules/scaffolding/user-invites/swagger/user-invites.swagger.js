@@ -133,7 +133,27 @@
  *     tags: [User Invites]
  *     responses:
  *       200:
- *         description: List of all sys_user_invite records
+ *         description: List of all sys_user_invite records enriched with user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     example: john@example.com
+ *                   invited_by_name:
+ *                     type: string
+ *                     example: Jane Doe
+ *                   role:
+ *                     type: string
+ *                     example: CASE_OFFICER
+ *                   status:
+ *                     type: string
+ *                     enum: [PENDING, ACCEPTED, COMPLETED, EXPIRED]
+ *                     example: PENDING
  *
  * /users/invites/invite/check:
  *   post:

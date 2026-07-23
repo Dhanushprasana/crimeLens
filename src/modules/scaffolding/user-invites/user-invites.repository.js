@@ -117,7 +117,122 @@ module.exports = {
   async getAllInvites(query, req) {
     const sql = `SELECT * FROM sys_user_invite`;
     const res = await executeQuery(req, sql);
-    return res.map((r) => r.sys_user_invite);
+    const invites = res.map((r) => r.sys_user_invite);
+
+    if (invites.length === 0) return [];
+
+    const sysUserIds = [];
+    const invitedByIds = [];
+    invites.forEach(inv => {
+      if (inv.user_info_id) sysUserIds.push(inv.user_info_id); // This is sysUserId
+      if (inv.invited_by) invitedByIds.push(inv.invited_by);
+    });
+
+    const sysUserMap = {};
+    const allUserInfoIds = new Set();
+    
+    // 1. Fetch sys_users for invitees to get their user_info_id
+    if (sysUserIds.length > 0) {
+      const sysUserSql = `SELECT ROWID, user_info_id FROM ${env.TABLE_USER} WHERE ROWID IN (${sysUserIds.map(id => `'${id}'`).join(',')})`;
+      try {
+        const sysUsers = await executeQuery(req, sysUserSql);
+        sysUsers.forEach(r => {
+          const row = r[env.TABLE_USER];
+          sysUserMap[row.ROWID] = row.user_info_id;
+          if (row.user_info_id) allUserInfoIds.add(row.user_info_id);
+        });
+      } catch (err) { /* ignore or log */ }
+    }
+
+    const inviterSysUserMap = {};
+    // 2. Fetch sys_users for inviters to get their user_info_id
+    if (invitedByIds.length > 0) {
+      const inviterSysUserSql = `SELECT ROWID, user_info_id FROM ${env.TABLE_USER} WHERE ROWID IN (${invitedByIds.map(id => `'${id}'`).join(',')})`;
+      try {
+        const inviterSysUsers = await executeQuery(req, inviterSysUserSql);
+        inviterSysUsers.forEach(r => {
+          const row = r[env.TABLE_USER];
+          inviterSysUserMap[row.ROWID] = row.user_info_id;
+          if (row.user_info_id) allUserInfoIds.add(row.user_info_id);
+        });
+      } catch (err) { /* ignore */ }
+      
+      // Fallback: If invited_by is actually already a user_info_id
+      invitedByIds.forEach(id => allUserInfoIds.add(id));
+    }
+
+    // 3. Fetch sys_user_info
+    const userInfoMap = {};
+    if (allUserInfoIds.size > 0) {
+      const userInfoIdsStr = Array.from(allUserInfoIds).map(id => `'${id}'`).join(',');
+      const userInfoSql = `SELECT ROWID, email, first_name, last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIdsStr})`;
+      try {
+        const userInfos = await executeQuery(req, userInfoSql);
+        userInfos.forEach(r => {
+          const row = r[env.TABLE_USER_INFO];
+          userInfoMap[row.ROWID] = row;
+        });
+      } catch (err) {}
+    }
+
+    // 4. Fetch sys_user_role
+    const sysUserToRoleMap = {};
+    const roleIds = new Set();
+    if (sysUserIds.length > 0) {
+      const userRoleSql = `SELECT * FROM ${env.TABLE_USER_ROLE} WHERE user_id IN (${sysUserIds.map(id => `'${id}'`).join(',')})`;
+      try {
+        const userRoles = await executeQuery(req, userRoleSql);
+        userRoles.forEach(r => {
+          const row = r[env.TABLE_USER_ROLE];
+          sysUserToRoleMap[row.user_id] = row.role_id;
+          if (row.role_id) roleIds.add(row.role_id);
+        });
+      } catch (err) {}
+    }
+
+    // 5. Fetch sys_role
+    const roleMap = {};
+    if (roleIds.size > 0) {
+      const roleIdsStr = Array.from(roleIds).map(id => `'${id}'`).join(',');
+      const roleSql = `SELECT ROWID, role_name FROM ${env.TABLE_ROLE} WHERE ROWID IN (${roleIdsStr})`;
+      try {
+        const roles = await executeQuery(req, roleSql);
+        roles.forEach(r => {
+          roleMap[r[env.TABLE_ROLE].ROWID] = r[env.TABLE_ROLE].role_name;
+        });
+      } catch (err) {}
+    }
+
+    // Map everything
+    return invites.map(invite => {
+      const sysUserId = invite.user_info_id; // FK to sys_user
+      const userInfoId = sysUserMap[sysUserId];
+      const inviteeInfo = userInfoId ? userInfoMap[userInfoId] : null;
+
+      const inviterId = invite.invited_by;
+      const inviterUserInfoId = inviterId ? (inviterSysUserMap[inviterId] || inviterId) : null;
+      const inviterInfo = inviterUserInfoId ? userInfoMap[inviterUserInfoId] : null;
+
+      const roleId = sysUserToRoleMap[sysUserId];
+      const roleName = roleId ? roleMap[roleId] : null;
+
+      let status = "PENDING";
+      if (invite.is_account_setup) {
+        status = "COMPLETED";
+      } else if (invite.is_accepted) {
+        status = "ACCEPTED";
+      } else if (new Date(invite.invite_expiry) < new Date()) {
+        status = "EXPIRED";
+      }
+
+      return {
+        ...invite,
+        email: inviteeInfo ? inviteeInfo.email : null,
+        invited_by_name: inviterInfo ? `${inviterInfo.first_name || ''} ${inviterInfo.last_name || ''}`.trim() : null,
+        role: roleName,
+        status: status
+      };
+    });
   },
 
   async checkInvite(dto, req) {

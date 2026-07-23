@@ -5,11 +5,12 @@ const logger = require('../../../config/logger');
 
 module.exports = {
   async createPermissions(dto, req) {
-    logger.info(`createPermissionsBulk called with ${dto?.permissions?.length || 0} items`);
-    if (!dto || !Array.isArray(dto.permissions)) {
-      throw new Error('Invalid payload structure: permissions must be an array');
+    const permissionsArray = Array.isArray(dto) ? dto : dto?.permissions;
+    logger.info(`createPermissionsBulk called with ${permissionsArray?.length || 0} items`);
+    if (!permissionsArray || !Array.isArray(permissionsArray)) {
+      throw new Error('Invalid payload structure: payload must be an array of permissions or contain a permissions array property');
     }
-    return repository.createPermissions(dto.permissions, req);
+    return repository.createPermissions(permissionsArray, req);
   },
 
   async findAll(req) {

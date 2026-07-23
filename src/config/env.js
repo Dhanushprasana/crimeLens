@@ -13,8 +13,10 @@ const env = {
   // Table Names
   TABLE_CONFIGURATION: "sys_configuration",
   TABLE_PERMISSION: "sys_permission",
+  TABLE_BIZ_PERMISSION: "biz_permission",
   TABLE_ROLE: "sys_role",
   TABLE_ROLE_PERMISSION: "sys_role_permission",
+  TABLE_BIZ_ROLE_PERMISSION: "biz_role_permission",
   TABLE_USER: "sys_user",
   TABLE_USER_INFO: "sys_user_info",
   TABLE_USER_ROLE: "sys_user_role",

@@ -25,20 +25,45 @@ module.exports = {
   async createPermissions(permissionsList, req) {
     const created = [];
     const skipped = [];
-    const table = getTable(req, env.TABLE_PERMISSION);
+    const sysTable = getTable(req, env.TABLE_PERMISSION);
+    const bizTable = getTable(req, env.TABLE_BIZ_PERMISSION);
 
     for (const dto of permissionsList) {
       const name = dto.name.trim();
       const description = dto.description?.trim() || null;
+      const type = dto.type === 'business' ? 'business' : 'system';
+      let parentId = dto.parentId || null;
+      const parentName = dto.parentName?.trim() || null;
+      
+      const table = type === 'business' ? bizTable : sysTable;
+      const tableName = type === 'business' ? env.TABLE_BIZ_PERMISSION : env.TABLE_PERMISSION;
+
+      // Handle parentName lookup/creation if parentId is not explicitly provided
+      if (!parentId && parentName) {
+        const parentQuery = `SELECT * FROM ${tableName} WHERE permission_name = '${parentName}'`;
+        const parentResult = await executeQuery(req, parentQuery).catch(() => []);
+        if (parentResult && parentResult.length > 0) {
+          parentId = parentResult[0][tableName].ROWID;
+        } else {
+          // Create the missing parent
+          const newParent = {
+            permission_name: parentName,
+            description: `Auto-created parent for ${name}`
+          };
+          if (type === 'business') {
+            newParent.is_enabled = true;
+          }
+          const savedParent = await table.insertRow(newParent);
+          created.push({ id: savedParent.ROWID, name: savedParent.permission_name, type, isImplicitParent: true });
+          parentId = savedParent.ROWID;
+        }
+      }
 
       // Lookup existing permission by name
-      const existQuery = `SELECT * FROM ${env.TABLE_PERMISSION} WHERE permission_name = '${name}'`;
-      const existResult = await executeQuery(req, existQuery);
+      const existQuery = `SELECT * FROM ${tableName} WHERE permission_name = '${name}'`;
+      const existResult = await executeQuery(req, existQuery).catch(() => []);
 
       if (existResult && existResult.length > 0) {
-        // Since sys_permission only has ROWID, CREATORID, CREATEDTIME, MODIFIEDTIME, description, and permission_name,
-        // there is no parentId, soft-delete columns (deletedAt/deleted/isEnabled).
-        // If it exists, we skip creating it to avoid violating the unique constraint on permission_name.
         skipped.push(name);
         continue;
       }
@@ -49,8 +74,16 @@ module.exports = {
         description: description
       };
 
+      if (parentId) {
+        newPerm.parent_id = parentId;
+      }
+      
+      if (type === 'business') {
+        newPerm.is_enabled = true;
+      }
+
       const saved = await table.insertRow(newPerm);
-      created.push({ id: saved.ROWID, name: saved.permission_name });
+      created.push({ id: saved.ROWID, name: saved.permission_name, type });
     }
 
     return {
@@ -63,7 +96,7 @@ module.exports = {
   async findAll(req) {
     // Fetch all permissions from sys_permission
     const query = `SELECT * FROM ${env.TABLE_PERMISSION}`;
-    const dbResult = await executeQuery(req, query);
+    const dbResult = await executeQuery(req, query).catch(() => []);
 
     const system = dbResult.map(r => {
       const perm = r[env.TABLE_PERMISSION];
@@ -71,16 +104,32 @@ module.exports = {
         id: perm.ROWID,
         name: perm.permission_name,
         description: perm.description,
-        enabled: true, // Mocked as true since column doesn't exist
+        parentId: perm.parent_id || null,
+        enabled: perm.is_enabled ?? true,
         createdAt: perm.CREATEDTIME,
         updatedAt: perm.MODIFIEDTIME
       };
     });
 
-    // Since sys_permission does not have parentId, hierarchy (business roots) is empty
+    const bizQuery = `SELECT * FROM ${env.TABLE_BIZ_PERMISSION}`;
+    const bizDbResult = await executeQuery(req, bizQuery).catch(() => []);
+    
+    const business = bizDbResult.map(r => {
+      const perm = r[env.TABLE_BIZ_PERMISSION];
+      return {
+        id: perm.ROWID,
+        name: perm.permission_name,
+        description: perm.description,
+        parentId: perm.parent_id || null,
+        enabled: perm.is_enabled ?? true,
+        createdAt: perm.CREATEDTIME,
+        updatedAt: perm.MODIFIEDTIME
+      };
+    });
+
     return {
       system,
-      business: []
+      business
     };
   },
 

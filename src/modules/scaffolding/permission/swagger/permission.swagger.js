@@ -21,6 +21,13 @@
  *                 description:
  *                   type: string
  *                   example: "Allows reading user details"
+ *                 type:
+ *                   type: string
+ *                   enum: [system, business]
+ *                   example: "system"
+ *                 parentName:
+ *                   type: string
+ *                   example: "Dashboard"
  *     responses:
  *       200:
  *         description: Permissions created successfully
