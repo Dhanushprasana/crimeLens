@@ -66,21 +66,32 @@ async function getGlobalNetworkGraph(req) {
   const userRole = req.user && req.user.role ? req.user.role : 'STATE_COMMANDER';
 
   // Frontend must supply these based on the logged-in user's profile
-  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER
+  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER / CASE_OFFICER
   const frontendDistrictId = req.query.districtId; // required for DISTRICT_COMMANDER
 
   // RBAC enforcement — role from JWT overrides the level; IDs from frontend
-  if (userRole === 'STATION_COMMANDER') {
+  if (userRole === 'STATION_COMMANDER' || userRole === 'CASE_OFFICER') {
     level = 'STATION';
     if (!nodeId) nodeId = frontendStationId;
-    if (!nodeId) throw Object.assign(new Error('stationId is required for STATION_COMMANDER'), { statusCode: 400 });
+    if (!nodeId) throw Object.assign(new Error('stationId is required for this role'), { statusCode: 400 });
   } else if (userRole === 'DISTRICT_COMMANDER') {
     if (level === 'STATE') level = 'DISTRICT';
     if (level === 'DISTRICT' && !nodeId) {
       nodeId = frontendDistrictId;
       if (!nodeId) throw Object.assign(new Error('districtId is required for DISTRICT_COMMANDER'), { statusCode: 400 });
     }
+  } else {
+    // STATE_COMMANDER or unknown roles: allow param-based level override
+    // If a stationId or districtId is explicitly passed, respect it
+    if (frontendStationId && level === 'STATE') {
+      level = 'STATION';
+      nodeId = nodeId || frontendStationId;
+    } else if (frontendDistrictId && level === 'STATE') {
+      level = 'DISTRICT';
+      nodeId = nodeId || frontendDistrictId;
+    }
   }
+
 
   const nodes = [];
   const edges = [];
