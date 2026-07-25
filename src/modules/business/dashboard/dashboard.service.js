@@ -52,7 +52,7 @@ module.exports = {
     if (!zcql) throw new Error("Catalyst not available");
 
     const queryParams = { ...req.query };
-    const currentCountRes = await this.buildAndExecuteCountQuery(queryParams, zcql);
+    const currentCountRes = await this.buildAndExecuteDetailedQuery(queryParams, zcql);
 
     // Calculate previous year dates
     let prevQueryParams = { ...queryParams };
@@ -75,11 +75,13 @@ module.exports = {
       prevQueryParams.toDate = td.toISOString().split('T')[0];
     }
 
-    const prevCountRes = await this.buildAndExecuteCountQuery(prevQueryParams, zcql);
+    const prevCountRes = await this.buildAndExecuteDetailedQuery(prevQueryParams, zcql);
 
     return {
       current_period_count: currentCountRes.total_crime_count,
-      previous_year_count: prevCountRes.total_crime_count
+      previous_year_count: prevCountRes.total_crime_count,
+      current_period_series: currentCountRes.time_series,
+      previous_year_series: prevCountRes.time_series
     };
   },
 
@@ -95,7 +97,7 @@ module.exports = {
       throw new Error("fromDate and toDate are required to calculate growth");
     }
 
-    const currentCountRes = await this.buildAndExecuteCountQuery(queryParams, zcql);
+    const currentCountRes = await this.buildAndExecuteDetailedQuery(queryParams, zcql);
     const currentCount = currentCountRes.total_crime_count;
 
     const fromD = new Date(queryParams.fromDate);
@@ -114,7 +116,7 @@ module.exports = {
     prevQueryParams.toDate = prevToD.toISOString().split('T')[0];
     delete prevQueryParams.date; // ensure date is not used
 
-    const prevCountRes = await this.buildAndExecuteCountQuery(prevQueryParams, zcql);
+    const prevCountRes = await this.buildAndExecuteDetailedQuery(prevQueryParams, zcql);
     const prevCount = prevCountRes.total_crime_count;
 
     let growthPercentage = 0;
@@ -128,28 +130,93 @@ module.exports = {
       current_period_count: currentCount,
       previous_period_count: prevCount,
       difference: currentCount - prevCount,
-      growth_percentage: parseFloat(growthPercentage.toFixed(2))
+      growth_percentage: parseFloat(growthPercentage.toFixed(2)),
+      current_period_series: currentCountRes.time_series,
+      previous_period_series: prevCountRes.time_series
     };
   },
 
+  async getCategoryVolumeRanking(req) {
+    logger.info("getCategoryVolumeRanking");
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    if (!zcql) throw new Error("Catalyst not available");
+
+    const queryParams = { ...req.query };
+    
+    if (!queryParams.fromDate || !queryParams.toDate) {
+      throw new Error("fromDate and toDate are required to calculate category volume ranking");
+    }
+
+    // 1. Current Period Categories
+    const currentRes = await this.buildAndExecuteDetailedQuery(queryParams, zcql);
+    
+    // 2. Previous Period Categories (same duration)
+    const fromD = new Date(queryParams.fromDate);
+    const toD = new Date(queryParams.toDate);
+    const diffTime = Math.abs(toD - fromD);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const prevToD = new Date(fromD);
+    prevToD.setDate(prevToD.getDate() - 1);
+    
+    const prevFromD = new Date(prevToD);
+    prevFromD.setDate(prevFromD.getDate() - diffDays + 1);
+
+    const prevQueryParams = { ...queryParams };
+    prevQueryParams.fromDate = prevFromD.toISOString().split('T')[0];
+    prevQueryParams.toDate = prevToD.toISOString().split('T')[0];
+    delete prevQueryParams.date;
+
+    const prevRes = await this.buildAndExecuteDetailedQuery(prevQueryParams, zcql);
+
+    // 3. Map Category Names
+    const categoryMap = {};
+    try {
+      const catRows = await zcql.executeZCQLQuery(`SELECT * FROM ${env.TABLE_CRIME_CATEGORY}`);
+      catRows.forEach(r => {
+        const row = r[env.TABLE_CRIME_CATEGORY];
+        categoryMap[row.ROWID] = row.category_name;
+      });
+    } catch (e) {}
+
+    // 4. Combine and calculate growth
+    const prevCatMap = {};
+    prevRes.category_counts.forEach(c => prevCatMap[c.categoryId] = c.count);
+
+    const ranking = currentRes.category_counts.map(c => {
+      const currentCount = c.count;
+      const prevCount = prevCatMap[c.categoryId] || 0;
+      let growth = 0;
+      if (prevCount === 0) {
+        growth = currentCount > 0 ? 100 : 0;
+      } else {
+        growth = ((currentCount - prevCount) / prevCount) * 100;
+      }
+
+      return {
+        categoryId: c.categoryId,
+        categoryName: categoryMap[c.categoryId] || 'Unknown',
+        count: currentCount,
+        growthPercentage: parseFloat(growth.toFixed(2))
+      };
+    });
+
+    // Sort descending by count
+    ranking.sort((a, b) => b.count - a.count);
+
+    return ranking;
+  },
+
   async buildAndExecuteCountQuery(params, zcql) {
+    const res = await this.buildAndExecuteDetailedQuery(params, zcql);
+    return { total_crime_count: res.total_crime_count };
+  },
+
+  async buildAndExecuteDetailedQuery(params, zcql) {
     // Determine if we need to join for gender
     let query = "";
     if (params.gender) {
-      // Assuming gender is filtered via biz_suspect (which would be linked via biz_incident_criminals or similar, 
-      // but biz_suspect doesn't have incident_id directly. If biz_suspect doesn't have incident_id, we can't join directly.
-      // Wait, checking suspect repository, biz_suspect has district_id but NO incident_id.
-      // We must join biz_incident_criminals which has incident_id and criminal_id, then join biz_criminal for gender.
-      // Or maybe biz_case_victim has incident_id and gender.
-      // Since Catalyst joins are limited, we'll try a basic approach:
-      // We will count incidents where there exists a victim with this gender OR criminal with this gender.
-      // For simplicity in ZCQL, we will do a join with biz_case_victim if filtering by victim gender.
-      // As ZCQL limitations might break complex joins, let's just do a simple count on biz_crime_incident for now, 
-      // and if gender is provided, we fetch incident IDs first.
-      
       let incidentIds = new Set();
-      
-      // Check victims
       const victimQuery = `SELECT incident_id FROM ${env.TABLE_CASE_VICTIM} WHERE gender = '${params.gender}'`;
       try {
         const vRes = await zcql.executeZCQLQuery(victimQuery);
@@ -163,19 +230,20 @@ module.exports = {
       }
       
       if (incidentIds.size === 0) {
-        return { total_crime_count: 0 };
+        return { total_crime_count: 0, time_series: [], category_counts: [] };
       }
       
       const idsList = Array.from(incidentIds).map(id => `'${id}'`).join(',');
-      query = `SELECT COUNT(ROWID) FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID IN (${idsList})`;
+      query = `SELECT ROWID, crime_occured_date_time, crime_category_id FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID IN (${idsList})`;
     } else {
-      query = `SELECT COUNT(ROWID) FROM ${env.TABLE_CRIME_INCIDENT}`;
+      query = `SELECT ROWID, crime_occured_date_time, crime_category_id FROM ${env.TABLE_CRIME_INCIDENT}`;
     }
 
     const conditions = [];
 
     if (params.stationId) conditions.push(`police_station_id = '${params.stationId}'`);
-    if (params.districtId) conditions.push(`crime_happended_at_district_id = '${params.districtId}'`);
+    const distId = params.districtId || params.district;
+    if (distId) conditions.push(`crime_happended_at_district_id = '${distId}'`);
     if (params.categoryId) conditions.push(`crime_category_id = '${params.categoryId}'`);
 
     if (params.date) {
@@ -195,14 +263,33 @@ module.exports = {
 
     try {
       const rows = await zcql.executeZCQLQuery(query);
+      
+      let total_crime_count = 0;
+      const dateMap = {};
+      const categoryMap = {};
+
       if (rows && rows.length > 0) {
-        const firstRow = rows[0][env.TABLE_CRIME_INCIDENT] || rows[0];
-        const count = firstRow["COUNT(ROWID)"] || Object.values(firstRow)[0];
-        return { total_crime_count: Number(count) || 0 };
+        total_crime_count = rows.length;
+        rows.forEach(r => {
+          const row = r[env.TABLE_CRIME_INCIDENT] || r;
+          
+          if (row.crime_occured_date_time) {
+            const dateStr = row.crime_occured_date_time.split(' ')[0]; // YYYY-MM-DD
+            dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
+          }
+
+          if (row.crime_category_id) {
+            categoryMap[row.crime_category_id] = (categoryMap[row.crime_category_id] || 0) + 1;
+          }
+        });
       }
-      return { total_crime_count: 0 };
+
+      const time_series = Object.keys(dateMap).sort().map(date => ({ date, count: dateMap[date] }));
+      const category_counts = Object.keys(categoryMap).map(categoryId => ({ categoryId, count: categoryMap[categoryId] }));
+
+      return { total_crime_count, time_series, category_counts };
     } catch (e) {
-      logger.warn("Failed to execute dynamic count query: " + query, e);
+      logger.warn("Failed to execute dynamic detailed query: " + query, e);
       throw e;
     }
   }

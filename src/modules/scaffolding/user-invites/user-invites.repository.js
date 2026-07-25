@@ -62,7 +62,7 @@ module.exports = {
   async createInvite(dto, req) {
     // 1. sys_user_info
     const userInfoTable = getTable(req, env.TABLE_USER_INFO);
-    const isOfficer = dto.isOfficer === true || dto.isOfficer === 'true' || false;
+    const isOfficer = dto.isOfficer === true || dto.isOfficer === 'true' || dto.is_officer === true || dto.is_officer === 'true' || false;
     const userInfoRow = await userInfoTable.insertRow({
       user_first_name: dto.first_name || "",
       user_last_name: dto.last_name || "",
@@ -165,7 +165,7 @@ module.exports = {
     const userInfoMap = {};
     if (allUserInfoIds.size > 0) {
       const userInfoIdsStr = Array.from(allUserInfoIds).map(id => `'${id}'`).join(',');
-      const userInfoSql = `SELECT ROWID, email, first_name, last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIdsStr})`;
+      const userInfoSql = `SELECT ROWID, email, user_first_name, user_last_name FROM ${env.TABLE_USER_INFO} WHERE ROWID IN (${userInfoIdsStr})`;
       try {
         const userInfos = await executeQuery(req, userInfoSql);
         userInfos.forEach(r => {
@@ -228,7 +228,7 @@ module.exports = {
       return {
         ...invite,
         email: inviteeInfo ? inviteeInfo.email : null,
-        invited_by_name: inviterInfo ? `${inviterInfo.first_name || ''} ${inviterInfo.last_name || ''}`.trim() : null,
+        invited_by_name: inviterInfo ? `${inviterInfo.user_first_name || ''} ${inviterInfo.user_last_name || ''}`.trim() : null,
         role: roleName,
         status: status
       };

@@ -99,6 +99,23 @@
  *     responses:
  *       200:
  *         description: Current and previous year crime counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 current_period_count:
+ *                   type: integer
+ *                 previous_year_count:
+ *                   type: integer
+ *                 current_period_series:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 previous_year_series:
+ *                   type: array
+ *                   items:
+ *                     type: object
  *
  * /dashboard/crimes/growth:
  *   get:
@@ -150,6 +167,63 @@
  *                   type: integer
  *                 growth_percentage:
  *                   type: number
+ *                 current_period_series:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 previous_period_series:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *
+ * /dashboard/crimes/category-volume:
+ *   get:
+ *     summary: Get category volume ranking
+ *     tags: [Dashboard]
+ *     description: Calculates crime count across all categories and compares growth against previous period. Requires fromDate and toDate.
+ *     parameters:
+ *       - in: query
+ *         name: fromDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: toDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: stationId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: districtId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: gender
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of category volume rankings with growth
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   categoryId:
+ *                     type: string
+ *                   categoryName:
+ *                     type: string
+ *                   count:
+ *                     type: integer
+ *                   growthPercentage:
+ *                     type: number
  */
 
 /**
