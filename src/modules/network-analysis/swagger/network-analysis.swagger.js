@@ -295,20 +295,51 @@
  *   get:
  *     summary: Get global network graph structure
  *     tags: [Network Analysis]
- *     description: Retrieves nodes and edges for the network graph visualization based on the user's role and the requested zoom level (STATE -> DISTRICT -> STATION -> CRIME).
+ *     description: >
+ *       Retrieves nodes and edges for the network graph visualization based on the user's role
+ *       and the requested zoom level (STATE -> DISTRICT -> STATION -> full crime network).
+ *
+ *       **Self-Contained Flow**: Every node in the response includes a `drillDown` field that
+ *       tells the frontend exactly what params to pass on the next click. The frontend never
+ *       needs to look up any IDs manually.
+ *
+ *       **Role Enforcement (automatic)**:
+ *       - `STATE_COMMANDER` starts from the top (STATE).
+ *       - `DISTRICT_COMMANDER` starts at the DISTRICT level, locked to their district.
+ *       - `STATION_COMMANDER` immediately receives the full station crime network of their assigned station.
  *     parameters:
  *       - in: query
  *         name: level
  *         schema:
  *           type: string
- *           enum: [STATE, DISTRICT, STATION, CRIME]
+ *           enum: [STATE, DISTRICT, STATION]
  *           default: STATE
- *         description: The hierarchy level to query. STATE returns districts; DISTRICT returns stations; STATION returns crimes; CRIME returns criminals.
+ *         description: >
+ *           The hierarchy level to query.
+ *           - `STATE` returns all districts connected to state root.
+ *           - `DISTRICT` returns all police stations in that district.
+ *           - `STATION` returns the complete deep crime network (criminals, vehicles, aliases, evidence, cross-district stations).
+ *           Omit this param to start from the default for your role.
  *       - in: query
  *         name: nodeId
  *         schema:
  *           type: string
- *         description: The ID of the node being drilled into. (Required for all levels except STATE).
+ *         description: >
+ *           The raw DB ID of the node to drill into. **DO NOT hardcode this**.
+ *           Always read `node.drillDown.nodeId` from the previous response and pass it here.
+ *           Not required for the initial call (STATE level or role-enforced starting level).
+ *       - in: query
+ *         name: stationId
+ *         schema:
+ *           type: string
+ *         description: >
+ *           Required for STATION_COMMANDER. The station ID from their profile.
+ *       - in: query
+ *         name: districtId
+ *         schema:
+ *           type: string
+ *         description: >
+ *           Required for DISTRICT_COMMANDER. The district ID from their profile.
  *     responses:
  *       200:
  *         description: Successfully retrieved nodes and edges.
@@ -325,17 +356,47 @@
  *                   properties:
  *                     nodes:
  *                       type: array
+ *                       description: >
+ *                         List of graph nodes. Each node with `canDrillDown: true` can be expanded
+ *                         by passing its `drillDown.level` and `drillDown.nodeId` to the next request.
  *                       items:
  *                         type: object
  *                         properties:
  *                           id:
  *                             type: string
+ *                             description: Unique node ID used internally by the graph library.
+ *                             example: dist_46044000000058003
  *                           label:
  *                             type: string
+ *                             description: Human-readable display label for the node.
+ *                             example: North District
  *                           type:
  *                             type: string
+ *                             description: Entity type of the node.
+ *                             enum: [STATE, DISTRICT, STATION, policeStation, incident, criminal, vehicle, alias, evidence]
+ *                             example: DISTRICT
  *                           rawId:
  *                             type: string
+ *                             description: The raw database ROWID of this entity.
+ *                             example: "46044000000058003"
+ *                           canDrillDown:
+ *                             type: boolean
+ *                             description: If true, this node can be expanded further by clicking on it.
+ *                             example: true
+ *                           drillDown:
+ *                             type: object
+ *                             nullable: true
+ *                             description: >
+ *                               The exact params to send in the next API call when this node is clicked.
+ *                               Pass these directly as query params to GET /network-analysis/global.
+ *                               Null for leaf nodes (criminals, evidence, etc.) that cannot be expanded.
+ *                             properties:
+ *                               level:
+ *                                 type: string
+ *                                 example: DISTRICT
+ *                               nodeId:
+ *                                 type: string
+ *                                 example: "46044000000058003"
  *                     edges:
  *                       type: array
  *                       items:
@@ -357,6 +418,19 @@
  *     summary: Get available drill-down options based on user role
  *     tags: [Network Analysis]
  *     description: Returns the list of districts, stations, and crimes the current user is allowed to view in the global network graph, tailored by their Commander role constraints.
+ *     parameters:
+ *       - in: query
+ *         name: stationId
+ *         schema:
+ *           type: string
+ *         description: >
+ *           Required for STATION_COMMANDER. The station ID from their profile.
+ *       - in: query
+ *         name: districtId
+ *         schema:
+ *           type: string
+ *         description: >
+ *           Required for DISTRICT_COMMANDER. The district ID from their profile.
  *     responses:
  *       200:
  *         description: Successfully retrieved allowed options.
