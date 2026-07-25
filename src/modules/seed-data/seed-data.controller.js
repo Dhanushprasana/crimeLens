@@ -88,6 +88,42 @@ module.exports = {
   },
 
 
+  async bootstrapSuspect(req, res, next) {
+    try {
+      const result = await service.bootstrapSuspect(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async bootstrapVictim(req, res, next) {
+    try {
+      const result = await service.bootstrapVictim(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async bootstrapWitness(req, res, next) {
+    try {
+      const result = await service.bootstrapWitness(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async bootstrapIncidentOfficer(req, res, next) {
+    try {
+      const result = await service.bootstrapIncidentOfficer(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   // Generate a crime incident using valid reference data
   async generateCrime(req, res, next) {
     try {

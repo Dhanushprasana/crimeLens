@@ -9,6 +9,10 @@ const stationRepo = require("../business/police/police-station/police-station.re
 const crimeRepo = require("../business/crime/crime.repository");
 const criminalRepo = require("../business/criminal/criminal.repository");
 const firRepo = require("../business/fir/fir.repository");
+const suspectRepo = require("../business/suspect/suspect.repository");
+const victimRepo = require("../business/crime/case-victim/case-victim.repository");
+const witnessRepo = require("../business/crime/case-witness/case-witness.repository");
+const incidentOfficerRepo = require("../business/crime/incident-officer/incident-officer.repository");
 const userRepo = require("../scaffolding/user/user.repository");
 const bcrypt = require("bcrypt");
 const env = require("../../config/env");
@@ -2025,4 +2029,148 @@ module.exports = {
     }
     return counts;
   },
+
+  async bootstrapSuspect(req) {
+    logger.info("bootstrapSuspect");
+    const filePath = path.join(__dirname, "data", "suspect", "suspect.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0, skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    for (const e of entries) {
+      try {
+        let district_id = null;
+        if (e.district_code) {
+          const dcode = e.district_code.replace(/_/g, "-");
+          const rows = await zcql.executeZCQLQuery(
+            `SELECT ROWID FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_code = '${dcode.replace(/'/g, "''")}' LIMIT 1`
+          );
+          if (rows && rows.length) {
+            district_id = rows[0].ROWID || rows[0][env.TABLE_DISTRICT_GEODATA]?.ROWID;
+          }
+        }
+        e.district_id_of_suspect = district_id;
+        await suspectRepo.addSuspect(e, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn("failed to insert suspect", err && err.message ? err.message : err);
+      }
+    }
+    return { created, skipped };
+  },
+
+  async bootstrapVictim(req) {
+    logger.info("bootstrapVictim");
+    const filePath = path.join(__dirname, "data", "victim", "victim.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0, skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    for (const e of entries) {
+      try {
+        let incident_id = null;
+        if (e.crime_number) {
+          const rows = await zcql.executeZCQLQuery(
+            `SELECT ROWID FROM ${env.TABLE_CRIME_INCIDENT} WHERE crime_number = '${e.crime_number.replace(/'/g, "''")}' LIMIT 1`
+          );
+          if (rows && rows.length) {
+            incident_id = rows[0].ROWID || rows[0][env.TABLE_CRIME_INCIDENT]?.ROWID;
+          }
+        }
+        if (!incident_id) {
+          skipped++;
+          continue;
+        }
+        e.incident_id = incident_id;
+        await victimRepo.addVictim(e, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn("failed to insert victim", err && err.message ? err.message : err);
+      }
+    }
+    return { created, skipped };
+  },
+
+  async bootstrapWitness(req) {
+    logger.info("bootstrapWitness");
+    const filePath = path.join(__dirname, "data", "witness", "witness.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0, skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    for (const e of entries) {
+      try {
+        let incident_id = null;
+        if (e.crime_number) {
+          const rows = await zcql.executeZCQLQuery(
+            `SELECT ROWID FROM ${env.TABLE_CRIME_INCIDENT} WHERE crime_number = '${e.crime_number.replace(/'/g, "''")}' LIMIT 1`
+          );
+          if (rows && rows.length) {
+            incident_id = rows[0].ROWID || rows[0][env.TABLE_CRIME_INCIDENT]?.ROWID;
+          }
+        }
+        if (!incident_id) {
+          skipped++;
+          continue;
+        }
+        e.incident_id = incident_id;
+        await witnessRepo.addWitness(e, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn("failed to insert witness", err && err.message ? err.message : err);
+      }
+    }
+    return { created, skipped };
+  },
+
+  async bootstrapIncidentOfficer(req) {
+    logger.info("bootstrapIncidentOfficer");
+    const filePath = path.join(__dirname, "data", "incident-officer", "incident_officer.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const entries = JSON.parse(raw || "[]");
+    let created = 0, skipped = 0;
+    const zcql = req.catalyst.zcql();
+
+    for (const e of entries) {
+      try {
+        let incident_id = null;
+        let officer_id = null;
+        
+        if (e.crime_number) {
+          const rows = await zcql.executeZCQLQuery(
+            `SELECT ROWID FROM ${env.TABLE_CRIME_INCIDENT} WHERE crime_number = '${e.crime_number.replace(/'/g, "''")}' LIMIT 1`
+          );
+          if (rows && rows.length) {
+            incident_id = rows[0].ROWID || rows[0][env.TABLE_CRIME_INCIDENT]?.ROWID;
+          }
+        }
+        if (e.badge_number) {
+          const rows = await zcql.executeZCQLQuery(
+            `SELECT ROWID FROM ${env.TABLE_POLICE_OFFICER} WHERE badge_number = '${e.badge_number.replace(/'/g, "''")}' LIMIT 1`
+          );
+          if (rows && rows.length) {
+            officer_id = rows[0].ROWID || rows[0][env.TABLE_POLICE_OFFICER]?.ROWID;
+          }
+        }
+
+        if (!incident_id || !officer_id) {
+          skipped++;
+          continue;
+        }
+        
+        await incidentOfficerRepo.assignOfficer({ incident_id, officer_id }, req);
+        created++;
+      } catch (err) {
+        skipped++;
+        logger.warn("failed to assign officer to incident", err && err.message ? err.message : err);
+      }
+    }
+    return { created, skipped };
+  }
 };

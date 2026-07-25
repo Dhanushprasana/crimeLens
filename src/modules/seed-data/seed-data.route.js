@@ -14,13 +14,14 @@ router.post("/crime-category/bootstrap", controller.bootstrapCrimeCategory); //
 router.post("/police-officer/bootstrap", controller.bootstrapPoliceOfficer); //
 router.post("/criminal/bootstrap", controller.bootstrapCriminal); //
 
-// router.post("/suspect/bootstrap",controller.bootstrapSuspect);
-
+router.post("/suspect/bootstrap", controller.bootstrapSuspect);
 router.post("/fir/bootstrap", controller.bootstrapFirs);  //
 router.post("/crime-incident/bootstrap", controller.bootstrapCrimeIncidents);  // 
 
 router.post("/incident-criminal/bootstrap", controller.bootstrapIncidentCriminals);
-// router.post("/incident-officer/bootstrap", controller.bootstrapIncidentOfficers);
+router.post("/incident-officer/bootstrap", controller.bootstrapIncidentOfficer);
+router.post("/case-victim/bootstrap", controller.bootstrapVictim);
+router.post("/case-witness/bootstrap", controller.bootstrapWitness);
 router.post("/crime-evidence/bootstrap", controller.bootstrapCrimeEvidence);
 
 router.post("/district-crime-stats/calculate", controller.calculateDistrictCrimeStats);
