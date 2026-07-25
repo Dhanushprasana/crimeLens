@@ -4,6 +4,66 @@
     {
       "type": "Feature",
       "properties": {
+        "OBJECTID": "1",
+        "DepartmentCode": "164450334",
+        "KGISVillageID": "5007",
+        "KGISCode": "29565055008031140000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "1",
+        "POL_STAName": "Cowlbazar PS",
+        "KGISPSCode": "PS - 01",
+        "districtName": "Bellary"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9029290003413,
+          15.1377060002966
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "2",
+        "DepartmentCode": "164450333",
+        "KGISVillageID": "5007",
+        "KGISCode": "29565055008031140000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "2",
+        "POL_STAName": "Bruceept PS",
+        "KGISPSCode": "PS - 02",
+        "districtName": "Bellary"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.926339999684,
+          15.1381910002788
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "3",
+        "DepartmentCode": "164450335",
+        "KGISVillageID": "5007",
+        "KGISCode": "29565055008031140000HMPOLPUOFFPOS0003",
+        "KGISPOL_STAID": "3",
+        "POL_STAName": "Gandhinagar PS",
+        "KGISPSCode": "PS - 03",
+        "districtName": "Bellary"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9310599996091,
+          15.1453570003326
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "OBJECTID": "12",
         "DepartmentCode": "169860351",
         "KGISVillageID": "5247",
@@ -24,580 +84,1780 @@
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "30",
-        "DepartmentCode": "164450338",
-        "KGISVillageID": "5007",
-        "KGISCode": "29565055008031140000HMPOLPUOFFPOS0004",
-        "KGISPOL_STAID": "30",
-        "POL_STAName": "Ballari Rural PS",
-        "KGISPSCode": "PS - 30",
-        "districtName": "Bellary"
+        "OBJECTID": "13",
+        "DepartmentCode": "169860361",
+        "KGISVillageID": "5233",
+        "KGISCode": "29565054986047060000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "13",
+        "POL_STAName": "Chittavadagi PS",
+        "KGISPSCode": "PS - 13",
+        "districtName": "Vijayanagara"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          76.9250640002023,
-          15.1444889998702
+          76.3884730002258,
+          15.1259780002526
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "55",
-        "DepartmentCode": "164610965",
-        "KGISVillageID": "4140",
-        "KGISCode": "29559054616008840000HMPOLPUOFFPOS0001",
-        "KGISPOL_STAID": "56",
-        "POL_STAName": "Shakti Nagar PS",
-        "KGISPSCode": "PS - 56",
+        "OBJECTID": "14",
+        "DepartmentCode": "169860356",
+        "KGISVillageID": "5247",
+        "KGISCode": "29565054988031090000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "14",
+        "POL_STAName": "Hospet Rural PS",
+        "KGISPSCode": "PS - 14",
+        "districtName": "Vijayanagara"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3873469999333,
+          15.2748960003868
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "31",
+        "DepartmentCode": "164681171",
+        "KGISVillageID": "7956",
+        "KGISCode": "29560054668030720000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "31",
+        "POL_STAName": "Gangavathi Rural PS",
+        "KGISPSCode": "PS - 31",
+        "districtName": "Koppal"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5297200001054,
+          15.4261110001564
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "32",
+        "DepartmentCode": "164681173",
+        "KGISVillageID": "8004",
+        "KGISCode": "29560054666015800000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "32",
+        "POL_STAName": "Kanakagiri PS",
+        "KGISPSCode": "PS - 32",
+        "districtName": "Koppal"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.4237390000924,
+          15.5723569997622
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "33",
+        "DepartmentCode": "164681172",
+        "KGISVillageID": "8023",
+        "KGISCode": "29560054666016810000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "33",
+        "POL_STAName": "Karatagi PS",
+        "KGISPSCode": "PS - 33",
+        "districtName": "Koppal"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6579839996317,
+          15.6005919997517
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "44",
+        "DepartmentCode": "164610992",
+        "KGISVillageID": "31763",
+        "KGISCode": "29559054606006100000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "45",
+        "POL_STAName": "Devadurga PS",
+        "KGISPSCode": "PS - 45",
         "districtName": "Raichur"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.3533134002243,
-          16.370844899622
+          76.9287049998064,
+          16.4150025003166
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "87",
-        "DepartmentCode": "164431394",
-        "KGISVillageID": "15087",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0009",
-        "KGISPOL_STAID": "90",
-        "POL_STAName": "High Grounds PS",
-        "KGISPSCode": "PS - 90",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "45",
+        "DepartmentCode": "164610994",
+        "KGISVillageID": "3673",
+        "KGISCode": "29559054606006700000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "46",
+        "POL_STAName": "Gabbur PS",
+        "KGISPSCode": "PS - 46",
+        "districtName": "Raichur"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.5927664453475,
-          12.9899573531302
+          77.1609118001156,
+          16.2960855001534
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "96",
-        "DepartmentCode": "164431411",
-        "KGISVillageID": "21387",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0018",
-        "KGISPOL_STAID": "99",
-        "POL_STAName": "Byappanahalli PS",
-        "KGISPSCode": "PS - 99",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "46",
+        "DepartmentCode": "164610993",
+        "KGISVillageID": "3731",
+        "KGISCode": "29559054606005490000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "47",
+        "POL_STAName": "Jalhalli PS",
+        "KGISPSCode": "PS - 47",
+        "districtName": "Raichur"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.6568733672614,
-          12.99146656405
+          76.7834533840468,
+          16.3651088137999
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "100",
-        "DepartmentCode": "164431401",
+        "OBJECTID": "68",
+        "DepartmentCode": "169821456",
+        "KGISVillageID": "883",
+        "KGISCode": "29555054385977810000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "69",
+        "POL_STAName": "Bagewadi PS",
+        "KGISPSCode": "PS - 69",
+        "districtName": "Belgaum"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.6373274007038,
+          15.7761522323095
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "69",
+        "DepartmentCode": "169820310",
+        "KGISVillageID": "935",
+        "KGISCode": "29555054388030330000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "70",
+        "POL_STAName": "Belagavi Rural PS",
+        "KGISPSCode": "PS - 70",
+        "districtName": "Belgaum"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5145610002729,
+          15.8331710002305
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "70",
+        "DepartmentCode": "169820311",
+        "KGISVillageID": "973",
+        "KGISCode": "29555054385977920000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "71",
+        "POL_STAName": "Kakati PS",
+        "KGISPSCode": "PS - 71",
+        "districtName": "Belgaum"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5275059997213,
+          15.9298600000182
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "81",
+        "DepartmentCode": "164431398",
         "KGISVillageID": "30092",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0022",
-        "KGISPOL_STAID": "103",
-        "POL_STAName": "Bharathi Nagar PS",
-        "KGISPSCode": "PS - 103",
+        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0003",
+        "KGISPOL_STAID": "84",
+        "POL_STAName": "Cubbon Park PS",
+        "KGISPSCode": "PS - 84",
         "districtName": "Bangalore Urban"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.6120856003067,
-          12.9912025002823
+          77.5979641429556,
+          12.9800298427157
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "103",
-        "DepartmentCode": "164431403",
+        "OBJECTID": "82",
+        "DepartmentCode": "164431397",
         "KGISVillageID": "30092",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0025",
-        "KGISPOL_STAID": "106",
-        "POL_STAName": "Shivajinagar PS",
-        "KGISPSCode": "PS - 106",
+        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0004",
+        "KGISPOL_STAID": "85",
+        "POL_STAName": "Vidhana Soudha PS",
+        "KGISPSCode": "PS - 85",
         "districtName": "Bangalore Urban"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.6052475001124,
-          12.9855097999292
+          77.5886142885905,
+          12.9773209692159
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "114",
-        "DepartmentCode": "164431364",
-        "KGISVillageID": "15081",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0073",
-        "KGISPOL_STAID": "159",
-        "POL_STAName": "Chamarajpet PS",
-        "KGISPSCode": "PS - 159",
+        "OBJECTID": "83",
+        "DepartmentCode": "164431390",
+        "KGISVillageID": "15151",
+        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0005",
+        "KGISPOL_STAID": "86",
+        "POL_STAName": "Viveknagar PS",
+        "KGISPSCode": "PS - 86",
         "districtName": "Bangalore Urban"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.5670263999736,
-          12.9605426996297
+          77.6222989999259,
+          12.951547000394
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "117",
-        "DepartmentCode": "164431431",
-        "KGISVillageID": "30092",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0076",
-        "KGISPOL_STAID": "162",
-        "POL_STAName": "Kalasipalya PS",
-        "KGISPSCode": "PS - 162",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "104",
+        "DepartmentCode": "164701245",
+        "KGISVillageID": "349",
+        "KGISCode": "29556054485990270000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "461",
+        "POL_STAName": "Amengad PS",
+        "KGISPSCode": "PS - 461",
+        "districtName": "Bagalkot"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.5773576933696,
-          12.9573704167974
+          75.9456940002023,
+          16.0566130004213
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "141",
-        "DepartmentCode": "164431350",
-        "KGISVillageID": "15491",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0035",
-        "KGISPOL_STAID": "116",
-        "POL_STAName": "Peenya PS",
-        "KGISPSCode": "PS - 116",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "105",
+        "DepartmentCode": "164701241",
+        "KGISVillageID": "370",
+        "KGISCode": "29556054485989420000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "462",
+        "POL_STAName": "Hungunda PS",
+        "KGISPSCode": "PS - 462",
+        "districtName": "Bagalkot"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.5211640244163,
-          13.0360401362993
+          76.0603622998149,
+          16.0666995998932
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "149",
-        "DepartmentCode": "164431354",
-        "KGISVillageID": "15112",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0042",
-        "KGISPOL_STAID": "124",
-        "POL_STAName": "Hebbal PS",
-        "KGISPSCode": "PS - 124",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "106",
+        "DepartmentCode": "164701242",
+        "KGISVillageID": "424",
+        "KGISCode": "29556054488030500000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "463",
+        "POL_STAName": "Ilakal PS",
+        "KGISPSCode": "PS - 463",
+        "districtName": "Bagalkot"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.5896609998677,
-          13.0383900002421
+          76.1116999999779,
+          15.9656960002354
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "158",
-        "DepartmentCode": "164431355",
-        "KGISVillageID": "15447",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0048",
-        "KGISPOL_STAID": "133",
-        "POL_STAName": "Yelahanka PS",
-        "KGISPSCode": "PS - 133",
-        "districtName": "Bangalore Urban"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.594093907309,
-          13.0948982140093
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "183",
-        "DepartmentCode": "164431428",
-        "KGISVillageID": "15494",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0086",
-        "KGISPOL_STAID": "172",
-        "POL_STAName": "Kamakshipalya PS",
-        "KGISPSCode": "PS - 172",
-        "districtName": "Bangalore Urban"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.5320189022735,
-          12.9822236602558
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "186",
-        "DepartmentCode": "164431424",
-        "KGISVillageID": "15116",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0089",
-        "KGISPOL_STAID": "175",
-        "POL_STAName": "Vijayanagar PS",
-        "KGISPSCode": "PS - 175",
-        "districtName": "Bangalore Urban"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.538467437727,
-          12.9723502644423
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "198",
-        "DepartmentCode": "169711935",
-        "KGISVillageID": "6685",
-        "KGISCode": "29562054758030830000HMPOLPUOFFPOS0002",
-        "KGISPOL_STAID": "346",
-        "POL_STAName": "Ashoknagar PS",
-        "KGISPSCode": "PS - 346",
-        "districtName": "Dharwad"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          75.1318450001869,
-          15.3689909999987
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "200",
-        "DepartmentCode": "169710070",
-        "KGISVillageID": "6689",
-        "KGISCode": "29562054758030830000HMPOLPUOFFPOS0004",
-        "KGISPOL_STAID": "348",
-        "POL_STAName": "Hubballi SubUrban PS",
-        "KGISPSCode": "PS - 348",
-        "districtName": "Dharwad"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          75.1392599995464,
-          15.3506379996766
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "288",
-        "DepartmentCode": "169771345",
-        "KGISVillageID": "29840",
-        "KGISCode": "29584056066261860000HMPOLPUOFFPOS0001",
-        "KGISPOL_STAID": "226",
-        "POL_STAName": "Bidadi PS",
-        "KGISPSCode": "PS - 226",
+        "OBJECTID": "119",
+        "DepartmentCode": "169771338",
+        "KGISVillageID": "29321",
+        "KGISCode": "29584056088032400000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "235",
+        "POL_STAName": "Kanakapura Rural PS",
+        "KGISPSCode": "PS - 235",
         "districtName": "Ramanagara"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.3847750000391,
-          12.800368999628
+          77.4244669999111,
+          12.5543489999296
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "405",
-        "DepartmentCode": "164590883",
-        "KGISVillageID": "28460",
-        "KGISCode": "29577055728031940000HMPOLPUOFFPOS0017",
-        "KGISPOL_STAID": "658",
-        "POL_STAName": "Mysore South PS",
-        "KGISPSCode": "PS - 658",
-        "districtName": "Mysore"
+        "OBJECTID": "120",
+        "DepartmentCode": "169771337",
+        "KGISVillageID": "29321",
+        "KGISCode": "29584056088032400000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "236",
+        "POL_STAName": "Kanakapura Town PS",
+        "KGISPSCode": "PS - 236",
+        "districtName": "Ramanagara"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          76.6643888891635,
-          12.3128250001524
+          77.4226379999284,
+          12.5466869996491
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "444",
-        "DepartmentCode": "164691216",
-        "KGISVillageID": "14824",
-        "KGISCode": "29569055228031390000HMPOLPUOFFPOS0001",
-        "KGISPOL_STAID": "719",
-        "POL_STAName": "Kundapura PS",
-        "KGISPSCode": "PS - 719",
-        "districtName": "Udupi"
+        "OBJECTID": "121",
+        "DepartmentCode": "169771339",
+        "KGISVillageID": "29376",
+        "KGISCode": "29584056086266090000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "237",
+        "POL_STAName": "Kodihalli PS",
+        "KGISPSCode": "PS - 237",
+        "districtName": "Ramanagara"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          74.6895069997589,
-          13.636995999572
+          77.494987999852,
+          12.4356590001252
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "457",
-        "DepartmentCode": "164431796",
-        "KGISVillageID": "15501",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0067",
-        "KGISPOL_STAID": "153",
-        "POL_STAName": "H.S.R.Layout PS",
-        "KGISPSCode": "PS - 153",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "131",
+        "DepartmentCode": "164641652",
+        "KGISVillageID": "14091",
+        "KGISCode": "29571055326102140000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "248",
+        "POL_STAName": "Chikkanayakanahalli PS",
+        "KGISPSCode": "PS - 248",
+        "districtName": "Tumkur"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.6513889997284,
-          12.9201510003798
+          76.6191166667985,
+          13.4095833334318
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "547",
-        "DepartmentCode": "164432198",
-        "KGISVillageID": "21436",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0091",
-        "KGISPOL_STAID": "783",
-        "POL_STAName": "Bellanduru PS",
-        "KGISPSCode": "PS - 783",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "132",
+        "DepartmentCode": "164641801",
+        "KGISVillageID": "14141",
+        "KGISCode": "29571055326100470000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "249",
+        "POL_STAName": "Handanakere PS",
+        "KGISPSCode": "PS - 249",
+        "districtName": "Tumkur"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.6678679998158,
-          12.9191619996926
+          76.4472850003111,
+          13.502821000084
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "550",
-        "DepartmentCode": "164430259",
-        "KGISVillageID": "21491",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0094",
-        "KGISPOL_STAID": "786",
-        "POL_STAName": "Varthur PS",
-        "KGISPSCode": "PS - 786",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "150",
+        "DepartmentCode": "164431820",
+        "KGISVillageID": "20089",
+        "KGISCode": "29583056039999990000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "125",
+        "POL_STAName": "BIAL PS",
+        "KGISPSCode": "PS - 125",
+        "districtName": "Bangalore Rural"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.7469200001009,
-          12.9380340003015
+          77.7059880001317,
+          13.1991489995673
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "554",
-        "DepartmentCode": "164430258",
-        "KGISVillageID": "21434",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0098",
-        "KGISPOL_STAID": "790",
-        "POL_STAName": "Whitefield PS",
-        "KGISPSCode": "PS - 790",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "152",
+        "DepartmentCode": "164430266",
+        "KGISVillageID": "20095",
+        "KGISCode": "29583056038032350000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "127",
+        "POL_STAName": "Devanahalli PS",
+        "KGISPSCode": "PS - 127",
+        "districtName": "Bangalore Rural"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.7510760001927,
-          12.9753560004434
+          77.7123860001372,
+          13.2454360002925
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "574",
-        "DepartmentCode": "169801054",
-        "KGISVillageID": "26167",
-        "KGISCode": "29575055618031810000HMPOLPUOFFPOS0003",
-        "KGISPOL_STAID": "811",
-        "POL_STAName": "Surathkal PS",
-        "KGISPSCode": "PS - 811",
-        "districtName": "Dakshina Kannada"
+        "OBJECTID": "187",
+        "DepartmentCode": "169760833",
+        "KGISVillageID": "25564",
+        "KGISCode": "29582055966235540000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "176",
+        "POL_STAName": "Chikkaballapura Town PS",
+        "KGISPSCode": "PS - 176",
+        "districtName": "Chikkaballapura"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          74.8011130002436,
-          12.9881750003396
+          77.7238969999589,
+          13.4377180003861
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "577",
-        "DepartmentCode": "169801041",
-        "KGISVillageID": "31454",
-        "KGISCode": "29575055618031810000HMPOLPUOFFPOS0004",
-        "KGISPOL_STAID": "814",
-        "POL_STAName": "Mangaluru North PS",
-        "KGISPSCode": "PS - 814",
-        "districtName": "Dakshina Kannada"
+        "OBJECTID": "188",
+        "DepartmentCode": "169760834",
+        "KGISVillageID": "25588",
+        "KGISCode": "29582055968032270000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "177",
+        "POL_STAName": "Chikkaballapura Rural PS",
+        "KGISPSCode": "PS - 177",
+        "districtName": "Chikkaballapura"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          74.8335019997197,
-          12.8642720003151
+          77.7296819999364,
+          13.4360050000193
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "581",
-        "DepartmentCode": "169801042",
-        "KGISVillageID": "31454",
-        "KGISCode": "29575055618031810000HMPOLPUOFFPOS0009",
-        "KGISPOL_STAID": "819",
-        "POL_STAName": "Mangaluru South PS",
-        "KGISPSCode": "PS - 819",
-        "districtName": "Dakshina Kannada"
+        "OBJECTID": "189",
+        "DepartmentCode": "169762157",
+        "KGISVillageID": "25564",
+        "KGISCode": "29582055966235540000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "178",
+        "POL_STAName": "Chikkaballapura Women PS",
+        "KGISPSCode": "PS - 178",
+        "districtName": "Chikkaballapura"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          74.8399299998815,
-          12.8549829999593
+          77.7238969999589,
+          13.4377180003861
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "602",
-        "DepartmentCode": "164421332",
-        "KGISVillageID": "14990",
-        "KGISCode": "29572055456133590000HMPOLPUOFFPOS0001",
-        "KGISPOL_STAID": "843",
-        "POL_STAName": "Attibele PS",
-        "KGISPSCode": "PS - 843",
-        "districtName": "Bangalore Urban"
+        "OBJECTID": "193",
+        "DepartmentCode": "164390156",
+        "KGISVillageID": "7922",
+        "KGISCode": "29564054896038790000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "341",
+        "POL_STAName": "Tadas PS",
+        "KGISPSCode": "PS - 341",
+        "districtName": "Haveri"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.7716710001049,
-          12.7789360000593
+          75.1241989997586,
+          15.1246640001089
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "636",
-        "DepartmentCode": "164431380",
-        "KGISVillageID": "15536",
-        "KGISCode": "29572055428031620000HMPOLPUOFFPOS0069",
-        "KGISPOL_STAID": "155",
-        "POL_STAName": "Madiwala PS",
-        "KGISPSCode": "PS - 155",
-        "districtName": "Bangalore Urban"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.620667999617,
-          12.9209999998742
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "OBJECTID": "669",
-        "DepartmentCode": "164520608",
-        "KGISVillageID": "6550",
-        "KGISCode": "29562054738030830000HMPOLPUOFFPOS0004",
-        "KGISPOL_STAID": "504",
-        "POL_STAName": "Dharwad Rural PS",
-        "KGISPSCode": "PS - 504",
+        "OBJECTID": "194",
+        "DepartmentCode": "169711686",
+        "KGISVillageID": "31496",
+        "KGISCode": "29562054738030830000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "342",
+        "POL_STAName": "Dharwad Sub Urban PS",
+        "KGISPSCode": "PS - 342",
         "districtName": "Dharwad"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          74.9879009494425,
-          15.4718184459285
+          74.9978580000498,
+          15.4645530001277
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "OBJECTID": "728",
-        "DepartmentCode": "169730055",
-        "KGISVillageID": "28453",
-        "KGISCode": "29577055728031940000HMPOLPUOFFPOS0005",
-        "KGISPOL_STAID": "440",
-        "POL_STAName": "Udayagiri PS",
-        "KGISPSCode": "PS - 440",
+        "OBJECTID": "195",
+        "DepartmentCode": "169710081",
+        "KGISVillageID": "31496",
+        "KGISCode": "29562054738030830000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "343",
+        "POL_STAName": "Dharwad Town PS",
+        "KGISPSCode": "PS - 343",
+        "districtName": "Dharwad"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0112029995962,
+          15.4588490003728
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "196",
+        "DepartmentCode": "169711687",
+        "KGISVillageID": "6559",
+        "KGISCode": "29562054738030830000HMPOLPUOFFPOS0003",
+        "KGISPOL_STAID": "344",
+        "POL_STAName": "Vidyagiri PS",
+        "KGISPSCode": "PS - 344",
+        "districtName": "Dharwad"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0113909995813,
+          15.4390219996846
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "209",
+        "DepartmentCode": "164461474",
+        "KGISVillageID": "1941",
+        "KGISCode": "29558054568030590000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "358",
+        "POL_STAName": "Aurad PS",
+        "KGISPSCode": "PS - 358",
+        "districtName": "Bidar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.4122979997886,
+          18.2490299998802
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "210",
+        "DepartmentCode": "164461476",
+        "KGISVillageID": "1976",
+        "KGISCode": "29558054566000730000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "359",
+        "POL_STAName": "Chintaki PS",
+        "KGISPSCode": "PS - 359",
+        "districtName": "Bidar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.5467750003733,
+          18.268915000167
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "211",
+        "DepartmentCode": "164461921",
+        "KGISVillageID": "2004",
+        "KGISCode": "29558054565999730000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "360",
+        "POL_STAName": "Hokrana PS",
+        "KGISPSCode": "PS - 360",
+        "districtName": "Bidar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.3288899995648,
+          18.3845760000993
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "238",
+        "DepartmentCode": "164541610",
+        "KGISVillageID": "2598",
+        "KGISCode": "29579055818032060000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "387",
+        "POL_STAName": "Afzalpur PS",
+        "KGISPSCode": "PS - 387",
+        "districtName": "Gulbarga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3582500001155,
+          17.2028699998072
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "239",
+        "DepartmentCode": "164541613",
+        "KGISVillageID": "2642",
+        "KGISCode": "29579055816201620000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "388",
+        "POL_STAName": "Devalagangapur PS",
+        "KGISPSCode": "PS - 388",
+        "districtName": "Gulbarga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5430970003937,
+          17.2072069999576
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "240",
+        "DepartmentCode": "164541612",
+        "KGISVillageID": "2624",
+        "KGISCode": "29579055816201200000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "389",
+        "POL_STAName": "Revoor PS",
+        "KGISPSCode": "PS - 389",
+        "districtName": "Gulbarga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.4648649997774,
+          17.3220370004382
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "249",
+        "DepartmentCode": "164641653",
+        "KGISVillageID": "14192",
+        "KGISCode": "29571055326102650000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "250",
+        "POL_STAName": "Huliyar PS",
+        "KGISPSCode": "PS - 250",
+        "districtName": "Tumkur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.538450999737,
+          13.5830499995931
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "250",
+        "DepartmentCode": "164510592",
+        "KGISVillageID": "27370",
+        "KGISCode": "29576055676178920000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "606",
+        "POL_STAName": "Shanivarasanthe PS",
+        "KGISPSCode": "PS - 606",
+        "districtName": "Kodagu"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8896999998976,
+          12.7266999999098
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "251",
+        "DepartmentCode": "164510591",
+        "KGISVillageID": "27455",
+        "KGISCode": "29576055676179580000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "607",
+        "POL_STAName": "Somwarpet PS",
+        "KGISPSCode": "PS - 607",
+        "districtName": "Kodagu"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8090270002041,
+          12.5132190001061
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "252",
+        "DepartmentCode": "164510582",
+        "KGISVillageID": "31660",
+        "KGISCode": "29576055686180890000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "608",
+        "POL_STAName": "Gonikoppa PS",
+        "KGISPSCode": "PS - 608",
+        "districtName": "Kodagu"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.9230444487975,
+          12.1855877517853
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "268",
+        "DepartmentCode": "169720227",
+        "KGISVillageID": "15770",
+        "KGISCode": "29581055938032230000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "194",
+        "POL_STAName": "Bangarpet PS",
+        "KGISPSCode": "PS - 194",
+        "districtName": "Kolar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.1788199998546,
+          12.985930000209
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "269",
+        "DepartmentCode": "169720228",
+        "KGISVillageID": "15809",
+        "KGISCode": "29581055936228430000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "195",
+        "POL_STAName": "Bethamangala PS",
+        "KGISPSCode": "PS - 195",
+        "districtName": "Kolar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.3333199996323,
+          13.0082299996789
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "270",
+        "DepartmentCode": "169720229",
+        "KGISVillageID": "15968",
+        "KGISCode": "29581055936226110000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "196",
+        "POL_STAName": "Kamasamudram PS",
+        "KGISPSCode": "PS - 196",
+        "districtName": "Kolar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.1959899995622,
+          12.8632300000266
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "295",
+        "DepartmentCode": "164482206",
+        "KGISVillageID": "10060",
+        "KGISCode": "29570055308031490000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "231",
+        "POL_STAName": "Chikkamagalur Women PS",
+        "KGISPSCode": "PS - 231",
+        "districtName": "Chikmagalur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.775461542016,
+          13.3206493591515
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "296",
+        "DepartmentCode": "164621011",
+        "KGISVillageID": "13948",
+        "KGISCode": "29568055196081620000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "860",
+        "POL_STAName": "Malur PS",
+        "KGISPSCode": "PS - 860",
+        "districtName": "Shimoga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3397154522091,
+          13.7289753620207
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "297",
+        "DepartmentCode": "164480469",
+        "KGISVillageID": "10522",
+        "KGISCode": "29570055296094570000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "883",
+        "POL_STAName": "Yagati PS",
+        "KGISPSCode": "PS - 883",
+        "districtName": "Chikmagalur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1482294667381,
+          13.6127814142827
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "298",
+        "DepartmentCode": "164390136",
+        "KGISVillageID": "7510",
+        "KGISCode": "29564054928031040000HMPOLPUOFFPOS0003",
+        "KGISPOL_STAID": "328",
+        "POL_STAName": "Haveri Town PS",
+        "KGISPSCode": "PS - 328",
+        "districtName": "Haveri"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3965820004141,
+          14.7930349998798
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "299",
+        "DepartmentCode": "164390151",
+        "KGISVillageID": "7571",
+        "KGISCode": "29564054946043550000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "329",
+        "POL_STAName": "Hansabhavi PS",
+        "KGISPSCode": "PS - 329",
+        "districtName": "Haveri"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3687599995934,
+          14.5699749998053
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "324",
+        "DepartmentCode": "169730041",
+        "KGISVillageID": "28431",
+        "KGISCode": "29577055728031940000HMPOLPUOFFPOS0015",
+        "KGISPOL_STAID": "452",
+        "POL_STAName": "Narasimharaja PS",
+        "KGISPSCode": "PS - 452",
         "districtName": "Mysore"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          76.6809440001246,
-          12.3267900003402
+          76.6640019996344,
+          12.3348370001307
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "325",
+        "DepartmentCode": "169730044",
+        "KGISVillageID": "28463",
+        "KGISCode": "29577055728031940000HMPOLPUOFFPOS0016",
+        "KGISPOL_STAID": "453",
+        "POL_STAName": "V.V. Puram PS",
+        "KGISPSCode": "PS - 453",
+        "districtName": "Mysore"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6328360000982,
+          12.3261190002503
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "326",
+        "DepartmentCode": "169730045",
+        "KGISVillageID": "28444",
+        "KGISCode": "29577055726188290000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "454",
+        "POL_STAName": "Vijayanagar PS",
+        "KGISPSCode": "PS - 454",
+        "districtName": "Mysore"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6016359995834,
+          12.3368890004213
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "362",
+        "DepartmentCode": "164580876",
+        "KGISVillageID": "24009",
+        "KGISCode": "29573055526147750000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "615",
+        "POL_STAName": "Halagur PS",
+        "KGISPSCode": "PS - 615",
+        "districtName": "Mandya"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.2283610003245,
+          12.4274999996901
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "363",
+        "DepartmentCode": "164580875",
+        "KGISVillageID": "23809",
+        "KGISCode": "29573055516146210000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "616",
+        "POL_STAName": "K.M. Doddi PS",
+        "KGISPSCode": "PS - 616",
+        "districtName": "Mandya"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.035163999984,
+          12.4893079996013
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "364",
+        "DepartmentCode": "164581617",
+        "KGISVillageID": "23844",
+        "KGISCode": "29573055516145310000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "617",
+        "POL_STAName": "Besagaraghalli PS",
+        "KGISPSCode": "PS - 617",
+        "districtName": "Mandya"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.0060279998678,
+          12.63613900021
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "414",
+        "DepartmentCode": "164480481",
+        "KGISVillageID": "10359",
+        "KGISCode": "29570055298031480000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "688",
+        "POL_STAName": "Kadur PS",
+        "KGISPSCode": "PS - 688",
+        "districtName": "Chikmagalur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0117877802284,
+          13.555317508155
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "422",
+        "DepartmentCode": "164631073",
+        "KGISVillageID": "25963",
+        "KGISCode": "29575055628031830000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "696",
+        "POL_STAName": "Bantwala Rural PS",
+        "KGISPSCode": "PS - 696",
+        "districtName": "Dakshina Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0404499999249,
+          12.8907833327236
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "423",
+        "DepartmentCode": "164631072",
+        "KGISVillageID": "25996",
+        "KGISCode": "29575055628031830000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "697",
+        "POL_STAName": "Bantwala Town PS",
+        "KGISPSCode": "PS - 697",
+        "districtName": "Dakshina Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0313750000531,
+          12.8813960002963
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "424",
+        "DepartmentCode": "164631074",
+        "KGISVillageID": "26042",
+        "KGISCode": "29575055626176050000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "698",
+        "POL_STAName": "Vitla PS",
+        "KGISPSCode": "PS - 698",
+        "districtName": "Dakshina Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.1016099998576,
+          12.763360000292
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "433",
+        "DepartmentCode": "164691202",
+        "KGISVillageID": "14923",
+        "KGISCode": "29569055236088320000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "707",
+        "POL_STAName": "Kapu PS",
+        "KGISPSCode": "PS - 707",
+        "districtName": "Udupi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.7482400004314,
+          13.2284669997503
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "434",
+        "DepartmentCode": "164691203",
+        "KGISVillageID": "14919",
+        "KGISCode": "29569055236088580000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "708",
+        "POL_STAName": "Padubidri PS",
+        "KGISPSCode": "PS - 708",
+        "districtName": "Udupi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.7701429996373,
+          13.1408309998147
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "435",
+        "DepartmentCode": "164691206",
+        "KGISVillageID": "14928",
+        "KGISCode": "29569055236088250000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "709",
+        "POL_STAName": "Shirva PS",
+        "KGISPSCode": "PS - 709",
+        "districtName": "Udupi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.832211999612,
+          13.2111169997885
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "459",
+        "DepartmentCode": "164600950",
+        "KGISVillageID": "8795",
+        "KGISCode": "29563054886038780000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "729",
+        "POL_STAName": "Bhatkal Rural PS",
+        "KGISPSCode": "PS - 729",
+        "districtName": "Uttara Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5385116612427,
+          13.9984983574694
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "460",
+        "DepartmentCode": "164600949",
+        "KGISVillageID": "8816",
+        "KGISCode": "29563054888030990000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "730",
+        "POL_STAName": "Bhatkal Town PS",
+        "KGISPSCode": "PS - 730",
+        "districtName": "Uttara Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5521247779463,
+          13.9899128338417
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "461",
+        "DepartmentCode": "164600951",
+        "KGISVillageID": "31836",
+        "KGISCode": "29563054886038190000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "731",
+        "POL_STAName": "Murudeshwar PS",
+        "KGISPSCode": "PS - 731",
+        "districtName": "Uttara Kannada"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.4885348002787,
+          14.0952149997076
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "473",
+        "DepartmentCode": "164380097",
+        "KGISVillageID": "11760",
+        "KGISCode": "29567055128031270000HMPOLPUOFFPOS0006",
+        "KGISPOL_STAID": "302",
+        "POL_STAName": "Basavanagara PS",
+        "KGISPSCode": "PS - 302",
+        "districtName": "Davanagere"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.9184260000763,
+          14.4692230002346
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "474",
+        "DepartmentCode": "164380099",
+        "KGISVillageID": "11760",
+        "KGISCode": "29567055128031270000HMPOLPUOFFPOS0007",
+        "KGISPOL_STAID": "303",
+        "POL_STAName": "Gandhi Nagar PS",
+        "KGISPSCode": "PS - 303",
+        "districtName": "Davanagere"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.9203209997948,
+          14.4763269999813
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "475",
+        "DepartmentCode": "164381519",
+        "KGISVillageID": "11759",
+        "KGISCode": "29567055128031270000HMPOLPUOFFPOS0008",
+        "KGISPOL_STAID": "304",
+        "POL_STAName": "Davanagere RMC Yard PS",
+        "KGISPSCode": "PS - 304",
+        "districtName": "Davanagere"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.9358709999474,
+          14.4597660003841
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "506",
+        "DepartmentCode": "169781597",
+        "KGISVillageID": "32157",
+        "KGISCode": "29580055888032160000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "421",
+        "POL_STAName": "Bheemarayanagudi PS",
+        "KGISPSCode": "PS - 421",
+        "districtName": "Yadgir"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.8038080001843,
+          16.7206390000315
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "507",
+        "DepartmentCode": "169781595",
+        "KGISVillageID": "32066",
+        "KGISCode": "29580055886210920000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "422",
+        "POL_STAName": "Gogi PS",
+        "KGISPSCode": "PS - 422",
+        "districtName": "Yadgir"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7461249996775,
+          16.7330159996719
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "520",
+        "DepartmentCode": "164621000",
+        "KGISVillageID": "13451",
+        "KGISCode": "29568055208031370000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "755",
+        "POL_STAName": "Doddapete PS",
+        "KGISPSCode": "PS - 755",
+        "districtName": "Shimoga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.56659799993,
+          13.9305049996446
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "521",
+        "DepartmentCode": "164621815",
+        "KGISVillageID": "13457",
+        "KGISCode": "29568055208031370000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "756",
+        "POL_STAName": "Tunganagara PS",
+        "KGISPSCode": "PS - 756",
+        "districtName": "Shimoga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.5544790004202,
+          13.9237559999042
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "560",
+        "DepartmentCode": "164420253",
+        "KGISVillageID": "20638",
+        "KGISCode": "29583056048032360000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "796",
+        "POL_STAName": "Hosakote PS",
+        "KGISPSCode": "PS - 796",
+        "districtName": "Bangalore Rural"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.7804413997902,
+          13.070119099763
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "586",
+        "DepartmentCode": "164401563",
+        "KGISVillageID": "7196",
+        "KGISCode": "29579055828032070000HMPOLPUOFFPOS0010",
+        "KGISPOL_STAID": "826",
+        "POL_STAName": "Lakshmeshwar PS",
+        "KGISPSCode": "PS - 826",
+        "districtName": "Gadag"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.4735646873454,
+          15.1202848551357
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "588",
+        "DepartmentCode": "164490511",
+        "KGISVillageID": "11282",
+        "KGISCode": "29566055086060600000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "829",
+        "POL_STAName": "Imangala PS",
+        "KGISPSCode": "PS - 829",
+        "districtName": "Chitradurga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5342669999315,
+          14.095090000349
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "589",
+        "DepartmentCode": "164490507",
+        "KGISVillageID": "6409",
+        "KGISCode": "29566055038031180000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "830",
+        "POL_STAName": "Molakalmuru PS",
+        "KGISPSCode": "PS - 830",
+        "districtName": "Chitradurga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7457030000174,
+          14.7180229999007
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "590",
+        "DepartmentCode": "164490489",
+        "KGISVillageID": "5879",
+        "KGISCode": "29566055056056000000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "831",
+        "POL_STAName": "Chitradurga Town PS",
+        "KGISPSCode": "PS - 831",
+        "districtName": "Chitradurga"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.4036630002954,
+          14.2240100001111
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "599",
+        "DepartmentCode": "164550753",
+        "KGISVillageID": "22408",
+        "KGISCode": "29574055546151440000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "840",
+        "POL_STAName": "Arehalli PS",
+        "KGISPSCode": "PS - 840",
+        "districtName": "Hassan"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8018299998595,
+          13.0454269998852
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "635",
+        "DepartmentCode": "169782236",
+        "KGISVillageID": "32561",
+        "KGISCode": "29580055898032190000HMPOLPUOFFPOS0004",
+        "KGISPOL_STAID": "881",
+        "POL_STAName": "Yadgir CEN Crime PS",
+        "KGISPSCode": "PS - 881",
+        "districtName": "Yadgir"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.1160595497585,
+          16.7732241213106
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "678",
+        "DepartmentCode": "164401558",
+        "KGISVillageID": "6920",
+        "KGISCode": "29561054708030780000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "516",
+        "POL_STAName": "Betageri PS",
+        "KGISPSCode": "PS - 516",
+        "districtName": "Gadag"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.6468818515471,
+          15.4452623455419
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "679",
+        "DepartmentCode": "164401559",
+        "KGISVillageID": "6920",
+        "KGISCode": "29561054708030780000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "517",
+        "POL_STAName": "Betageri Extention PS",
+        "KGISPSCode": "PS - 517",
+        "districtName": "Gadag"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.6522139996588,
+          15.4276390003914
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "743",
+        "DepartmentCode": "164471924",
+        "KGISVillageID": "4418",
+        "KGISCode": "29557054525994910000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "528",
+        "POL_STAName": "Alamatti PS",
+        "KGISPSCode": "PS - 528",
+        "districtName": "Bijapur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8977699998408,
+          16.343020000317
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "744",
+        "DepartmentCode": "164470429",
+        "KGISVillageID": "4343",
+        "KGISCode": "29557054528030540000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "529",
+        "POL_STAName": "Basavan Bagewadi PS",
+        "KGISPSCode": "PS - 529",
+        "districtName": "Bijapur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.9689999997507,
+          16.5720999995958
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "745",
+        "DepartmentCode": "164470430",
+        "KGISVillageID": "4433",
+        "KGISCode": "29557054525994530000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "530",
+        "POL_STAName": "Kolhar PS",
+        "KGISPSCode": "PS - 530",
+        "districtName": "Bijapur"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.6862534277492,
+          16.4869407384441
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "766",
+        "DepartmentCode": "164671121",
+        "KGISVillageID": "25009",
+        "KGISCode": "29578055776196740000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "552",
+        "POL_STAName": "Chamarajanagar East PS",
+        "KGISPSCode": "PS - 552",
+        "districtName": "Chamarajanagar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9627490003615,
+          11.9350219996238
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "767",
+        "DepartmentCode": "164671120",
+        "KGISVillageID": "24983",
+        "KGISCode": "29578055778032010000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "553",
+        "POL_STAName": "Chamarajanagar Rural PS",
+        "KGISPSCode": "PS - 553",
+        "districtName": "Chamarajanagar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9298200003305,
+          11.9260970003251
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "768",
+        "DepartmentCode": "164672173",
+        "KGISVillageID": "25009",
+        "KGISCode": "29578055776196740000HMPOLPUOFFPOS0002",
+        "KGISPOL_STAID": "554",
+        "POL_STAName": "Chamarajanagar Women PS",
+        "KGISPSCode": "PS - 554",
+        "districtName": "Chamarajanagar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9629229997826,
+          11.9362010002533
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "782",
+        "DepartmentCode": "164550738",
+        "KGISVillageID": "21959",
+        "KGISCode": "29574055558031730000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "568",
+        "POL_STAName": "Arasikere Rural PS",
+        "KGISPSCode": "PS - 568",
+        "districtName": "Hassan"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2569929998741,
+          13.3126749996872
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": "783",
+        "DepartmentCode": "164550739",
+        "KGISVillageID": "22038",
+        "KGISCode": "29574055556158400000HMPOLPUOFFPOS0001",
+        "KGISPOL_STAID": "569",
+        "POL_STAName": "Banavara PS",
+        "KGISPSCode": "PS - 569",
+        "districtName": "Hassan"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1628809997244,
+          13.4047820003321
         ]
       }
     }

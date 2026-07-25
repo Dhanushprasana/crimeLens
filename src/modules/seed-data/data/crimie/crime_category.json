@@ -1,62 +1,22 @@
 [
- {
-  "crime_category_name": "Theft",
-  "description": "Property theft",
-  "crime_category_number": "1"
- },
- {
-  "crime_category_name": "Robbery",
-  "description": "Armed robbery",
-  "crime_category_number": "2"
- },
- {
-  "crime_category_name": "Burglary",
-  "description": "House break-in",
-  "crime_category_number": "3"
- },
- {
-  "crime_category_name": "Assault",
-  "description": "Physical assault",
-  "crime_category_number": "4"
- },
- {
-  "crime_category_name": "Murder",
-  "description": "Homicide",
-  "crime_category_number": "5"
- },
- {
-  "crime_category_name": "Cyber Crime",
-  "description": "Online offences",
-  "crime_category_number": "6"
- },
- {
-  "crime_category_name": "Fraud",
-  "description": "Financial fraud",
-  "crime_category_number": "7"
- },
- {
-  "crime_category_name": "Kidnapping",
-  "description": "Abduction",
-  "crime_category_number": "8"
- },
- {
-  "crime_category_name": "Drug Offence",
-  "description": "NDPS related",
-  "crime_category_number": "9"
- },
- {
-  "crime_category_name": "Vehicle Theft",
-  "description": "Vehicle stealing",
-  "crime_category_number": "10"
- },
- {
-  "crime_category_name": "Domestic Violence",
-  "description": "Family violence",
-  "crime_category_number": "11"
- },
- {
-  "crime_category_name": "Rioting",
-  "description": "Public disorder",
-  "crime_category_number": "12"
- }
+    {
+        "crime_category_name": "Theft",
+        "description": "Property theft",
+        "crime_category_number": "1"
+    },
+    {
+        "crime_category_name": "Assault",
+        "description": "Physical assault",
+        "crime_category_number": "2"
+    },
+    {
+        "crime_category_name": "Murder",
+        "description": "Homicide",
+        "crime_category_number": "3"
+    },
+    {
+        "crime_category_name": "Cyber Crime",
+        "description": "Online offences",
+        "crime_category_number": "4"
+    }
 ]
