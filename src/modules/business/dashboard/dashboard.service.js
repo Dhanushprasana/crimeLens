@@ -175,7 +175,7 @@ module.exports = {
       const catRows = await zcql.executeZCQLQuery(`SELECT * FROM ${env.TABLE_CRIME_CATEGORY}`);
       catRows.forEach(r => {
         const row = r[env.TABLE_CRIME_CATEGORY];
-        categoryMap[row.ROWID] = row.category_name;
+        categoryMap[row.ROWID] = row.crime_category_name || row.category_name;
       });
     } catch (e) {}
 
