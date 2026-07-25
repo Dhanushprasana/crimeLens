@@ -47,5 +47,14 @@ module.exports = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async getCategoryVolumeRanking(req, res, next) {
+    try {
+      const result = await service.getCategoryVolumeRanking(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
   }
 };
