@@ -163,7 +163,7 @@ async function getGlobalNetworkGraph(req) {
       }
 
       // Fetch crimes for this station
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
       
       const { traverseGraph } = require('./graph-traverser');
       const edgeIds = new Set();
@@ -260,8 +260,8 @@ async function getGlobalOptions(req) {
       const statRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${frontendStationId}'`);
       result.stations = statRows.map(r => ({ id: r[env.TABLE_POLICE_STATION].ROWID, name: r[env.TABLE_POLICE_STATION].station_name }));
 
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
-      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].crime_title || 'Incident' }));
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
+      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].title || 'Incident' }));
     }
 
     return result;
