@@ -290,4 +290,114 @@
  *                 message:
  *                   type: string
  *                   example: Internal server error
+ *
+ * /network-analysis/global:
+ *   get:
+ *     summary: Get global network graph structure
+ *     tags: [Network Analysis]
+ *     description: Retrieves nodes and edges for the network graph visualization based on the user's role and the requested zoom level (STATE -> DISTRICT -> STATION -> CRIME).
+ *     parameters:
+ *       - in: query
+ *         name: level
+ *         schema:
+ *           type: string
+ *           enum: [STATE, DISTRICT, STATION, CRIME]
+ *           default: STATE
+ *         description: The hierarchy level to query. STATE returns districts; DISTRICT returns stations; STATION returns crimes; CRIME returns criminals.
+ *       - in: query
+ *         name: nodeId
+ *         schema:
+ *           type: string
+ *         description: The ID of the node being drilled into. (Required for all levels except STATE).
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved nodes and edges.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     nodes:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           label:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           rawId:
+ *                             type: string
+ *                     edges:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           source:
+ *                             type: string
+ *                           target:
+ *                             type: string
+ *                           label:
+ *                             type: string
+ *       500:
+ *         description: Server error
+ *
+ * /network-analysis/global/options:
+ *   get:
+ *     summary: Get available drill-down options based on user role
+ *     tags: [Network Analysis]
+ *     description: Returns the list of districts, stations, and crimes the current user is allowed to view in the global network graph, tailored by their Commander role constraints.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved allowed options.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     districts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                     stations:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                     crimes:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *       500:
+ *         description: Server error
  */

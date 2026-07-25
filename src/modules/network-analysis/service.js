@@ -53,4 +53,214 @@ async function buildNetworkGraph(req, root, filters) {
   return { summary, nodes, edges };
 }
 
-module.exports = { buildNetworkGraph };
+async function getGlobalNetworkGraph(req) {
+  const env = require('../../config/env');
+  logger.info('[NetworkAnalysis:Service] getGlobalNetworkGraph called');
+  const zcql = req.catalyst ? req.catalyst.zcql() : null;
+  if (!zcql) throw new Error('Catalyst not available');
+
+  let level = req.query.level || 'STATE';
+  let nodeId = req.query.nodeId;
+  
+  // RBAC Context from Token
+  const userRole = req.user && req.user.role ? req.user.role : 'STATE_COMMANDER'; // Fallback for dev if needed
+  let userStationId = null;
+  let userDistrictId = null;
+
+  if (req.user && req.user.user_info_id) {
+     try {
+       const userInfo = await zcql.executeZCQLQuery(`SELECT station_id FROM ${env.TABLE_USER_INFO} WHERE ROWID = '${req.user.user_info_id}'`);
+       if (userInfo && userInfo.length > 0) {
+         userStationId = userInfo[0][env.TABLE_USER_INFO].station_id;
+       }
+     } catch (e) {}
+  }
+  
+  // Check RBAC
+  if (userRole === 'STATION_COMMANDER') {
+    level = 'STATION'; 
+    if (!nodeId) nodeId = userStationId;
+  } else if (userRole === 'DISTRICT_COMMANDER') {
+    if (level === 'STATE') {
+      level = 'DISTRICT';
+    }
+  }
+
+  const nodes = [];
+  const edges = [];
+  const addedNodeIds = new Set();
+
+  const addNode = (id, label, type, rawId) => {
+     if (!addedNodeIds.has(id)) {
+        nodes.push({ id, label, type, rawId });
+        addedNodeIds.add(id);
+     }
+  };
+
+  try {
+    if (level === 'STATE') {
+      addNode('STATE', 'State HQ', 'STATE', null);
+      
+      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      distRows.forEach(r => {
+        const row = r[env.TABLE_DISTRICT_GEODATA];
+        addNode(`dist_${row.ROWID}`, row.district_name, 'DISTRICT', row.ROWID);
+        edges.push({ id: `edge_state_${row.ROWID}`, source: 'STATE', target: `dist_${row.ROWID}`, label: 'has_district' });
+      });
+    } 
+    else if (level === 'DISTRICT') {
+      const targetDistrictId = nodeId || userDistrictId;
+      if (!targetDistrictId) throw new Error('District ID is required for this level');
+
+      addNode(`dist_${targetDistrictId}`, 'District Node', 'DISTRICT', targetDistrictId);
+
+      const stationRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE district_id = '${targetDistrictId}'`);
+      stationRows.forEach(r => {
+        const row = r[env.TABLE_POLICE_STATION];
+        addNode(`station_${row.ROWID}`, row.station_name, 'STATION', row.ROWID);
+        edges.push({ id: `edge_dist_${row.ROWID}`, source: `dist_${targetDistrictId}`, target: `station_${row.ROWID}`, label: 'has_station' });
+      });
+    }
+    else if (level === 'STATION') {
+      const targetStationId = (userRole === 'STATION_COMMANDER') ? (userStationId || nodeId) : nodeId;
+      if (!targetStationId) throw new Error('Station ID is required for this level');
+
+      // Fetch the Police Station node
+      const stationRes = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${targetStationId}'`);
+      if (stationRes && stationRes.length > 0) {
+        addNode(`policeStation_${targetStationId}`, stationRes[0][env.TABLE_POLICE_STATION].station_name, 'policeStation', targetStationId);
+      } else {
+        addNode(`policeStation_${targetStationId}`, 'Police Station', 'policeStation', targetStationId);
+      }
+
+      // Fetch crimes for this station
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
+      
+      const { traverseGraph } = require('./graph-traverser');
+      const edgeIds = new Set();
+      
+      for (const r of crimeRows) {
+        const crimeId = r[env.TABLE_CRIME_INCIDENT].ROWID;
+        // The edge connecting station and crime
+        const edgeId = `edge_incident_${crimeId}_REPORTED_AT_policeStation_${targetStationId}`;
+        edges.push({ id: edgeId, source: `incident_${crimeId}`, target: `policeStation_${targetStationId}`, relationship: 'REPORTED_AT' });
+        edgeIds.add(edgeId);
+        
+        // Deep traversal from each crime
+        try {
+          const deepGraph = await traverseGraph(req, { type: 'incident', id: crimeId }, { policeStation: true }); // ensure policeStation is resolved if found elsewhere
+          
+          deepGraph.nodes.forEach(n => {
+            if (!addedNodeIds.has(n.id)) {
+              nodes.push(n);
+              addedNodeIds.add(n.id);
+            }
+          });
+          
+          deepGraph.edges.forEach(e => {
+            if (!edgeIds.has(e.id)) {
+              edges.push(e);
+              edgeIds.add(e.id);
+            }
+          });
+        } catch (err) {
+          logger.error('[NetworkAnalysis:Service] traverseGraph failed for incident', { crimeId, error: err.message });
+        }
+      }
+    }
+    else if (level === 'CRIME') {
+      if (!nodeId) throw new Error('Crime ID (nodeId) is required');
+      addNode(`crime_${nodeId}`, 'Crime Incident', 'CRIME', nodeId);
+
+      const criminalRows = await zcql.executeZCQLQuery(`SELECT ROWID, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE incident_id = '${nodeId}'`);
+      
+      for (const r of criminalRows) {
+        const row = r[env.TABLE_INCIDENT_CRIMINAL];
+        if (row.criminal_id) {
+          try {
+            const cRes = await zcql.executeZCQLQuery(`SELECT first_name, last_name FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${row.criminal_id}'`);
+            const cName = cRes && cRes.length > 0 ? `${cRes[0][env.TABLE_CRIMINAL].first_name} ${cRes[0][env.TABLE_CRIMINAL].last_name}` : 'Unknown Criminal';
+            
+            addNode(`criminal_${row.criminal_id}`, cName.trim(), 'CRIMINAL', row.criminal_id);
+            edges.push({ id: `edge_cr_crim_${row.criminal_id}`, source: `crime_${nodeId}`, target: `criminal_${row.criminal_id}`, label: 'involved_in' });
+          } catch (e) {}
+        }
+      }
+    }
+
+    return { nodes, edges };
+  } catch (err) {
+    logger.error('[NetworkAnalysis:Service] Error generating global graph', err);
+    throw err;
+  }
+}
+
+async function getGlobalOptions(req) {
+  const env = require('../../config/env');
+  logger.info('[NetworkAnalysis:Service] getGlobalOptions called');
+  const zcql = req.catalyst ? req.catalyst.zcql() : null;
+  if (!zcql) throw new Error('Catalyst not available');
+
+  const userRole = req.user && req.user.role ? req.user.role : 'STATE_COMMANDER';
+  let userStationId = null;
+  let userDistrictId = null;
+
+  if (req.user && req.user.user_info_id) {
+     try {
+       const userInfo = await zcql.executeZCQLQuery(`SELECT station_id, rank_id FROM ${env.TABLE_USER_INFO} WHERE ROWID = '${req.user.user_info_id}'`);
+       // Assuming district logic might need additional joins if not on user directly,
+       // but for Station Commander, station_id is enough.
+       if (userInfo && userInfo.length > 0) {
+         userStationId = userInfo[0][env.TABLE_USER_INFO].station_id;
+       }
+     } catch (e) {}
+  }
+
+  // We should fetch district of the station for District Commanders if needed, 
+  // or rely on a user table if district is assigned directly.
+  if (userRole === 'DISTRICT_COMMANDER' && userStationId) {
+    try {
+      const stationRes = await zcql.executeZCQLQuery(`SELECT district_id FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${userStationId}'`);
+      if (stationRes && stationRes.length > 0) {
+        userDistrictId = stationRes[0][env.TABLE_POLICE_STATION].district_id;
+      }
+    } catch(e) {}
+  }
+
+  const result = { districts: [], stations: [], crimes: [] };
+
+  try {
+    // STATE COMMANDER: Fetch all districts
+    if (userRole === 'STATE_COMMANDER') {
+      const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA}`);
+      result.districts = distRows.map(r => ({ id: r[env.TABLE_DISTRICT_GEODATA].ROWID, name: r[env.TABLE_DISTRICT_GEODATA].district_name }));
+    } 
+    // DISTRICT COMMANDER: Fetch their 1 district, and all stations in it
+    else if (userRole === 'DISTRICT_COMMANDER') {
+      if (userDistrictId) {
+        const distRows = await zcql.executeZCQLQuery(`SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA} WHERE ROWID = '${userDistrictId}'`);
+        result.districts = distRows.map(r => ({ id: r[env.TABLE_DISTRICT_GEODATA].ROWID, name: r[env.TABLE_DISTRICT_GEODATA].district_name }));
+
+        const statRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE district_id = '${userDistrictId}'`);
+        result.stations = statRows.map(r => ({ id: r[env.TABLE_POLICE_STATION].ROWID, name: r[env.TABLE_POLICE_STATION].station_name }));
+      }
+    } 
+    // STATION COMMANDER: Fetch their 1 station, and recent crimes
+    else if (userRole === 'STATION_COMMANDER') {
+      if (userStationId) {
+        const statRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${userStationId}'`);
+        result.stations = statRows.map(r => ({ id: r[env.TABLE_POLICE_STATION].ROWID, name: r[env.TABLE_POLICE_STATION].station_name }));
+
+        const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${userStationId}' LIMIT 50`);
+        result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].crime_title || 'Incident' }));
+      }
+    }
+
+    return result;
+  } catch (err) {
+    logger.error('[NetworkAnalysis:Service] Error generating global options', err);
+    throw err;
+  }
+}
+
+module.exports = { buildNetworkGraph, getGlobalNetworkGraph, getGlobalOptions };

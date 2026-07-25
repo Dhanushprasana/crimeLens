@@ -69,4 +69,55 @@ async function buildGraph(req, res) {
   }
 }
 
-module.exports = { buildGraph };
+async function getGlobalGraph(req, res) {
+  const startTime = Date.now();
+  logger.info('[NetworkAnalysis] Incoming global graph request', { query: req.query });
+
+  try {
+    const result = await networkAnalysisService.getGlobalNetworkGraph(req);
+
+    const duration = Date.now() - startTime;
+    logger.info('[NetworkAnalysis] Global graph built successfully', {
+      nodeCount: result.nodes.length,
+      edgeCount: result.edges.length,
+      durationMs: duration
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      data: result
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    logger.error('[NetworkAnalysis] Error generating global network graph', {
+      message: error.message,
+      stack: error.stack,
+      durationMs: duration
+    });
+    return res.status(500).json({
+      status: 'error',
+      message: error.message || 'Internal server error'
+    });
+  }
+}
+
+async function getGlobalOptions(req, res) {
+  try {
+    const result = await networkAnalysisService.getGlobalOptions(req);
+    return res.status(200).json({
+      status: 'success',
+      data: result
+    });
+  } catch (error) {
+    logger.error('[NetworkAnalysis] Error generating global options', {
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(500).json({
+      status: 'error',
+      message: error.message || 'Internal server error'
+    });
+  }
+}
+
+module.exports = { buildGraph, getGlobalGraph, getGlobalOptions };
