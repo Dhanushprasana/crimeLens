@@ -19,6 +19,99 @@ const env = require("../../config/env");
 const StorageService = require("../storage/storage.service");
 const storageConstants = require("../storage/storage.constants");
 
+function parseCsvLine(line) {
+  const values = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      values.push(current);
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  values.push(current);
+  return values;
+}
+
+function parseCsv(raw) {
+  const lines = raw.split(/\r?\n/).filter((line) => line.trim() !== "");
+  if (!lines.length) return [];
+  const headers = parseCsvLine(lines[0]);
+  return lines.slice(1).map((line) => {
+    const values = parseCsvLine(line);
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] === undefined ? "" : values[index];
+    });
+    return row;
+  });
+}
+
+function parseIntOrNull(value) {
+  if (value === null || value === undefined) return null;
+  const trimmed = String(value).trim();
+  if (trimmed === "") return null;
+  const parsed = Number(trimmed);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function normalizeLegalDate(value) {
+  if (value === null || value === undefined) return null;
+  let normalized = String(value).trim();
+  if (!normalized) return null;
+
+  // Remove enclosing brackets and trailing dots
+  normalized = normalized.replace(/^[\[\(]+|[\]\)]+$/g, "").replace(/\.+$/g, "");
+  normalized = normalized.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+  normalized = normalized.replace(/\s*,\s*/g, ", ");
+  normalized = normalized.replace(/\s+/g, " ").trim();
+
+  const parsed = Date.parse(normalized);
+  if (!Number.isNaN(parsed)) {
+    return new Date(parsed);
+  }
+
+  const yearMatch = normalized.match(/\b(18|19|20)\d{2}\b/);
+  if (yearMatch) {
+    return new Date(`${yearMatch[0]}-01-01`);
+  }
+
+  return null;
+}
+
+async function insertRowsInBatches(table, rows) {
+  for (let idx = 0; idx < rows.length; idx += 200) {
+    const chunk = rows.slice(idx, idx + 200);
+    logger.info(`Inserting batch ${idx} to ${idx + chunk.length} of ${rows.length}...`);
+    await table.insertRows(chunk);
+  }
+}
+
+async function fetchExistingMap(zcql, tableName, keyColumns) {
+  const rows = await zcql.executeZCQLQuery(`SELECT ROWID, ${keyColumns.join(", ")} FROM ${tableName}`);
+  const map = new Map();
+  for (const row of rows) {
+    const record = row[tableName] || row;
+    if (!record || !record.ROWID) continue;
+    const key = keyColumns.map((c) => String(record[c] || "").trim()).join("|~|");
+    if (key) map.set(key, record.ROWID);
+  }
+  return map;
+}
+
 module.exports = {
   async bootstrapDistrictGeoJson(req) {
     logger.info("bootstrapDistrictGeoJson");
@@ -240,6 +333,141 @@ module.exports = {
       }
     }
     return { created, skipped };
+  },
+
+  async bootstrapLegal(req) {
+    logger.info("bootstrapLegal");
+    const legalDir = path.join(__dirname, "data", "legal");
+    const actsCsv = await fs.readFile(path.join(legalDir, "legal_acts.csv"), "utf8");
+    const chaptersCsv = await fs.readFile(path.join(legalDir, "legal_chapters.csv"), "utf8");
+    const sectionsCsv = await fs.readFile(path.join(legalDir, "legal_sections.csv"), "utf8");
+
+    const acts = parseCsv(actsCsv);
+    const chapters = parseCsv(chaptersCsv);
+    const sections = parseCsv(sectionsCsv);
+
+    const zcql = req.catalyst ? req.catalyst.zcql() : null;
+    const actsTable = req.catalyst ? req.catalyst.datastore().table(env.TABLE_LEGAL_ACTS) : null;
+    const chaptersTable = req.catalyst ? req.catalyst.datastore().table(env.TABLE_LEGAL_CHAPTERS) : null;
+    const sectionsTable = req.catalyst ? req.catalyst.datastore().table(env.TABLE_LEGAL_SECTIONS) : null;
+
+    if (!zcql || !actsTable || !chaptersTable || !sectionsTable) {
+      throw new Error("Catalyst datastore not initialized for legal bootstrap.");
+    }
+
+    // Process Acts
+    const existingActMap = await fetchExistingMap(zcql, env.TABLE_LEGAL_ACTS, ["act_code"]);
+    const actIdMap = new Map();
+    const actsToInsert = [];
+    const sourceIdToActCode = new Map();
+
+    for (const row of acts) {
+      const sourceId = String(row.id || "").trim();
+      const actCode = String(row.act_code || "").trim();
+      if (!actCode) continue;
+      
+      if (existingActMap.has(actCode)) {
+        actIdMap.set(sourceId, existingActMap.get(actCode));
+        continue;
+      }
+      
+      sourceIdToActCode.set(actCode, sourceId);
+      actsToInsert.push({
+        act_code: row.act_code || null,
+        act_name: row.act_name || null,
+        act_number: parseIntOrNull(row.act_number),
+        year: parseIntOrNull(row.year),
+        enactment_date: normalizeLegalDate(row.enactment_date),
+        description: row.description || null,
+      });
+    }
+
+    // Batch Insert Acts
+    logger.info(`Starting batch insert for ${actsToInsert.length} acts...`);
+    for (let idx = 0; idx < actsToInsert.length; idx += 200) {
+      const chunk = actsToInsert.slice(idx, idx + 200);
+      logger.info(`Inserting acts ${idx} to ${idx + chunk.length} of ${actsToInsert.length}...`);
+      const savedChunk = await actsTable.insertRows(chunk);
+      for (const saved of savedChunk) {
+        const row = saved[env.TABLE_LEGAL_ACTS] || saved;
+        const sourceId = sourceIdToActCode.get(row.act_code);
+        if (sourceId && row.ROWID) {
+          actIdMap.set(sourceId, row.ROWID);
+        }
+      }
+    }
+
+    // Process Chapters
+    const existingChapterMap = await fetchExistingMap(zcql, env.TABLE_LEGAL_CHAPTERS, ["act_id", "chapter_name", "chapter_number"]);
+    const chapterMap = new Map();
+    const chaptersToInsert = [];
+
+    for (const row of chapters) {
+      const sourceActId = String(row.act_id || "").trim();
+      const actRowId = actIdMap.get(sourceActId);
+      if (!actRowId) {
+        logger.warn("Skipping chapter because referenced act_id not found", row);
+        continue;
+      }
+      
+      const key = [actRowId, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
+      if (existingChapterMap.has(key)) {
+        chapterMap.set(key, existingChapterMap.get(key));
+        continue;
+      }
+      
+      chaptersToInsert.push({
+        act_id: actRowId,
+        chapter_name: row.chapter_name || null,
+        chapter_number: row.chapter_number || null,
+      });
+    }
+
+    // Batch Insert Chapters
+    logger.info(`Starting batch insert for ${chaptersToInsert.length} chapters...`);
+    for (let idx = 0; idx < chaptersToInsert.length; idx += 200) {
+      const chunk = chaptersToInsert.slice(idx, idx + 200);
+      logger.info(`Inserting chapters ${idx} to ${idx + chunk.length} of ${chaptersToInsert.length}...`);
+      const savedChunk = await chaptersTable.insertRows(chunk);
+      for (const saved of savedChunk) {
+        const row = saved[env.TABLE_LEGAL_CHAPTERS] || saved;
+        const key = [row.act_id, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
+        if (row.ROWID) {
+          chapterMap.set(key, row.ROWID);
+        }
+      }
+    }
+
+    // Process Sections
+    const sectionRows = [];
+    for (const row of sections) {
+      const sourceActId = String(row.act_id || "").trim();
+      const actRowId = actIdMap.get(sourceActId);
+      if (!actRowId) {
+        // Suppressed detailed log for sections to prevent log bloat
+        continue;
+      }
+      const chapterKey = [actRowId, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
+      const chapterRowId = chapterMap.get(chapterKey);
+      if (!chapterRowId) {
+        continue;
+      }
+      sectionRows.push({
+        act_id: actRowId,
+        chapter_id: chapterRowId,
+        section_number: row.section_number || null,
+        section_title: row.section_title || null,
+        section_text: row.section_text || null,
+      });
+    }
+
+    await insertRowsInBatches(sectionsTable, sectionRows);
+    
+    return {
+      acts: actIdMap.size,
+      chapters: chapterMap.size,
+      sections: sectionRows.length,
+    };
   },
 
   async bootstrapPoliceOfficer(req) {

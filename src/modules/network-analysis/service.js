@@ -61,26 +61,50 @@ async function getGlobalNetworkGraph(req) {
 
   let level = req.query.level || 'STATE';
   let nodeId = req.query.nodeId;
-  
+
+  // nodeType tells traverseGraph what entity nodeId refers to.
+  // Valid values: 'incident' | 'criminal' | 'vehicle' | 'alias' | 'evidence'
+  // Defaults to 'incident' for backward compatibility.
+  const VALID_NODE_TYPES = new Set(['incident', 'criminal', 'vehicle', 'alias', 'evidence']);
+  const nodeType = req.query.nodeType && VALID_NODE_TYPES.has(req.query.nodeType)
+    ? req.query.nodeType
+    : 'incident';
+
   // Role comes from the JWT (trusted) — station/district IDs come from the frontend
   const userRole = req.user && req.user.role ? req.user.role : 'STATE_COMMANDER';
 
   // Frontend must supply these based on the logged-in user's profile
-  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER
+  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER / CASE_OFFICER
   const frontendDistrictId = req.query.districtId; // required for DISTRICT_COMMANDER
 
   // RBAC enforcement — role from JWT overrides the level; IDs from frontend
-  if (userRole === 'STATION_COMMANDER') {
+  if (userRole === 'STATION_COMMANDER' || userRole === 'CASE_OFFICER') {
     level = 'STATION';
     if (!nodeId) nodeId = frontendStationId;
-    if (!nodeId) throw Object.assign(new Error('stationId is required for STATION_COMMANDER'), { statusCode: 400 });
+    if (!nodeId) throw Object.assign(new Error('stationId is required for this role'), { statusCode: 400 });
   } else if (userRole === 'DISTRICT_COMMANDER') {
     if (level === 'STATE') level = 'DISTRICT';
     if (level === 'DISTRICT' && !nodeId) {
       nodeId = frontendDistrictId;
       if (!nodeId) throw Object.assign(new Error('districtId is required for DISTRICT_COMMANDER'), { statusCode: 400 });
     }
+  } else {
+    // STATE_COMMANDER or unknown roles: allow param-based level override
+    if (frontendStationId && level === 'STATE') {
+      if (nodeId && nodeId !== frontendStationId) {
+        // nodeId is explicitly provided and differs from stationId — it's a specific entity (incident, criminal, etc.)
+        level = 'NODE';
+        // nodeId and nodeType stay as provided
+      } else {
+        level = 'STATION';
+        nodeId = nodeId || frontendStationId;
+      }
+    } else if (frontendDistrictId && level === 'STATE') {
+      level = 'DISTRICT';
+      nodeId = nodeId || frontendDistrictId;
+    }
   }
+
 
   const nodes = [];
   const edges = [];
@@ -152,58 +176,81 @@ async function getGlobalNetworkGraph(req) {
       }
 
       // Fetch crimes for this station
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
       
       const { traverseGraph } = require('./graph-traverser');
       const edgeIds = new Set();
-      
-      for (const r of crimeRows) {
-        const crimeId = r[env.TABLE_CRIME_INCIDENT].ROWID;
-        // The edge connecting station and crime
-        const edgeId = `edge_incident_${crimeId}_REPORTED_AT_policeStation_${targetStationId}`;
-        edges.push({ id: edgeId, source: `incident_${crimeId}`, target: `policeStation_${targetStationId}`, relationship: 'REPORTED_AT' });
-        edgeIds.add(edgeId);
-        
-        // Deep traversal from each crime
-        try {
-          const deepGraph = await traverseGraph(req, { type: 'incident', id: crimeId }, { policeStation: true }); // ensure policeStation is resolved if found elsewhere
-          
-          deepGraph.nodes.forEach(n => {
-            if (!addedNodeIds.has(n.id)) {
-              nodes.push(n);
-              addedNodeIds.add(n.id);
+
+      // Fix B: Concurrency-limited traversal (3 at a time) to avoid saturating the
+      // Catalyst ZCQL connection pool with 20 simultaneous BFS runs.
+      const CONCURRENCY = 3;
+      const traversalResults = [];
+
+      for (let i = 0; i < crimeRows.length; i += CONCURRENCY) {
+        const batch = crimeRows.slice(i, i + CONCURRENCY);
+        const batchResults = await Promise.all(
+          batch.map(async (r) => {
+            const crimeId = r[env.TABLE_CRIME_INCIDENT].ROWID;
+            try {
+              const deepGraph = await traverseGraph(req, { type: 'incident', id: crimeId }, {});
+              return { crimeId, deepGraph };
+            } catch (err) {
+              logger.error('[NetworkAnalysis:Service] traverseGraph failed for incident', { crimeId, error: err.message });
+              return { crimeId, deepGraph: { nodes: [], edges: [] } };
             }
-          });
-          
-          deepGraph.edges.forEach(e => {
-            if (!edgeIds.has(e.id)) {
-              edges.push(e);
-              edgeIds.add(e.id);
-            }
-          });
-        } catch (err) {
-          logger.error('[NetworkAnalysis:Service] traverseGraph failed for incident', { crimeId, error: err.message });
+          })
+        );
+        traversalResults.push(...batchResults);
+      }
+
+      // Merge all results, deduplicating by node/edge ID
+      for (const { crimeId, deepGraph } of traversalResults) {
+        // Add the station↔crime edge
+        const stationEdgeId = `edge_incident_${crimeId}_REPORTED_AT_policeStation_${targetStationId}`;
+        if (!edgeIds.has(stationEdgeId)) {
+          edges.push({ id: stationEdgeId, source: `incident_${crimeId}`, target: `policeStation_${targetStationId}`, relationship: 'REPORTED_AT' });
+          edgeIds.add(stationEdgeId);
         }
+
+        deepGraph.nodes.forEach(n => {
+          if (!addedNodeIds.has(n.id)) {
+            nodes.push(n);
+            addedNodeIds.add(n.id);
+          }
+        });
+
+        deepGraph.edges.forEach(e => {
+          if (!edgeIds.has(e.id)) {
+            edges.push(e);
+            edgeIds.add(e.id);
+          }
+        });
       }
     }
-    else if (level === 'CRIME') {
-      if (!nodeId) throw new Error('Crime ID (nodeId) is required');
-      addNode(`crime_${nodeId}`, 'Crime Incident', 'CRIME', nodeId);
+    else if (level === 'NODE' || level === 'CRIME') {
+      // level 'CRIME' is kept as an alias for backward compatibility
+      if (!nodeId) throw new Error('nodeId is required for NODE level');
 
-      const criminalRows = await zcql.executeZCQLQuery(`SELECT ROWID, criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE incident_id = '${nodeId}'`);
-      
-      for (const r of criminalRows) {
-        const row = r[env.TABLE_INCIDENT_CRIMINAL];
-        if (row.criminal_id) {
-          try {
-            const cRes = await zcql.executeZCQLQuery(`SELECT first_name, last_name FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${row.criminal_id}'`);
-            const cName = cRes && cRes.length > 0 ? `${cRes[0][env.TABLE_CRIMINAL].first_name} ${cRes[0][env.TABLE_CRIMINAL].last_name}` : 'Unknown Criminal';
-            
-            addNode(`criminal_${row.criminal_id}`, cName.trim(), 'CRIMINAL', row.criminal_id);
-            edges.push({ id: `edge_cr_crim_${row.criminal_id}`, source: `crime_${nodeId}`, target: `criminal_${row.criminal_id}`, label: 'involved_in' });
-          } catch (e) {}
+      const { traverseGraph } = require('./graph-traverser');
+
+      logger.info('[NetworkAnalysis:Service] NODE-level traversal', { nodeId, nodeType });
+
+      // BFS from the specified entity — nodeType tells us where to start
+      const deepGraph = await traverseGraph(req, { type: nodeType, id: nodeId }, {});
+
+      const nodeEdgeIds = new Set();
+      deepGraph.nodes.forEach(n => {
+        if (!addedNodeIds.has(n.id)) {
+          nodes.push(n);
+          addedNodeIds.add(n.id);
         }
-      }
+      });
+      deepGraph.edges.forEach(e => {
+        if (!nodeEdgeIds.has(e.id)) {
+          edges.push(e);
+          nodeEdgeIds.add(e.id);
+        }
+      });
     }
 
     return { nodes, edges };
@@ -249,8 +296,8 @@ async function getGlobalOptions(req) {
       const statRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${frontendStationId}'`);
       result.stations = statRows.map(r => ({ id: r[env.TABLE_POLICE_STATION].ROWID, name: r[env.TABLE_POLICE_STATION].station_name }));
 
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
-      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].crime_title || 'Incident' }));
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
+      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].title || 'Incident' }));
     }
 
     return result;

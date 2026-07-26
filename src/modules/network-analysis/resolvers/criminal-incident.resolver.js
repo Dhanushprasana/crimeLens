@@ -14,36 +14,41 @@ async function resolveCriminalIncidents(req, criminalId, filters) {
 
   logger.debug('[Resolver:CriminalIncident] Fetching incidents for criminal', { criminalId });
 
-  const query = `SELECT * FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE criminal_id = '${criminalId}'`;
-  const res = await executeQuery(req, query);
+  // Step 1: Get all incident IDs from the junction table in one query
+  const junctionQuery = `SELECT incident_id FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE criminal_id = '${criminalId}'`;
+  const junctionRes = await executeQuery(req, junctionQuery);
 
-  if (!res || res.length === 0) {
+  if (!junctionRes || junctionRes.length === 0) {
     logger.debug('[Resolver:CriminalIncident] No incident links found', { criminalId });
     return { nodes: [], edges: [] };
   }
 
-  logger.debug('[Resolver:CriminalIncident] Incident links found', { criminalId, count: res.length });
+  const incidentIds = junctionRes
+    .map(r => r[env.TABLE_INCIDENT_CRIMINAL]?.incident_id)
+    .filter(Boolean);
+
+  if (incidentIds.length === 0) return { nodes: [], edges: [] };
+
+  logger.debug('[Resolver:CriminalIncident] Incident links found', { criminalId, count: incidentIds.length });
+
+  // Step 2: Batch-fetch all incidents in a single query using IN clause
+  const idList = incidentIds.map(id => `'${id}'`).join(',');
+  const batchQuery = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID IN (${idList})`;
+  const incidentRes = await executeQuery(req, batchQuery);
 
   const nodes = [];
   const edges = [];
 
-  for (const row of res) {
-    const incidentId = row[env.TABLE_INCIDENT_CRIMINAL].incident_id;
-
-    const incidentQuery = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID = '${incidentId}'`;
-    const incidentRes = await executeQuery(req, incidentQuery);
-
-    if (incidentRes && incidentRes.length > 0) {
-      const incidentData = incidentRes[0][env.TABLE_CRIME_INCIDENT];
+  if (incidentRes && incidentRes.length > 0) {
+    for (const row of incidentRes) {
+      const incidentData = row[env.TABLE_CRIME_INCIDENT];
       nodes.push(incident(incidentData));
-      edges.push(buildEdge(criminalId, 'criminal', incidentId, 'incident', 'INVOLVED_IN'));
+      edges.push(buildEdge(criminalId, 'criminal', incidentData.ROWID, 'incident', 'INVOLVED_IN'));
       logger.debug('[Resolver:CriminalIncident] Resolved incident node', {
         criminalId,
-        incidentId,
+        incidentId: incidentData.ROWID,
         label: incidentData.title
       });
-    } else {
-      logger.warn('[Resolver:CriminalIncident] Incident record not found in biz_crime_incident', { incidentId });
     }
   }
 
@@ -67,36 +72,41 @@ async function resolveIncidentCriminals(req, incidentId, filters) {
 
   logger.debug('[Resolver:IncidentCriminal] Fetching criminals for incident', { incidentId });
 
-  const query = `SELECT * FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE incident_id = '${incidentId}'`;
-  const res = await executeQuery(req, query);
+  // Step 1: Get all criminal IDs from the junction table in one query
+  const junctionQuery = `SELECT criminal_id FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE incident_id = '${incidentId}'`;
+  const junctionRes = await executeQuery(req, junctionQuery);
 
-  if (!res || res.length === 0) {
+  if (!junctionRes || junctionRes.length === 0) {
     logger.debug('[Resolver:IncidentCriminal] No criminal links found', { incidentId });
     return { nodes: [], edges: [] };
   }
 
-  logger.debug('[Resolver:IncidentCriminal] Criminal links found', { incidentId, count: res.length });
+  const criminalIds = junctionRes
+    .map(r => r[env.TABLE_INCIDENT_CRIMINAL]?.criminal_id)
+    .filter(Boolean);
+
+  if (criminalIds.length === 0) return { nodes: [], edges: [] };
+
+  logger.debug('[Resolver:IncidentCriminal] Criminal links found', { incidentId, count: criminalIds.length });
+
+  // Step 2: Batch-fetch all criminals in a single query using IN clause
+  const idList = criminalIds.map(id => `'${id}'`).join(',');
+  const batchQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID IN (${idList})`;
+  const criminalRes = await executeQuery(req, batchQuery);
 
   const nodes = [];
   const edges = [];
 
-  for (const row of res) {
-    const criminalId = row[env.TABLE_INCIDENT_CRIMINAL].criminal_id;
-
-    const criminalQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${criminalId}'`;
-    const criminalRes = await executeQuery(req, criminalQuery);
-
-    if (criminalRes && criminalRes.length > 0) {
-      const criminalData = criminalRes[0][env.TABLE_CRIMINAL];
+  if (criminalRes && criminalRes.length > 0) {
+    for (const row of criminalRes) {
+      const criminalData = row[env.TABLE_CRIMINAL];
       nodes.push(criminal(criminalData));
-      edges.push(buildEdge(incidentId, 'incident', criminalId, 'criminal', 'INVOLVED_IN'));
+      edges.push(buildEdge(incidentId, 'incident', criminalData.ROWID, 'criminal', 'INVOLVED_IN'));
       logger.debug('[Resolver:IncidentCriminal] Resolved criminal node', {
         incidentId,
-        criminalId,
+        criminalId: criminalData.ROWID,
         label: criminalData.full_name
       });
-    } else {
-      logger.warn('[Resolver:IncidentCriminal] Criminal record not found in biz_criminal', { criminalId });
     }
   }
 

@@ -36,6 +36,14 @@ module.exports = {
       next(err);
     }
   },
+  async bootstrapLegal(req, res, next) {
+    try {
+      const result = await service.bootstrapLegal(req);
+      sendResponse(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
   async bootstrapPoliceOfficer(req, res, next) {
     try {
       const result = await service.bootstrapPoliceOfficer(req);

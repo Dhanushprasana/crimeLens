@@ -136,6 +136,15 @@ module.exports = {
     // --- Build WHERE conditions ---
     const conditions = [];
 
+    const districtId = params.districtId || params.district_id || null;
+    const stationId = params.stationId || params.station_id || null;
+    const safeDistrictId = districtId
+      ? String(districtId).replace(/'/g, "''")
+      : null;
+    const safeStationId = stationId
+      ? String(stationId).replace(/'/g, "''")
+      : null;
+
     if (params.search) {
       // Escape single quotes in the search term
       const safe = params.search.replace(/'/g, "''");
@@ -144,12 +153,12 @@ module.exports = {
       );
     }
 
-    if (params.districtId) {
-      conditions.push(`crime_happended_at_district_id = '${params.districtId}'`);
+    if (safeDistrictId) {
+      conditions.push(`crime_happended_at_district_id = '${safeDistrictId}'`);
     }
 
-    if (params.stationId) {
-      conditions.push(`police_station_id = '${params.stationId}'`);
+    if (safeStationId) {
+      conditions.push(`police_station_id = '${safeStationId}'`);
     }
 
     if (params.categoryId) {
