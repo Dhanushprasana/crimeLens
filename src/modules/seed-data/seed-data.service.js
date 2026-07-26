@@ -91,6 +91,7 @@ function normalizeLegalDate(value) {
 async function insertRowsInBatches(table, rows) {
   for (let idx = 0; idx < rows.length; idx += 200) {
     const chunk = rows.slice(idx, idx + 200);
+    logger.info(`Inserting batch ${idx} to ${idx + chunk.length} of ${rows.length}...`);
     await table.insertRows(chunk);
   }
 }
@@ -350,17 +351,24 @@ module.exports = {
       throw new Error("Catalyst datastore not initialized for legal bootstrap.");
     }
 
+    // Process Acts
     const existingActMap = await fetchExistingMap(zcql, env.TABLE_LEGAL_ACTS, ["act_code"]);
     const actIdMap = new Map();
+    const actsToInsert = [];
+    const sourceIdToActCode = new Map();
+
     for (const row of acts) {
       const sourceId = String(row.id || "").trim();
       const actCode = String(row.act_code || "").trim();
       if (!actCode) continue;
+      
       if (existingActMap.has(actCode)) {
         actIdMap.set(sourceId, existingActMap.get(actCode));
         continue;
       }
-      const saved = await actsTable.insertRow({
+      
+      sourceIdToActCode.set(actCode, sourceId);
+      actsToInsert.push({
         act_code: row.act_code || null,
         act_name: row.act_name || null,
         act_number: parseIntOrNull(row.act_number),
@@ -368,11 +376,28 @@ module.exports = {
         enactment_date: normalizeLegalDate(row.enactment_date),
         description: row.description || null,
       });
-      actIdMap.set(sourceId, saved && saved.ROWID);
     }
 
-    const chapterMap = new Map();
+    // Batch Insert Acts
+    logger.info(`Starting batch insert for ${actsToInsert.length} acts...`);
+    for (let idx = 0; idx < actsToInsert.length; idx += 200) {
+      const chunk = actsToInsert.slice(idx, idx + 200);
+      logger.info(`Inserting acts ${idx} to ${idx + chunk.length} of ${actsToInsert.length}...`);
+      const savedChunk = await actsTable.insertRows(chunk);
+      for (const saved of savedChunk) {
+        const row = saved[env.TABLE_LEGAL_ACTS] || saved;
+        const sourceId = sourceIdToActCode.get(row.act_code);
+        if (sourceId && row.ROWID) {
+          actIdMap.set(sourceId, row.ROWID);
+        }
+      }
+    }
+
+    // Process Chapters
     const existingChapterMap = await fetchExistingMap(zcql, env.TABLE_LEGAL_CHAPTERS, ["act_id", "chapter_name", "chapter_number"]);
+    const chapterMap = new Map();
+    const chaptersToInsert = [];
+
     for (const row of chapters) {
       const sourceActId = String(row.act_id || "").trim();
       const actRowId = actIdMap.get(sourceActId);
@@ -380,31 +405,47 @@ module.exports = {
         logger.warn("Skipping chapter because referenced act_id not found", row);
         continue;
       }
+      
       const key = [actRowId, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
       if (existingChapterMap.has(key)) {
         chapterMap.set(key, existingChapterMap.get(key));
         continue;
       }
-      const saved = await chaptersTable.insertRow({
+      
+      chaptersToInsert.push({
         act_id: actRowId,
         chapter_name: row.chapter_name || null,
         chapter_number: row.chapter_number || null,
       });
-      chapterMap.set(key, saved && saved.ROWID);
     }
 
+    // Batch Insert Chapters
+    logger.info(`Starting batch insert for ${chaptersToInsert.length} chapters...`);
+    for (let idx = 0; idx < chaptersToInsert.length; idx += 200) {
+      const chunk = chaptersToInsert.slice(idx, idx + 200);
+      logger.info(`Inserting chapters ${idx} to ${idx + chunk.length} of ${chaptersToInsert.length}...`);
+      const savedChunk = await chaptersTable.insertRows(chunk);
+      for (const saved of savedChunk) {
+        const row = saved[env.TABLE_LEGAL_CHAPTERS] || saved;
+        const key = [row.act_id, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
+        if (row.ROWID) {
+          chapterMap.set(key, row.ROWID);
+        }
+      }
+    }
+
+    // Process Sections
     const sectionRows = [];
     for (const row of sections) {
       const sourceActId = String(row.act_id || "").trim();
       const actRowId = actIdMap.get(sourceActId);
       if (!actRowId) {
-        logger.warn("Skipping section because referenced act_id not found", row);
+        // Suppressed detailed log for sections to prevent log bloat
         continue;
       }
       const chapterKey = [actRowId, String(row.chapter_name || "").trim(), String(row.chapter_number || "").trim()].join("|~|");
       const chapterRowId = chapterMap.get(chapterKey);
       if (!chapterRowId) {
-        logger.warn("Skipping section because referenced chapter not found", row);
         continue;
       }
       sectionRows.push({
@@ -417,8 +458,9 @@ module.exports = {
     }
 
     await insertRowsInBatches(sectionsTable, sectionRows);
+    
     return {
-      acts: acts.length,
+      acts: actIdMap.size,
       chapters: chapterMap.size,
       sections: sectionRows.length,
     };

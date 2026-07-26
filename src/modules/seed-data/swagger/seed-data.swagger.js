@@ -91,6 +91,18 @@ module.exports = {};
 
 /**
  * @openapi
+ * /seed/legal/bootstrap:
+ *   post:
+ *     summary: Bootstrap legal data (acts, chapters, sections)
+ *     tags: [Seed Data]
+ *     description: Reads `data/legal/legal_acts.csv`, `legal_chapters.csv`, and `legal_sections.csv` and populates the respective database tables.
+ *     responses:
+ *       200:
+ *         description: Counts of inserted acts, chapters, and sections
+ */
+
+/**
+ * @openapi
  * /seed/police-officer/bootstrap:
  *   post:
  *     summary: Bootstrap police officers
