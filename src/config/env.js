@@ -26,6 +26,9 @@ const env = {
   TABLE_POLICE_STATION: "biz_police_station",
   TABLE_STATION_TYPE: "biz_station_type",
   TABLE_DISTRICT_GEODATA: "biz_district_geodata",
+  TABLE_LEGAL_ACTS: "biz_legal_acts",
+  TABLE_LEGAL_CHAPTERS: "biz_legal_chapters",
+  TABLE_LEGAL_SECTIONS: "biz_legal_sections",
   // Default role assigned to newly created officers
   DEFAULT_OFFICER_ROLE: process.env.DEFAULT_OFFICER_ROLE || "CASE_OFFICER",
   // Crime / FIR / Suspect / Criminal tables
