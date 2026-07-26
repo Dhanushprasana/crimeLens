@@ -13,9 +13,10 @@
  *       - SeedData
  *     summary: Bootstrap crime incidents from a data file (optional fileName)
  *     description: |
- *       Starts a background job to insert crime incident records from a JSON file located in
+ *       Inserts crime incident records from a JSON file located in
  *       `src/modules/seed-data/data/crimie/`. If `fileName` is provided in the request body,
- *       the service will use that file (basename only). Returns 202 with a `jobId` and `statusUrl`.
+ *       the service will use that file (basename only). Split files such as `crime_incident-1.json`
+ *       through `crime_incident-10.json` are supported, and `crime_incident.json` is used by default.
  *     requestBody:
  *       required: false
  *       content:
@@ -25,19 +26,19 @@
  *             properties:
  *               fileName:
  *                 type: string
- *                 description: Filename under `src/modules/seed-data/data/crimie/` to import (basename only)
+ *                 description: Filename under `src/modules/seed-data/data/crimie/` to import (basename only), for example `crime_incident-1.json`
  *     responses:
- *       202:
- *         description: Job accepted and running in background; returns jobId and statusUrl
+ *       200:
+ *         description: Crime incidents bootstrap completed and returns inserted/skipped counts
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 jobId:
- *                   type: string
- *                 statusUrl:
- *                   type: string
+ *                 created:
+ *                   type: integer
+ *                 skipped:
+ *                   type: integer
  */
 
 module.exports = {};
@@ -127,11 +128,33 @@ module.exports = {};
 
 /**
  * @openapi
+ * /seed/suspect/bootstrap:
+ *   post:
+ *     summary: Bootstrap suspects
+ *     tags: [Seed Data]
+ *     description: Reads suspect seed data and inserts suspect records into the datastore.
+ *     responses:
+ *       200:
+ *         description: Suspects inserted/skipped counts
+ */
+
+/**
+ * @openapi
  * /seed/fir/bootstrap:
  *   post:
  *     summary: Bootstrap FIRs
  *     tags: [Seed Data]
- *     description: Reads `data/crimie/FIRs.json`, resolves district and station references and inserts into `biz_FIR`.
+ *     description: Reads a FIR seed file from `data/crimie/` and inserts the rows into `biz_FIR`. You can pass `fileName` as `FIRs-1.json` through `FIRs-10.json`; otherwise `FIRs.json` is used by default.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: File name under `src/modules/seed-data/data/crimie/`, for example `FIRs-3.json`
  *     responses:
  *       200:
  *         description: FIRs inserted/skipped counts
@@ -167,7 +190,17 @@ module.exports = {};
  *   post:
  *     summary: Bootstrap incident‑criminal relationships
  *     tags: [Seed Data]
- *     description: Reads `data/crimie/incident_criminal.json` and inserts links between crime incidents and criminals into `biz_incident_criminal`.
+ *     description: Reads a relationship seed file from `data/crimie/` and inserts links between crime incidents and criminals into `biz_incident_criminal`. You can pass `fileName` as `incident_criminal-1.json` through `incident_criminal-10.json`; otherwise `incident_criminal.json` is used by default.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: File name under `src/modules/seed-data/data/crimie/`, for example `incident_criminal-3.json`
  *     responses:
  *       200:
  *         description: Incident‑criminal links inserted/skipped counts
@@ -191,6 +224,72 @@ module.exports = {};
  *         description: Validation error
  *       500:
  *         description: Server error
+ */
+
+/**
+ * @openapi
+ * /seed/incident-officer/bootstrap:
+ *   post:
+ *     summary: Bootstrap incident officers
+ *     tags: [Seed Data]
+ *     description: Reads an incident officer seed file from `data/incident-officer/` and assigns officers to incidents. You can pass `fileName` as `incident_officer-1.json` through `incident_officer-10.json`; otherwise `incident_officer.json` is used by default.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: File name under `src/modules/seed-data/data/incident-officer/`, for example `incident_officer-5.json`
+ *     responses:
+ *       200:
+ *         description: Incident officers inserted/skipped counts
+ */
+
+/**
+ * @openapi
+ * /seed/victim/bootstrap:
+ *   post:
+ *     summary: Bootstrap victims
+ *     tags: [Seed Data]
+ *     description: Reads a victim seed file from `data/victim/` and inserts victims into the datastore. You can pass `fileName` as `victim-1.json` through `victim-10.json`; otherwise `victim.json` is used by default.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: File name under `src/modules/seed-data/data/victim/`, for example `victim-2.json`
+ *     responses:
+ *       200:
+ *         description: Victims inserted/skipped counts
+ */
+
+/**
+ * @openapi
+ * /seed/witness/bootstrap:
+ *   post:
+ *     summary: Bootstrap witnesses
+ *     tags: [Seed Data]
+ *     description: Reads a witness seed file from `data/witness/` and inserts witnesses into the datastore. You can pass `fileName` as `witness-1.json` through `witness-10.json`; otherwise `witness.json` is used by default.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *                 description: File name under `src/modules/seed-data/data/witness/`, for example `witness-4.json`
+ *     responses:
+ *       200:
+ *         description: Witnesses inserted/skipped counts
  */
 
 /**

@@ -9,23 +9,31 @@ router.post("/geojson/bootstrap", controller.bootstrapDistrictGeoJson); //
 router.post("/police-rank/bootstrap", controller.bootstrapPoliceRank); //
 
 router.post("/police-station/bootstrap", controller.bootstrapPoliceStations); //
-router.post("/crime-category/bootstrap", controller.bootstrapCrimeCategory); // 
+router.post("/crime-category/bootstrap", controller.bootstrapCrimeCategory); //
 router.post("/legal/bootstrap", controller.bootstrapLegal);
 
 router.post("/police-officer/bootstrap", controller.bootstrapPoliceOfficer); //
 router.post("/criminal/bootstrap", controller.bootstrapCriminal); //
 
 router.post("/suspect/bootstrap", controller.bootstrapSuspect);
-router.post("/fir/bootstrap", controller.bootstrapFirs);  //
-router.post("/crime-incident/bootstrap", controller.bootstrapCrimeIncidents);  // 
+router.post("/fir/bootstrap", controller.bootstrapFirs); //
+router.post("/crime-incident/bootstrap", controller.bootstrapCrimeIncidents); //
 
-router.post("/incident-criminal/bootstrap", controller.bootstrapIncidentCriminals);
+router.post(
+  "/incident-criminal/bootstrap",
+  controller.bootstrapIncidentCriminals,
+);
 router.post("/incident-officer/bootstrap", controller.bootstrapIncidentOfficer);
 router.post("/case-victim/bootstrap", controller.bootstrapVictim);
+router.post("/victim/bootstrap", controller.bootstrapVictim);
 router.post("/case-witness/bootstrap", controller.bootstrapWitness);
+router.post("/witness/bootstrap", controller.bootstrapWitness);
 router.post("/crime-evidence/bootstrap", controller.bootstrapCrimeEvidence);
 
-router.post("/district-crime-stats/calculate", controller.calculateDistrictCrimeStats);
+router.post(
+  "/district-crime-stats/calculate",
+  controller.calculateDistrictCrimeStats,
+);
 router.post("/crime-incident/generate", controller.generateCrime);
 router.get("/record-counts", controller.getAllTableCounts);
 
