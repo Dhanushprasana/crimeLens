@@ -311,6 +311,80 @@ module.exports = {
     const evRes = await executeQuery(req, evSql);
     incident.evidences = evRes.map(e => e[env.TABLE_CRIME_EVIDENCE]);
 
+    // fetch victims
+    try {
+      const victimSql = `SELECT * FROM ${env.TABLE_CASE_VICTIM} WHERE incident_id = '${id}'`;
+      const victimRes = await executeQuery(req, victimSql);
+      incident.victims = (victimRes || []).map(v => v[env.TABLE_CASE_VICTIM]);
+    } catch (e) {
+      incident.victims = [];
+    }
+
+    // fetch witnesses
+    try {
+      const witnessSql = `SELECT * FROM ${env.TABLE_CASE_WITNESS} WHERE incident_id = '${id}'`;
+      const witnessRes = await executeQuery(req, witnessSql);
+      incident.witnesses = (witnessRes || []).map(w => w[env.TABLE_CASE_WITNESS]);
+    } catch (e) {
+      incident.witnesses = [];
+    }
+
+    // fetch assigned officers
+    try {
+      const officerSql = `SELECT * FROM ${env.TABLE_INCIDENT_OFFICER} WHERE incident_id = '${id}'`;
+      const officerRes = await executeQuery(req, officerSql);
+      const incidentOfficers = (officerRes || []).map(o => o[env.TABLE_INCIDENT_OFFICER]);
+      
+      if (incidentOfficers.length > 0) {
+        const officerIds = incidentOfficers.map(o => `'${o.officer_id}'`).join(',');
+        const fullOfficerSql = `SELECT * FROM ${env.TABLE_POLICE_OFFICER} WHERE ROWID IN (${officerIds})`;
+        const fullOfficerRes = await executeQuery(req, fullOfficerSql);
+        
+        const officersMap = {};
+        (fullOfficerRes || []).forEach(row => {
+          const off = row[env.TABLE_POLICE_OFFICER];
+          officersMap[off.ROWID] = off;
+        });
+        
+        incident.assigned_officers = incidentOfficers.map(io => ({
+          ...io,
+          officer_details: officersMap[io.officer_id] || null
+        }));
+      } else {
+        incident.assigned_officers = [];
+      }
+    } catch (e) {
+      incident.assigned_officers = [];
+    }
+
+    // fetch criminals / suspects
+    try {
+      const icSql = `SELECT * FROM ${env.TABLE_INCIDENT_CRIMINAL} WHERE incident_id = '${id}'`;
+      const icRes = await executeQuery(req, icSql);
+      const incidentCriminals = (icRes || []).map(ic => ic[env.TABLE_INCIDENT_CRIMINAL]);
+      
+      if (incidentCriminals.length > 0) {
+        const criminalIds = incidentCriminals.map(ic => `'${ic.criminal_id}'`).join(',');
+        const fullCriminalSql = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID IN (${criminalIds})`;
+        const fullCriminalRes = await executeQuery(req, fullCriminalSql);
+        
+        const criminalsMap = {};
+        (fullCriminalRes || []).forEach(row => {
+          const c = row[env.TABLE_CRIMINAL];
+          criminalsMap[c.ROWID] = c;
+        });
+        
+        incident.criminals = incidentCriminals.map(ic => ({
+          ...ic,
+          criminal_details: criminalsMap[ic.criminal_id] || null
+        }));
+      } else {
+        incident.criminals = [];
+      }
+    } catch (e) {
+      incident.criminals = [];
+    }
+
     return incident;
   },
 
