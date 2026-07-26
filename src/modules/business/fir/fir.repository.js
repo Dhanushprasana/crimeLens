@@ -28,7 +28,17 @@ module.exports = {
   },
 
   async getAllFir(query, req) {
-    const sql = `SELECT * FROM ${env.TABLE_FIR}`;
+    let sql = `SELECT * FROM ${env.TABLE_FIR}`;
+    const conditions = [];
+    if (query.districtId) {
+      conditions.push(`district_id = '${query.districtId}'`);
+    }
+    if (query.stationId) {
+      conditions.push(`police_station_id = '${query.stationId}'`);
+    }
+    if (conditions.length > 0) {
+      sql += ` WHERE ` + conditions.join(' AND ');
+    }
     const res = await executeQuery(req, sql);
     return res.map(r => r[env.TABLE_FIR]);
   },

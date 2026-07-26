@@ -66,21 +66,32 @@ async function getGlobalNetworkGraph(req) {
   const userRole = req.user && req.user.role ? req.user.role : 'STATE_COMMANDER';
 
   // Frontend must supply these based on the logged-in user's profile
-  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER
+  const frontendStationId = req.query.stationId;   // required for STATION_COMMANDER / CASE_OFFICER
   const frontendDistrictId = req.query.districtId; // required for DISTRICT_COMMANDER
 
   // RBAC enforcement — role from JWT overrides the level; IDs from frontend
-  if (userRole === 'STATION_COMMANDER') {
+  if (userRole === 'STATION_COMMANDER' || userRole === 'CASE_OFFICER') {
     level = 'STATION';
     if (!nodeId) nodeId = frontendStationId;
-    if (!nodeId) throw Object.assign(new Error('stationId is required for STATION_COMMANDER'), { statusCode: 400 });
+    if (!nodeId) throw Object.assign(new Error('stationId is required for this role'), { statusCode: 400 });
   } else if (userRole === 'DISTRICT_COMMANDER') {
     if (level === 'STATE') level = 'DISTRICT';
     if (level === 'DISTRICT' && !nodeId) {
       nodeId = frontendDistrictId;
       if (!nodeId) throw Object.assign(new Error('districtId is required for DISTRICT_COMMANDER'), { statusCode: 400 });
     }
+  } else {
+    // STATE_COMMANDER or unknown roles: allow param-based level override
+    // If a stationId or districtId is explicitly passed, respect it
+    if (frontendStationId && level === 'STATE') {
+      level = 'STATION';
+      nodeId = nodeId || frontendStationId;
+    } else if (frontendDistrictId && level === 'STATE') {
+      level = 'DISTRICT';
+      nodeId = nodeId || frontendDistrictId;
+    }
   }
+
 
   const nodes = [];
   const edges = [];
@@ -152,7 +163,7 @@ async function getGlobalNetworkGraph(req) {
       }
 
       // Fetch crimes for this station
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${targetStationId}' LIMIT 20`);
       
       const { traverseGraph } = require('./graph-traverser');
       const edgeIds = new Set();
@@ -249,8 +260,8 @@ async function getGlobalOptions(req) {
       const statRows = await zcql.executeZCQLQuery(`SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID = '${frontendStationId}'`);
       result.stations = statRows.map(r => ({ id: r[env.TABLE_POLICE_STATION].ROWID, name: r[env.TABLE_POLICE_STATION].station_name }));
 
-      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, crime_title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
-      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].crime_title || 'Incident' }));
+      const crimeRows = await zcql.executeZCQLQuery(`SELECT ROWID, title FROM ${env.TABLE_CRIME_INCIDENT} WHERE police_station_id = '${frontendStationId}' LIMIT 50`);
+      result.crimes = crimeRows.map(r => ({ id: r[env.TABLE_CRIME_INCIDENT].ROWID, name: r[env.TABLE_CRIME_INCIDENT].title || 'Incident' }));
     }
 
     return result;
