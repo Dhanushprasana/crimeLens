@@ -10,6 +10,7 @@ router.post("/police-rank/bootstrap", controller.bootstrapPoliceRank); //
 
 router.post("/police-station/bootstrap", controller.bootstrapPoliceStations); //
 router.post("/crime-category/bootstrap", controller.bootstrapCrimeCategory); // 
+router.post("/legal/bootstrap", controller.bootstrapLegal);
 
 router.post("/police-officer/bootstrap", controller.bootstrapPoliceOfficer); //
 router.post("/criminal/bootstrap", controller.bootstrapCriminal); //
