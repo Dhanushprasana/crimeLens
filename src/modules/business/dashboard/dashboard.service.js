@@ -9,14 +9,113 @@ module.exports = {
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
     if (!zcql) throw new Error("Catalyst not available");
 
+    const { date, fromDate, toDate, categoryId } = req.query;
+
     try {
-      const rows = await zcql.executeZCQLQuery(`SELECT * FROM ${env.TABLE_COMP_DISTRICT_CRIME_STATS}`);
-      const stats = rows.map(r => r[env.TABLE_COMP_DISTRICT_CRIME_STATS] || r);
-      return stats;
+      // Step 1: Build filtered incident query
+      const conditions = [];
+
+      if (categoryId) {
+        conditions.push(`crime_category_id = '${categoryId}'`);
+      }
+
+      if (date) {
+        conditions.push(`crime_occured_date_time >= '${date} 00:00:00' AND crime_occured_date_time <= '${date} 23:59:59'`);
+      } else {
+        if (fromDate) conditions.push(`crime_occured_date_time >= '${fromDate} 00:00:00'`);
+        if (toDate)   conditions.push(`crime_occured_date_time <= '${toDate} 23:59:59'`);
+      }
+
+      const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+
+      const incidentRows = await zcql.executeZCQLQuery(
+        `SELECT crime_happended_at_district_id, police_station_id FROM ${env.TABLE_CRIME_INCIDENT}${whereClause}`
+      );
+
+      if (!incidentRows || incidentRows.length === 0) {
+        return { districts: [] };
+      }
+
+      // Step 2: Count crimes per district and per station
+      const districtMap = {}; // { districtId: { total: N, stations: { stationId: N } } }
+
+      incidentRows.forEach(r => {
+        const row = r[env.TABLE_CRIME_INCIDENT] || r;
+        const distId = row.crime_happended_at_district_id;
+        const stationId = row.police_station_id;
+
+        if (!distId) return;
+
+        if (!districtMap[distId]) {
+          districtMap[distId] = { total: 0, stations: {} };
+        }
+        districtMap[distId].total++;
+
+        if (stationId) {
+          districtMap[distId].stations[stationId] = (districtMap[distId].stations[stationId] || 0) + 1;
+        }
+      });
+
+      const districtIds = Object.keys(districtMap);
+      if (districtIds.length === 0) return { districts: [] };
+
+      // Step 3: Batch-fetch district names
+      const distIdList = districtIds.map(id => `'${id}'`).join(',');
+      const distRows = await zcql.executeZCQLQuery(
+        `SELECT ROWID, district_name FROM ${env.TABLE_DISTRICT_GEODATA} WHERE ROWID IN (${distIdList})`
+      );
+      const distNameMap = {};
+      distRows.forEach(r => {
+        const row = r[env.TABLE_DISTRICT_GEODATA] || r;
+        distNameMap[row.ROWID] = row.district_name || 'Unknown District';
+      });
+
+      // Step 4: Batch-fetch station names
+      const allStationIds = new Set();
+      districtIds.forEach(distId => {
+        Object.keys(districtMap[distId].stations).forEach(sid => allStationIds.add(sid));
+      });
+
+      const stationNameMap = {};
+      if (allStationIds.size > 0) {
+        const stationIdList = Array.from(allStationIds).map(id => `'${id}'`).join(',');
+        const stationRows = await zcql.executeZCQLQuery(
+          `SELECT ROWID, station_name FROM ${env.TABLE_POLICE_STATION} WHERE ROWID IN (${stationIdList})`
+        );
+        stationRows.forEach(r => {
+          const row = r[env.TABLE_POLICE_STATION] || r;
+          stationNameMap[row.ROWID] = row.station_name || 'Unknown Station';
+        });
+      }
+
+      // Step 5: Build response
+      const districts = districtIds.map(distId => {
+        const stations = Object.entries(districtMap[distId].stations).map(([stationId, count]) => ({
+          stationId,
+          stationName: stationNameMap[stationId] || 'Unknown Station',
+          crimeCount: count
+        }));
+
+        // Sort stations by crime count descending
+        stations.sort((a, b) => b.crimeCount - a.crimeCount);
+
+        return {
+          districtId: distId,
+          districtName: distNameMap[distId] || 'Unknown District',
+          totalCrimeCount: districtMap[distId].total,
+          stations
+        };
+      });
+
+      // Sort districts by total crime count descending
+      districts.sort((a, b) => b.totalCrimeCount - a.totalCrimeCount);
+
+      return { districts };
     } catch (e) {
       logger.warn("Failed to fetch district crime stats", e);
       throw e;
     }
+
   },
 
   async getTotalCrimeCount(req) {
