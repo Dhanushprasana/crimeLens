@@ -38,8 +38,9 @@
  *
  *       - Criminal ↔ Alias (`KNOWN_AS`)
  *
- *       - Incident ↔ Evidence (`HAS_EVIDENCE`)
+ *       - Incident → Evidence (`HAS_EVIDENCE`) _(unidirectional — evidence does not traverse back to incident)_
  *
+ *       - Incident → Police Station (`REPORTED_AT`) _(unidirectional — prevents cross-district loops)_
  *
  *       **Extending the graph:**
  *       To add new entity types (e.g. Phone, CDR, Bank Account), simply create
@@ -299,47 +300,135 @@
  *       Retrieves nodes and edges for the network graph visualization based on the user's role
  *       and the requested zoom level (STATE -> DISTRICT -> STATION -> full crime network).
  *
+ *
  *       **Self-Contained Flow**: Every node in the response includes a `drillDown` field that
  *       tells the frontend exactly what params to pass on the next click. The frontend never
  *       needs to look up any IDs manually.
  *
+ *
  *       **Role Enforcement (automatic)**:
+ *
  *       - `STATE_COMMANDER` starts from the top (STATE).
+ *
  *       - `DISTRICT_COMMANDER` starts at the DISTRICT level, locked to their district.
- *       - `STATION_COMMANDER` immediately receives the full station crime network of their assigned station.
+ *
+ *       - `STATION_COMMANDER` immediately receives the full station crime network.
+ *
+ *
+ *       **Drill-down into a specific entity (NODE level)**:
+ *
+ *       When `nodeId` is provided alongside `stationId` and `nodeId` differs from `stationId`,
+ *       the service automatically routes to `level=NODE` and runs a full BFS traversal starting
+ *       from that entity. Pass `nodeType` to tell the engine what kind of entity `nodeId` is
+ *       (defaults to `incident` for backward compatibility).
+ *
+ *
+ *       **BFS traversal limits (NODE / STATION level)**:
+ *
+ *       - Max depth: 2 hops from the root entity.
+ *
+ *       - Max nodes: 200 (hard cap — BFS halts early if the graph grows too large).
  *     parameters:
  *       - in: query
  *         name: level
  *         schema:
  *           type: string
- *           enum: [STATE, DISTRICT, STATION]
+ *           enum: [STATE, DISTRICT, STATION, NODE, CRIME]
  *           default: STATE
  *         description: >
- *           The hierarchy level to query.
- *           - `STATE` returns all districts connected to state root.
- *           - `DISTRICT` returns all police stations in that district.
- *           - `STATION` returns the complete deep crime network (criminals, vehicles, aliases, evidence, cross-district stations).
- *           Omit this param to start from the default for your role.
+ *           The hierarchy level to query. Usually auto-detected — do not set manually unless needed.
+ *
+ *           - `STATE` — returns all districts connected to the state root node.
+ *
+ *           - `DISTRICT` — returns all police stations in the given district.
+ *
+ *           - `STATION` — returns the full crime network for the given station (BFS from each incident).
+ *
+ *           - `NODE` — BFS from a specific entity (incident, criminal, vehicle, alias, or evidence).
+ *             Auto-detected when `nodeId` is present and differs from `stationId`.
+ *
+ *           - `CRIME` — Alias for `NODE`, kept for backward compatibility.
  *       - in: query
  *         name: nodeId
  *         schema:
  *           type: string
  *         description: >
- *           The raw DB ID of the node to drill into. **DO NOT hardcode this**.
- *           Always read `node.drillDown.nodeId` from the previous response and pass it here.
- *           Not required for the initial call (STATE level or role-enforced starting level).
+ *           The raw DB ROWID of the entity to drill into. **Do not hardcode this** —
+ *           always read `node.drillDown.nodeId` from the previous response.
+ *           When `nodeId` is present and differs from `stationId`, `level` is automatically
+ *           set to `NODE` and `nodeType` determines what kind of entity this ID refers to.
+ *       - in: query
+ *         name: nodeType
+ *         schema:
+ *           type: string
+ *           enum: [incident, criminal, vehicle, alias, evidence]
+ *           default: incident
+ *         description: >
+ *           The entity type that `nodeId` refers to. Only relevant when drilling into a
+ *           specific node (i.e. when `level=NODE` or `nodeId` is provided alongside `stationId`).
+ *
+ *           - `incident` — a crime incident / FIR (default)
+ *
+ *           - `criminal` — a criminal profile
+ *
+ *           - `vehicle` — a vehicle linked to a criminal
+ *
+ *           - `alias` — a criminal alias
+ *
+ *           - `evidence` — a piece of evidence linked to an incident
+ *
+ *           Invalid values are silently ignored and fall back to `incident`.
  *       - in: query
  *         name: stationId
  *         schema:
  *           type: string
  *         description: >
- *           Required for STATION_COMMANDER. The station ID from their profile.
+ *           The station ROWID. Required for `STATION_COMMANDER` and `CASE_OFFICER` roles.
+ *           Also used by STATE_COMMANDER as context when drilling into a specific node.
  *       - in: query
  *         name: districtId
  *         schema:
  *           type: string
  *         description: >
- *           Required for DISTRICT_COMMANDER. The district ID from their profile.
+ *           The district ROWID. Required for `DISTRICT_COMMANDER` role.
+ *           Also used by STATE_COMMANDER as context when drilling into a district.
+ *     examples:
+ *       StateOverview:
+ *         summary: Get full state overview (STATE_COMMANDER)
+ *         value:
+ *           level: STATE
+ *       DistrictDrillDown:
+ *         summary: Drill into a district
+ *         value:
+ *           level: DISTRICT
+ *           nodeId: "46044000000317002"
+ *           districtId: "46044000000317002"
+ *       StationNetwork:
+ *         summary: Get full crime network for a station
+ *         value:
+ *           stationId: "46044000000353832"
+ *           districtId: "46044000000317002"
+ *       DrillIntoIncident:
+ *         summary: Drill into a specific crime incident
+ *         value:
+ *           nodeId: "46044000000374758"
+ *           nodeType: incident
+ *           stationId: "46044000000353832"
+ *           districtId: "46044000000317002"
+ *       DrillIntoCriminal:
+ *         summary: Drill into a specific criminal
+ *         value:
+ *           nodeId: "46044000000114080"
+ *           nodeType: criminal
+ *           stationId: "46044000000353832"
+ *           districtId: "46044000000317002"
+ *       DrillIntoVehicle:
+ *         summary: Drill into a vehicle
+ *         value:
+ *           nodeId: "46044000000221001"
+ *           nodeType: vehicle
+ *           stationId: "46044000000353832"
+ *           districtId: "46044000000317002"
  *     responses:
  *       200:
  *         description: Successfully retrieved nodes and edges.

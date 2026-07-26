@@ -14,6 +14,7 @@ async function resolveIncidentEvidence(req, incidentId, filters) {
 
   logger.debug('[Resolver:IncidentEvidence] Fetching evidence for incident', { incidentId });
 
+  // Single batch query — all evidence for this incident at once
   const query = `SELECT * FROM ${env.TABLE_CRIME_EVIDENCE} WHERE incident_id = '${incidentId}'`;
   const res = await executeQuery(req, query);
 
@@ -48,39 +49,45 @@ async function resolveEvidenceIncident(req, evidenceId, filters) {
 
   logger.debug('[Resolver:EvidenceIncident] Fetching incident for evidence', { evidenceId });
 
-  const query = `SELECT * FROM ${env.TABLE_CRIME_EVIDENCE} WHERE ROWID = '${evidenceId}'`;
-  const res = await executeQuery(req, query);
+  // Step 1: Get the incident_id from the evidence record
+  const evidenceQuery = `SELECT incident_id FROM ${env.TABLE_CRIME_EVIDENCE} WHERE ROWID = '${evidenceId}'`;
+  const evidenceRes = await executeQuery(req, evidenceQuery);
 
-  if (!res || res.length === 0) {
+  if (!evidenceRes || evidenceRes.length === 0) {
     logger.debug('[Resolver:EvidenceIncident] No evidence record found', { evidenceId });
     return { nodes: [], edges: [] };
   }
 
+  const incidentIds = evidenceRes
+    .map(r => r[env.TABLE_CRIME_EVIDENCE]?.incident_id)
+    .filter(Boolean);
+
+  if (incidentIds.length === 0) {
+    logger.warn('[Resolver:EvidenceIncident] Evidence has no linked incident_id', { evidenceId });
+    return { nodes: [], edges: [] };
+  }
+
+  // Step 2: Batch-fetch all incidents in a single query
+  const idList = incidentIds.map(id => `'${id}'`).join(',');
+  const batchQuery = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID IN (${idList})`;
+  const incidentRes = await executeQuery(req, batchQuery);
+
   const nodes = [];
   const edges = [];
 
-  for (const row of res) {
-    const incidentId = row[env.TABLE_CRIME_EVIDENCE].incident_id;
-    if (!incidentId) {
-      logger.warn('[Resolver:EvidenceIncident] Evidence has no linked incident_id', { evidenceId });
-      continue;
-    }
-
-    const incidentQuery = `SELECT * FROM ${env.TABLE_CRIME_INCIDENT} WHERE ROWID = '${incidentId}'`;
-    const incidentRes = await executeQuery(req, incidentQuery);
-
-    if (incidentRes && incidentRes.length > 0) {
-      const incidentData = incidentRes[0][env.TABLE_CRIME_INCIDENT];
+  if (incidentRes && incidentRes.length > 0) {
+    for (const row of incidentRes) {
+      const incidentData = row[env.TABLE_CRIME_INCIDENT];
       nodes.push(incident(incidentData));
-      edges.push(buildEdge(evidenceId, 'evidence', incidentId, 'incident', 'HAS_EVIDENCE'));
+      edges.push(buildEdge(evidenceId, 'evidence', incidentData.ROWID, 'incident', 'HAS_EVIDENCE'));
       logger.debug('[Resolver:EvidenceIncident] Resolved incident node', {
         evidenceId,
-        incidentId,
+        incidentId: incidentData.ROWID,
         label: incidentData.title
       });
-    } else {
-      logger.warn('[Resolver:EvidenceIncident] Incident record not found in biz_crime_incident', { incidentId });
     }
+  } else {
+    logger.warn('[Resolver:EvidenceIncident] Incident record(s) not found in biz_crime_incident', { incidentIds });
   }
 
   logger.debug('[Resolver:EvidenceIncident] Done', { evidenceId, nodes: nodes.length, edges: edges.length });

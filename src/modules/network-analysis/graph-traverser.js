@@ -8,20 +8,25 @@ const logger = require('../../config/logger');
  * @param {Object} req - Express request object (for DB context/Catalyst)
  * @param {Object} rootNode - { id, type }
  * @param {Object} filters - Node/Data filters provided by user
+ * @param {number} [maxDepth=2] - Maximum BFS depth to prevent runaway expansion
+ * @param {number} [maxNodes=200] - Hard cap on total nodes to prevent runaway graphs
  */
-async function traverseGraph(req, rootNode, filters = {}) {
+async function traverseGraph(req, rootNode, filters = {}, maxDepth = 2, maxNodes = 200) {
   const visitedNodes = new Set();
   const visitedEdges = new Set();
+  // O(1) Set-based node deduplication
+  const addedNodeIds = new Set();
   const nodes = [];
   const edges = [];
 
-  const queue = [rootNode];
+  // Track depth per queue entry { node, depth }
+  const queue = [{ node: rootNode, depth: 0 }];
 
   logger.debug('[NetworkAnalysis:Traverser] BFS started', {
     root: rootNode,
-    activeFilters: Object.entries(filters)
-      .filter(([, v]) => v !== true)
-      .map(([k]) => k)
+    maxDepth,
+    maxNodes,
+    activeFilters: Object.keys(filters).filter(k => filters[k] === false)
   });
 
   // Fetch and push the root node data
@@ -36,7 +41,11 @@ async function traverseGraph(req, rootNode, filters = {}) {
       logger.debug('[NetworkAnalysis:Traverser] Loading root node data', { type: current.type, id: current.id });
       const rootGraphNode = await rel.resolverFn.loadNode(req, current.id);
       if (rootGraphNode) {
-        nodes.push(rootGraphNode);
+        const rootKey = `${rootGraphNode.type}_${rootGraphNode.id}`;
+        if (!addedNodeIds.has(rootKey)) {
+          nodes.push(rootGraphNode);
+          addedNodeIds.add(rootKey);
+        }
         logger.debug('[NetworkAnalysis:Traverser] Root node loaded', { nodeId: rootGraphNode.id, label: rootGraphNode.label });
       } else {
         logger.warn('[NetworkAnalysis:Traverser] Root node not found in DB', { type: current.type, id: current.id });
@@ -47,7 +56,7 @@ async function traverseGraph(req, rootNode, filters = {}) {
   let iterationCount = 0;
 
   while (queue.length > 0) {
-    const current = queue.shift();
+    const { node: current, depth } = queue.shift();
     const nodeKey = `${current.type}_${current.id}`;
     iterationCount++;
 
@@ -57,11 +66,23 @@ async function traverseGraph(req, rootNode, filters = {}) {
     }
 
     visitedNodes.add(nodeKey);
-    logger.debug('[NetworkAnalysis:Traverser] Processing node', { nodeKey, queueLength: queue.length });
+    logger.debug('[NetworkAnalysis:Traverser] Processing node', { nodeKey, depth, queueLength: queue.length });
 
     // Fetch root node data on first iteration
     if (nodes.length === 0) {
       await fetchAndAddRootNode(current);
+    }
+
+    // Stop expanding neighbors beyond maxDepth
+    if (depth >= maxDepth) {
+      logger.debug('[NetworkAnalysis:Traverser] Max depth reached, not expanding further', { nodeKey, depth, maxDepth });
+      continue;
+    }
+
+    // Hard cap: stop adding to the graph if maxNodes is reached
+    if (nodes.length >= maxNodes) {
+      logger.warn('[NetworkAnalysis:Traverser] Max nodes limit reached, halting BFS', { maxNodes, totalNodes: nodes.length });
+      break;
     }
 
     const relationships = registry.getRelationshipsFor(current.type);
@@ -71,47 +92,41 @@ async function traverseGraph(req, rootNode, filters = {}) {
       targets: relationships.map(r => r.to)
     });
 
-    for (const rel of relationships) {
-      // Check if this node type is filtered out
-      if (filters[rel.to] === false) {
-        logger.debug('[NetworkAnalysis:Traverser] Skipping filtered relationship', {
-          from: rel.from,
-          to: rel.to
-        });
-        continue;
-      }
+    // Filter out skipped relationship types
+    const activeRels = relationships.filter(rel => filters[rel.to] !== false);
 
-      logger.debug('[NetworkAnalysis:Traverser] Resolving relationship', {
-        from: rel.from,
-        to: rel.to,
-        sourceId: current.id
-      });
-
-      let neighborNodes = [];
-      let newEdges = [];
-
-      try {
-        const result = await rel.resolverFn(req, current.id, filters);
-        neighborNodes = result.nodes;
-        newEdges = result.edges;
-      } catch (err) {
-        logger.error('[NetworkAnalysis:Traverser] Resolver error', {
+    // Fix C: Resolve all relationships for this node in parallel
+    const resolverResults = await Promise.all(
+      activeRels.map(async (rel) => {
+        logger.debug('[NetworkAnalysis:Traverser] Resolving relationship', {
           from: rel.from,
           to: rel.to,
-          sourceId: current.id,
-          message: err.message
+          sourceId: current.id
         });
-        continue;
-      }
+        try {
+          const result = await rel.resolverFn(req, current.id, filters);
+          logger.debug('[NetworkAnalysis:Traverser] Resolver returned', {
+            from: rel.from,
+            to: rel.to,
+            sourceId: current.id,
+            newNodes: result.nodes.length,
+            newEdges: result.edges.length
+          });
+          return result;
+        } catch (err) {
+          logger.error('[NetworkAnalysis:Traverser] Resolver error', {
+            from: rel.from,
+            to: rel.to,
+            sourceId: current.id,
+            message: err.message
+          });
+          return { nodes: [], edges: [] };
+        }
+      })
+    );
 
-      logger.debug('[NetworkAnalysis:Traverser] Resolver returned', {
-        from: rel.from,
-        to: rel.to,
-        sourceId: current.id,
-        newNodes: neighborNodes.length,
-        newEdges: newEdges.length
-      });
-
+    // Merge all resolver results
+    for (const { nodes: neighborNodes, edges: newEdges } of resolverResults) {
       // Deduplicate and add edges
       for (const edge of newEdges) {
         if (!visitedEdges.has(edge.id)) {
@@ -122,12 +137,13 @@ async function traverseGraph(req, rootNode, filters = {}) {
         }
       }
 
-      // Deduplicate and queue new neighbor nodes
+      // O(1) Set-based dedup + enqueue with incremented depth
       for (const neighbor of neighborNodes) {
         const neighborKey = `${neighbor.type}_${neighbor.id}`;
 
-        if (!nodes.some(n => n.id === neighborKey)) {
+        if (!addedNodeIds.has(neighborKey)) {
           nodes.push(neighbor);
+          addedNodeIds.add(neighborKey);
           logger.debug('[NetworkAnalysis:Traverser] New node added to graph', {
             nodeId: neighborKey,
             label: neighbor.label
@@ -138,7 +154,7 @@ async function traverseGraph(req, rootNode, filters = {}) {
 
         if (!visitedNodes.has(neighborKey)) {
           const dbId = neighbor.id.replace(`${neighbor.type}_`, '');
-          queue.push({ id: dbId, type: neighbor.type });
+          queue.push({ node: { id: dbId, type: neighbor.type }, depth: depth + 1 });
         }
       }
     }
