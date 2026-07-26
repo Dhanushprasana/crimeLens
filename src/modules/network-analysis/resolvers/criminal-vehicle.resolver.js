@@ -14,6 +14,7 @@ async function resolveCriminalVehicles(req, criminalId, filters) {
 
   logger.debug('[Resolver:CriminalVehicle] Fetching vehicles for criminal', { criminalId });
 
+  // Vehicles are stored directly on the criminal_vehicle table — single batch query
   const query = `SELECT * FROM ${env.TABLE_CRIMINAL_VEHICLE} WHERE criminal_id = '${criminalId}'`;
   const res = await executeQuery(req, query);
 
@@ -48,10 +49,11 @@ async function resolveVehicleCriminals(req, vehicleId, filters) {
 
   logger.debug('[Resolver:VehicleCriminal] Fetching criminal for vehicle', { vehicleId });
 
-  const query = `SELECT * FROM ${env.TABLE_CRIMINAL_VEHICLE} WHERE ROWID = '${vehicleId}'`;
-  const res = await executeQuery(req, query);
+  // Step 1: Get the criminal_id from the vehicle record
+  const vehicleQuery = `SELECT criminal_id FROM ${env.TABLE_CRIMINAL_VEHICLE} WHERE ROWID = '${vehicleId}'`;
+  const vehicleRes = await executeQuery(req, vehicleQuery);
 
-  if (!res || res.length === 0) {
+  if (!vehicleRes || vehicleRes.length === 0) {
     logger.debug('[Resolver:VehicleCriminal] No vehicle record found', { vehicleId });
     return { nodes: [], edges: [] };
   }
@@ -59,28 +61,34 @@ async function resolveVehicleCriminals(req, vehicleId, filters) {
   const nodes = [];
   const edges = [];
 
-  for (const row of res) {
-    const criminalId = row[env.TABLE_CRIMINAL_VEHICLE].criminal_id;
-    if (!criminalId) {
-      logger.warn('[Resolver:VehicleCriminal] Vehicle has no linked criminal_id', { vehicleId });
-      continue;
-    }
+  // Collect all unique criminal IDs (vehicle can only have one, but handle safely)
+  const criminalIds = vehicleRes
+    .map(r => r[env.TABLE_CRIMINAL_VEHICLE]?.criminal_id)
+    .filter(Boolean);
 
-    const criminalQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${criminalId}'`;
-    const criminalRes = await executeQuery(req, criminalQuery);
+  if (criminalIds.length === 0) {
+    logger.warn('[Resolver:VehicleCriminal] Vehicle has no linked criminal_id', { vehicleId });
+    return { nodes: [], edges: [] };
+  }
 
-    if (criminalRes && criminalRes.length > 0) {
-      const criminalData = criminalRes[0][env.TABLE_CRIMINAL];
+  // Step 2: Batch-fetch all criminals in a single query
+  const idList = criminalIds.map(id => `'${id}'`).join(',');
+  const batchQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID IN (${idList})`;
+  const criminalRes = await executeQuery(req, batchQuery);
+
+  if (criminalRes && criminalRes.length > 0) {
+    for (const row of criminalRes) {
+      const criminalData = row[env.TABLE_CRIMINAL];
       nodes.push(criminal(criminalData));
-      edges.push(buildEdge(vehicleId, 'vehicle', criminalId, 'criminal', 'USES'));
+      edges.push(buildEdge(vehicleId, 'vehicle', criminalData.ROWID, 'criminal', 'USES'));
       logger.debug('[Resolver:VehicleCriminal] Resolved criminal node', {
         vehicleId,
-        criminalId,
+        criminalId: criminalData.ROWID,
         label: criminalData.full_name
       });
-    } else {
-      logger.warn('[Resolver:VehicleCriminal] Criminal record not found', { criminalId });
     }
+  } else {
+    logger.warn('[Resolver:VehicleCriminal] Criminal record(s) not found', { criminalIds });
   }
 
   logger.debug('[Resolver:VehicleCriminal] Done', { vehicleId, nodes: nodes.length, edges: edges.length });

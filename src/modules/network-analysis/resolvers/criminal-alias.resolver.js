@@ -14,6 +14,7 @@ async function resolveCriminalAliases(req, criminalId, filters) {
 
   logger.debug('[Resolver:CriminalAlias] Fetching aliases for criminal', { criminalId });
 
+  // Aliases are stored directly on the alias table — single batch query
   const query = `SELECT * FROM ${env.TABLE_CRIMINAL_ALIAS} WHERE criminal_id = '${criminalId}'`;
   const res = await executeQuery(req, query);
 
@@ -48,39 +49,45 @@ async function resolveAliasCriminals(req, aliasId, filters) {
 
   logger.debug('[Resolver:AliasCriminal] Fetching criminal for alias', { aliasId });
 
-  const query = `SELECT * FROM ${env.TABLE_CRIMINAL_ALIAS} WHERE ROWID = '${aliasId}'`;
-  const res = await executeQuery(req, query);
+  // Step 1: Get the criminal_id from the alias record
+  const aliasQuery = `SELECT criminal_id FROM ${env.TABLE_CRIMINAL_ALIAS} WHERE ROWID = '${aliasId}'`;
+  const aliasRes = await executeQuery(req, aliasQuery);
 
-  if (!res || res.length === 0) {
+  if (!aliasRes || aliasRes.length === 0) {
     logger.debug('[Resolver:AliasCriminal] No alias record found', { aliasId });
     return { nodes: [], edges: [] };
   }
 
+  const criminalIds = aliasRes
+    .map(r => r[env.TABLE_CRIMINAL_ALIAS]?.criminal_id)
+    .filter(Boolean);
+
+  if (criminalIds.length === 0) {
+    logger.warn('[Resolver:AliasCriminal] Alias has no linked criminal_id', { aliasId });
+    return { nodes: [], edges: [] };
+  }
+
+  // Step 2: Batch-fetch all criminals in a single query
+  const idList = criminalIds.map(id => `'${id}'`).join(',');
+  const batchQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID IN (${idList})`;
+  const criminalRes = await executeQuery(req, batchQuery);
+
   const nodes = [];
   const edges = [];
 
-  for (const row of res) {
-    const criminalId = row[env.TABLE_CRIMINAL_ALIAS].criminal_id;
-    if (!criminalId) {
-      logger.warn('[Resolver:AliasCriminal] Alias has no linked criminal_id', { aliasId });
-      continue;
-    }
-
-    const criminalQuery = `SELECT * FROM ${env.TABLE_CRIMINAL} WHERE ROWID = '${criminalId}'`;
-    const criminalRes = await executeQuery(req, criminalQuery);
-
-    if (criminalRes && criminalRes.length > 0) {
-      const criminalData = criminalRes[0][env.TABLE_CRIMINAL];
+  if (criminalRes && criminalRes.length > 0) {
+    for (const row of criminalRes) {
+      const criminalData = row[env.TABLE_CRIMINAL];
       nodes.push(criminal(criminalData));
-      edges.push(buildEdge(aliasId, 'alias', criminalId, 'criminal', 'KNOWN_AS'));
+      edges.push(buildEdge(aliasId, 'alias', criminalData.ROWID, 'criminal', 'KNOWN_AS'));
       logger.debug('[Resolver:AliasCriminal] Resolved criminal node', {
         aliasId,
-        criminalId,
+        criminalId: criminalData.ROWID,
         label: criminalData.full_name
       });
-    } else {
-      logger.warn('[Resolver:AliasCriminal] Criminal record not found', { criminalId });
     }
+  } else {
+    logger.warn('[Resolver:AliasCriminal] Criminal record(s) not found', { criminalIds });
   }
 
   logger.debug('[Resolver:AliasCriminal] Done', { aliasId, nodes: nodes.length, edges: edges.length });

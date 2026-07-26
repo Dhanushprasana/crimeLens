@@ -22,9 +22,11 @@ function initRegistry() {
   registry.register('alias', 'criminal', resolveAliasCriminals);
   
   registry.register('incident', 'evidence', resolveIncidentEvidence);
-  registry.register('evidence', 'incident', resolveEvidenceIncident);
+  // NOTE: evidence→incident is intentionally NOT registered.
+  // Traversal always starts from station/incident. Resolving evidence back to its
+  // parent incident produces only duplicate nodes and wastes N*2 DB queries.
 
-  // Unidirectional registry to prevent infinite cross-district loops
+  // Unidirectional — prevent infinite cross-district loops
   registry.register('incident', 'policeStation', resolveIncidentStation);
 }
 
