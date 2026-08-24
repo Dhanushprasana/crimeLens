@@ -6,6 +6,7 @@ const fs = require("fs").promises;
 const path = require("path");
 
 async function executeQuery(req, query) {
+  logger.info("executeQuery", { query });
   if (!req.catalyst) throw new Error("Catalyst SDK not initialized");
   const zcql = req.catalyst.zcql();
   return zcql.executeZCQLQuery(query);
@@ -81,6 +82,18 @@ module.exports = {
     const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA}`;
     const res = await executeQuery(req, sql);
     return res.map((r) => r[env.TABLE_DISTRICT_GEODATA]);
+  },
+
+  async getDistrictByName(name, req) {
+    const clean = String(name).trim().replace(/'/g, "''");
+    logger.info(`getDistrictByNameClean ${clean}`);
+    const sql = `SELECT * FROM ${env.TABLE_DISTRICT_GEODATA} WHERE district_name = '${clean}' LIMIT 1`;
+    const res = await executeQuery(req, sql);
+    logger.info(`getDistrictByName result count ${res.length}`);
+    if (!res || res.length === 0) {
+      return null;
+    }
+    return res[0][env.TABLE_DISTRICT_GEODATA];
   },
 
   async getOneDistrictGeoJson(id, req) {

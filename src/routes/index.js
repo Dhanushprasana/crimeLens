@@ -27,6 +27,7 @@ const suspectPhotoRoute     = require("../modules/business/suspect/suspect-photo
 const incidentOfficerRoute  = require("../modules/business/crime/incident-officer/incident-officer.route");
 const caseWitnessRoute      = require("../modules/business/crime/case-witness/case-witness.route");
 const caseVictimRoute       = require("../modules/business/crime/case-victim/case-victim.route");
+const aiRoute               = require("../modules/ai/ai.route");
 
 const networkAnalysisRoute = require("../modules/network-analysis/route");
 
@@ -61,5 +62,6 @@ router.use("/suspect-photos", suspectPhotoRoute);
 router.use("/incident-officers", incidentOfficerRoute);
 router.use("/case-witnesses", caseWitnessRoute);
 router.use("/case-victims", caseVictimRoute);
+router.use("/ai", aiRoute);
 
 module.exports = router;
