@@ -13,6 +13,13 @@ module.exports = {
     logger.info("getAllDistrict");
     return repository.getAllDistrictGeoJson(query, req);
   },
+  async getDistrictByName(name, req) {
+    logger.info(`getDistrictByName ${name}`);
+    if (!name || !String(name).trim()) {
+      throw new Error("district name required");
+    }
+    return repository.getDistrictByName(name, req);
+  },
   async getOneDistrict(id, req) {
     logger.info(`getOneDistrict ${id}`);
     return repository.getOneDistrictGeoJson(id, req);

@@ -45,6 +45,11 @@ const env = {
   TABLE_CASE_WITNESS: "biz_case_witness",
   TABLE_CASE_VICTIM: "biz_case_victim",
 
+  // AI / OpenRouter
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
+  OPENROUTER_API_URL: process.env.OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions",
+  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+
   // Profiling
   TABLE_CRIMINAL_PROFILE: "biz_criminal_profile",
   TABLE_CRIMINAL_ALIAS: "biz_criminal_alias",
