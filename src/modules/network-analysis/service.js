@@ -307,4 +307,32 @@ async function getGlobalOptions(req) {
   }
 }
 
-module.exports = { buildNetworkGraph, getGlobalNetworkGraph, getGlobalOptions };
+async function getEntityOptions(req) {
+  const env = require('../../config/env');
+  logger.info('[NetworkAnalysis:Service] getEntityOptions called');
+  const zcql = req.catalyst ? req.catalyst.zcql() : null;
+  if (!zcql) throw new Error('Catalyst not available');
+
+  const result = { criminals: [], vehicles: [], evidences: [] };
+
+  try {
+    const crimRows = await zcql.executeZCQLQuery(`SELECT ROWID, full_name FROM ${env.TABLE_CRIMINAL} LIMIT 100`);
+    result.criminals = crimRows.map(r => ({ id: r[env.TABLE_CRIMINAL].ROWID, label: r[env.TABLE_CRIMINAL].full_name || 'Unknown' }));
+
+    const vehRows = await zcql.executeZCQLQuery(`SELECT ROWID, registration_number FROM ${env.TABLE_CRIMINAL_VEHICLE} LIMIT 100`);
+    result.vehicles = vehRows.map(r => ({ id: r[env.TABLE_CRIMINAL_VEHICLE].ROWID, label: r[env.TABLE_CRIMINAL_VEHICLE].registration_number || 'Unknown' }));
+
+    const eviRows = await zcql.executeZCQLQuery(`SELECT ROWID, evidence_type, description FROM ${env.TABLE_CRIME_EVIDENCE} LIMIT 100`);
+    result.evidences = eviRows.map(r => ({ 
+      id: r[env.TABLE_CRIME_EVIDENCE].ROWID, 
+      label: r[env.TABLE_CRIME_EVIDENCE].evidence_type || r[env.TABLE_CRIME_EVIDENCE].description || 'Unknown' 
+    }));
+
+    return result;
+  } catch (err) {
+    logger.error('[NetworkAnalysis:Service] Error generating entity options', err);
+    throw err;
+  }
+}
+
+module.exports = { buildNetworkGraph, getGlobalNetworkGraph, getGlobalOptions, getEntityOptions };

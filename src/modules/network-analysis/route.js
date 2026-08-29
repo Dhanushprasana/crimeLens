@@ -8,5 +8,6 @@ const controller = require('./controller');
 router.post('/network-analysis', controller.buildGraph);
 router.get('/network-analysis/global', controller.getGlobalGraph);
 router.get('/network-analysis/global/options', controller.getGlobalOptions);
+router.get('/network-analysis/entity-options', controller.getEntityOptions);
 
 module.exports = router;
