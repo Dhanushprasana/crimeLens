@@ -120,4 +120,23 @@ async function getGlobalOptions(req, res) {
   }
 }
 
-module.exports = { buildGraph, getGlobalGraph, getGlobalOptions };
+async function getEntityOptions(req, res) {
+  try {
+    const result = await networkAnalysisService.getEntityOptions(req);
+    return res.status(200).json({
+      status: 'success',
+      data: result
+    });
+  } catch (error) {
+    logger.error('[NetworkAnalysis] Error generating entity options', {
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(500).json({
+      status: 'error',
+      message: error.message || 'Internal server error'
+    });
+  }
+}
+
+module.exports = { buildGraph, getGlobalGraph, getGlobalOptions, getEntityOptions };
