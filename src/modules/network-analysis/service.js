@@ -432,12 +432,28 @@ async function getEntityOptions(req) {
   const result = { criminals: [], suspects: [], vehicles: [], evidences: [] };
 
   try {
+    const pickLabel = (row, fallbackPrefix) => {
+      const raw = row || {};
+      const candidate = [
+        raw.evidence_type,
+        raw.description,
+        raw.evidence_number,
+        raw.file_url,
+        raw.registration_number,
+        raw.full_name,
+      ].find((value) => value && String(value).trim());
+
+      if (candidate) return String(candidate).trim();
+      if (raw.ROWID) return `${fallbackPrefix} #${raw.ROWID}`;
+      return fallbackPrefix;
+    };
+
     const crimRows = await zcql.executeZCQLQuery(
       `SELECT ROWID, full_name FROM ${env.TABLE_CRIMINAL} LIMIT 100`,
     );
     result.criminals = crimRows.map((r) => ({
       id: r[env.TABLE_CRIMINAL].ROWID,
-      label: r[env.TABLE_CRIMINAL].full_name || "Unknown",
+      label: pickLabel(r[env.TABLE_CRIMINAL], "Criminal") || "Unknown Criminal",
       type: "criminal",
     }));
 
@@ -446,7 +462,7 @@ async function getEntityOptions(req) {
     );
     result.suspects = suspectRows.map((r) => ({
       id: r[env.TABLE_SUSPECT].ROWID,
-      label: r[env.TABLE_SUSPECT].full_name || "Unknown",
+      label: pickLabel(r[env.TABLE_SUSPECT], "Suspect") || "Unknown Suspect",
       type: "suspect",
     }));
 
@@ -455,19 +471,16 @@ async function getEntityOptions(req) {
     );
     result.vehicles = vehRows.map((r) => ({
       id: r[env.TABLE_CRIMINAL_VEHICLE].ROWID,
-      label: r[env.TABLE_CRIMINAL_VEHICLE].registration_number || "Unknown",
+      label: pickLabel(r[env.TABLE_CRIMINAL_VEHICLE], "Vehicle") || "Unknown Vehicle",
       type: "vehicle",
     }));
 
     const eviRows = await zcql.executeZCQLQuery(
-      `SELECT ROWID, evidence_type, description FROM ${env.TABLE_CRIME_EVIDENCE} LIMIT 100`,
+      `SELECT ROWID, evidence_type, description, evidence_number, file_url FROM ${env.TABLE_CRIME_EVIDENCE} LIMIT 100`,
     );
     result.evidences = eviRows.map((r) => ({
       id: r[env.TABLE_CRIME_EVIDENCE].ROWID,
-      label:
-        r[env.TABLE_CRIME_EVIDENCE].evidence_type ||
-        r[env.TABLE_CRIME_EVIDENCE].description ||
-        "Unknown",
+      label: pickLabel(r[env.TABLE_CRIME_EVIDENCE], "Evidence") || "Unknown Evidence",
       type: "evidence",
     }));
 
