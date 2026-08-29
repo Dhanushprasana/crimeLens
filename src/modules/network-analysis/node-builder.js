@@ -60,13 +60,22 @@ function incident(incidentData) {
 }
 
 function evidence(evidenceData) {
+  const label =
+    evidenceData.evidence_type ||
+    evidenceData.description ||
+    evidenceData.evidence_number ||
+    evidenceData.file_url ||
+    `Evidence #${evidenceData.ROWID}`;
+
   return buildNode(
     "evidence",
     evidenceData.ROWID,
-    evidenceData.evidence_type,
-    evidenceData.evidence_number,
+    label,
+    evidenceData.evidence_number || "Evidence",
     {
       description: evidenceData.description,
+      evidenceType: evidenceData.evidence_type,
+      fileUrl: evidenceData.file_url,
     },
   );
 }
