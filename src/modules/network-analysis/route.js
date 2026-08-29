@@ -5,9 +5,9 @@ const router = express.Router();
 const controller = require('./controller');
 
 // Network Analysis Graph Endpoint
-router.post('/network-analysis', controller.buildGraph);
-router.get('/network-analysis/global', controller.getGlobalGraph);
-router.get('/network-analysis/global/options', controller.getGlobalOptions);
-router.get('/network-analysis/entity-options', controller.getEntityOptions);
+router.post('/', controller.buildGraph);
+router.get('/global', controller.getGlobalGraph);
+router.get('/global/options', controller.getGlobalOptions);
+router.get('/entity-options', controller.getEntityOptions);
 
 module.exports = router;

@@ -57,7 +57,7 @@ router.use("/suspects", suspectRoute);
 router.use("/crime-categories", crimeCategoryRoute);
 router.use("/evidence-analysis", evidenceAnalysisRoute);
 router.use("/evidence-matches", evidenceMatchRoute);
-router.use("/", networkAnalysisRoute); // Using "/" because route.js already defines "/network-analysis"
+router.use("/network-analysis", networkAnalysisRoute);
 router.use("/suspect-photos", suspectPhotoRoute);
 router.use("/incident-officers", incidentOfficerRoute);
 router.use("/case-witnesses", caseWitnessRoute);
