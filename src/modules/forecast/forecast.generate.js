@@ -17,6 +17,16 @@ function getForecastDates(days) {
   return dates;
 }
 
+function getDatesBetween(start, end) {
+  const dates = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    dates.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
 function weekOfYear(date) {
   const d = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
@@ -37,7 +47,15 @@ async function generateForecast(
   });
 
   const predictionRows = [];
-  const dates = getForecastDates(30);
+  const startDate = forecast_start ? new Date(forecast_start) : null;
+  const endDate = forecast_end ? new Date(forecast_end) : null;
+  const dates =
+    startDate &&
+    endDate &&
+    !Number.isNaN(startDate.getTime()) &&
+    !Number.isNaN(endDate.getTime())
+      ? getDatesBetween(startDate, endDate)
+      : getForecastDates(30);
 
   logger.info("generateForecast: preparing prediction rows");
   logger.info("Combinations loaded", {
@@ -90,7 +108,9 @@ async function generateForecast(
 
     try {
       // QuickML has been removed, generate mock predictions for testing
-      predictions = batch.map(() => ({ predicted_count: Math.floor(Math.random() * 10) }));
+      const predictions = batch.map(() => ({
+        predicted_count: Math.floor(Math.random() * 10),
+      }));
     } catch (err) {
       logger.error("Forecast prediction failed for batch", {
         error: err && err.message ? err.message : err,

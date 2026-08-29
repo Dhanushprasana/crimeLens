@@ -32,11 +32,8 @@ async function generateAndStoreForecast(req, filters = {}) {
 
     // 1. Generate predictions using the existing generator
     const generatedPredictions = await generator.generateForecast(req, {
-      start_date,
-      end_date,
-      district_id,
-      police_station_id,
-      crime_category_id,
+      forecast_start: start_date,
+      forecast_end: end_date,
     });
 
     // 2. Get datastore and forecast table
@@ -139,13 +136,21 @@ async function getForecasts(req, query = {}) {
     const zcql = req.catalyst ? req.catalyst.zcql() : null;
 
     if (!zcql) {
-      logger.warn("ZCQL not available, returning mock data");
-      return [
+      logger.warn("ZCQL not available; returning no stored forecasts");
+      return [];
+    }
+
+    if (
+      query.start_date &&
+      query.end_date &&
+      query.start_date > query.end_date
+    ) {
+      throw Object.assign(
+        new Error("start_date must be before or equal to end_date"),
         {
-          forecast_date: new Date().toISOString().slice(0, 10),
-          predicted_count: 15,
+          status: 400,
         },
-      ];
+      );
     }
 
     const where = [];
@@ -179,29 +184,29 @@ async function getForecasts(req, query = {}) {
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
-    const selectColumns =
-      "ROWID, forecast_date, predicted_count, district_id, police_station_id, crime_category_id, model_version, generated_at";
-
     const rows = await zcql.executeZCQLQuery(
-      `SELECT ${selectColumns} FROM ${constants.FORECAST_TABLE} ${whereSql} ORDER BY forecast_date DESC LIMIT 500`,
+      `SELECT * FROM ${constants.FORECAST_TABLE} ${whereSql} ORDER BY forecast_date DESC LIMIT 500`,
     );
 
-    logger.info("getForecasts: returned rows", {
-      count: rows ? rows.length : 0,
+    // Catalyst returns ZCQL rows as { tableName: { ...columns } }.
+    const normalizedRows = (rows || []).map((row) => {
+      if (!row || typeof row !== "object") return row;
+      const tableRow = row[constants.FORECAST_TABLE];
+      return tableRow && typeof tableRow === "object" ? tableRow : row;
     });
-    return rows || [];
+
+    logger.info("getForecasts: returned rows", {
+      count: normalizedRows.length,
+    });
+    return normalizedRows;
   } catch (err) {
     logger.error("getForecasts failed", {
       message: err.message,
       stack: err.stack,
     });
-    // Return mock data on error
-    return [
-      {
-        forecast_date: new Date().toISOString().slice(0, 10),
-        predicted_count: 15,
-      },
-    ];
+    if (err.status) throw err;
+    // A failed read must not fabricate a forecast for another date.
+    return [];
   }
 }
 
