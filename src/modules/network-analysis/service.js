@@ -471,7 +471,9 @@ async function getEntityOptions(req) {
     );
     result.vehicles = vehRows.map((r) => ({
       id: r[env.TABLE_CRIMINAL_VEHICLE].ROWID,
-      label: pickLabel(r[env.TABLE_CRIMINAL_VEHICLE], "Vehicle") || "Unknown Vehicle",
+      label:
+        pickLabel(r[env.TABLE_CRIMINAL_VEHICLE], "Vehicle") ||
+        "Unknown Vehicle",
       type: "vehicle",
     }));
 
@@ -480,7 +482,9 @@ async function getEntityOptions(req) {
     );
     result.evidences = eviRows.map((r) => ({
       id: r[env.TABLE_CRIME_EVIDENCE].ROWID,
-      label: pickLabel(r[env.TABLE_CRIME_EVIDENCE], "Evidence") || "Unknown Evidence",
+      label:
+        pickLabel(r[env.TABLE_CRIME_EVIDENCE], "Evidence") ||
+        "Unknown Evidence",
       type: "evidence",
     }));
 
