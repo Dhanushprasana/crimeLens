@@ -72,6 +72,7 @@ module.exports = {
 
   // async addCrime(dto, req) { logger.info('addCrime'); if (!dto || !dto.title) throw new Error('title required'); return repository.addCrime(dto, req); },
   async addCrimesBulk(dtos, req) { logger.info('addCrimesBulk'); if (!Array.isArray(dtos)) throw new Error('payload must be an array'); return repository.addCrimesBulk(dtos, req); },
+  async addEvidence(crimeId, dto, req) { logger.info(`addEvidence ${crimeId}`); if (!crimeId) throw new AppError('crimeId is required', 400); if (!dto || !dto.evidence_type) throw new AppError('evidence_type is required', 400); return repository.addEvidence(crimeId, dto, req); },
   // async getAllCrimes(query, req) { logger.info('getAllCrimes'); return repository.getAllCrimes(query, req); },
   async getOneCrime(id, req) { logger.info(`getOneCrime ${id}`); return repository.getOneCrime(id, req); },
   async updateCrime(id, dto, req) { logger.info(`updateCrime ${id}`); return repository.updateCrime(id, dto, req); },

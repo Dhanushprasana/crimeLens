@@ -39,9 +39,8 @@ class StorageController {
       }
 
       const fileBuffer = await StorageService.downloadFile(req, folder, filename);
-      
-      // Determine content type conceptually based on extension, defaulting to application/octet-stream
-      const ext = filename.split('.').pop().toLowerCase();
+
+      const ext = String(filename).split('.').pop().toLowerCase();
       let contentType = 'application/octet-stream';
       if (['jpg', 'jpeg'].includes(ext)) contentType = 'image/jpeg';
       else if (ext === 'png') contentType = 'image/png';
@@ -49,6 +48,33 @@ class StorageController {
       else if (ext === 'mp4') contentType = 'video/mp4';
 
       res.setHeader('Content-Type', contentType);
+      res.send(fileBuffer);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async downloadBlobByPath(req, res, next) {
+    try {
+      const objectPath = req.params?.path || req.params?.[0] || req.query?.path;
+      if (!objectPath) {
+        return res.status(400).json({ error: "path is required" });
+      }
+
+      const normalizedPath = String(objectPath).replace(/^\/+/, "");
+      const fileBuffer = await StorageService.downloadByObjectPath(req, normalizedPath);
+
+      const fileName = normalizedPath.split('/').pop() || 'blob';
+      const ext = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+      let contentType = 'application/octet-stream';
+      if (['jpg', 'jpeg'].includes(ext)) contentType = 'image/jpeg';
+      else if (ext === 'png') contentType = 'image/png';
+      else if (ext === 'pdf') contentType = 'application/pdf';
+      else if (['mp4', 'mov'].includes(ext)) contentType = 'video/' + ext;
+      else if (['txt', 'json', 'csv'].includes(ext)) contentType = 'text/' + ext;
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
       res.send(fileBuffer);
     } catch (error) {
       next(error);
@@ -89,6 +115,15 @@ class StorageController {
       next(error);
     }
   }
+
+  static async debugListFace(req, res, next) {
+  try {
+    const keys = await StorageService.listBucketObjectKeys(req, "face/");
+    res.json({ count: keys.length, keys });
+  } catch (error) {
+    next(error);
+  }
+}
 }
 
 module.exports = StorageController;
