@@ -6,6 +6,7 @@ const controller = require('./crime.controller');
 
 router.post('/', controller.addCrime);
 router.post('/bulk', controller.addCrimesBulk);
+router.post('/:id/evidences', controller.addEvidence);
 router.get('/', controller.getAllCrimes);
 router.get('/getOneCrime/:id', controller.getOneCrime);
 router.put('/:id', controller.updateCrime);

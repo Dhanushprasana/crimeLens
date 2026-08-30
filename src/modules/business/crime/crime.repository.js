@@ -120,6 +120,30 @@ module.exports = {
     return { id: saved.ROWID };
   },
 
+  async addEvidence(crimeId, dto, req) {
+    const table = getTable(req, env.TABLE_CRIME_EVIDENCE);
+    const row = {
+      incident_id: crimeId,
+      uploaded_by: dto.uploaded_by || dto.collected_by || dto.uploadedBy || 'Officer',
+      collected_by: dto.collected_by || dto.collectedBy || null,
+      collected_date: dto.collected_date || dto.collectedDate || null,
+      collection_location: dto.collection_location || dto.collectionLocation || null,
+      evidence_type: dto.evidence_type || dto.evidenceType || null,
+      description: dto.description || null,
+      remarks: dto.remarks || null,
+      file_url: dto.file_url || dto.fileUrl || null,
+      file_name: dto.file_name || dto.fileName || null,
+      file_size: dto.file_size || dto.fileSize || null,
+      file_mime_type: dto.file_mime_type || dto.fileMimeType || null,
+      evidence_number: dto.evidence_number || dto.evidenceNumber || `EV-${Date.now().toString().slice(-6)}`,
+      chain_of_custody_status: dto.chain_of_custody_status || 'intact',
+      verification_status: dto.verification_status || 'verified',
+    };
+
+    const saved = await table.insertRow(row);
+    return { data: { ...row, ROWID: saved.ROWID, id: saved.ROWID }, message: 'Evidence uploaded successfully' };
+  },
+
   async getAllCrimes(params, req) {
     const TABLE = env.TABLE_CRIME_INCIDENT;
 

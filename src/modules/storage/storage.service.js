@@ -86,23 +86,27 @@ class StorageService {
   }
 
   /**
-   * Downloads a file from Catalyst Storage
+   * Downloads a file from Catalyst Storage by object path.
+   * Accepts either a full object path or a folder + filename pair.
    */
-  static async downloadFile(req, folderName, fileName) {
+  static async downloadByObjectPath(req, objectPath) {
     const catalystApp = req.catalyst;
 
     try {
+      const normalizedPath = String(objectPath || "").replace(/^\/+/, "");
+      if (!normalizedPath) {
+        throw new Error("Object path is required");
+      }
+
       if (!catalystApp || typeof catalystApp.stratus !== "function") {
         throw new Error("Catalyst Stratus API not available on req.catalyst");
       }
 
       const stratus = catalystApp.stratus();
       const bucket = stratus.bucket(constants.BUCKET_NAME);
-      const objectPath = `${folderName}/${fileName}`;
 
-      const result = await bucket.getObject(objectPath);
+      const result = await bucket.getObject(normalizedPath);
 
-      // result may be a Buffer or a stream
       if (result && typeof result.pipe === "function") {
         const chunks = [];
         for await (const chunk of result) chunks.push(chunk);
@@ -111,13 +115,21 @@ class StorageService {
 
       return result;
     } catch (error) {
-      logger.error("Failed to download file from Storage", {
-        folder: folderName,
-        file: fileName,
+      logger.error("Failed to download object from Storage", {
+        objectPath,
         error: error.message,
       });
       throw new Error("Failed to download file: " + error.message);
     }
+  }
+
+  static async downloadFile(req, folderName, fileName) {
+    if (!folderName && fileName === undefined) {
+      throw new Error("Object path is required");
+    }
+
+    const objectPath = fileName !== undefined ? `${folderName}/${fileName}` : folderName;
+    return this.downloadByObjectPath(req, objectPath);
   }
 
   /**
